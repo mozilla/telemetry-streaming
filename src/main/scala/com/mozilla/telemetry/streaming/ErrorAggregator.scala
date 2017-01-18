@@ -25,7 +25,7 @@ case class OS(name: Option[String],
 
 case class PayloadInfo(subsessionLength: Option[Int])
 
-object Aggregator {
+object ErrorAggregator {
   private val kafkaParams = Map(
     "metadata.broker.list" -> "ec2-54-186-31-145.us-west-2.compute.amazonaws.com:6667",
     "group.id" -> "kafka-test3",
