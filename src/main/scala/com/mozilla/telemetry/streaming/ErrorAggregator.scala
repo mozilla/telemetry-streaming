@@ -13,6 +13,7 @@ import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.rogach.scallop.ScallopConf
 
 case class EnvironmentBuild(version: Option[String],
                             buildId: Option[String],
@@ -25,12 +26,28 @@ case class OS(name: Option[String],
 
 case class PayloadInfo(subsessionLength: Option[Int])
 
+
 object ErrorAggregator {
-  private val kafkaParams = Map(
-    "metadata.broker.list" -> "ec2-54-186-31-145.us-west-2.compute.amazonaws.com:6667",
-    "group.id" -> "kafka-test3",
-    "auto.offset.reset" -> "largest"
-  )
+
+  private class Opts(args: Array[String]) extends ScallopConf(args) {
+    val kafkaBroker = opt[String](
+      "kafkaBroker",
+      descr = "From submission date",
+      required = true)
+    val kafkaGroupId = opt[String](
+      "kafkaGroupId",
+      descr = "A unique string that identifies the consumer group this consumer belongs to",
+      required = true)
+    val outputBucket = opt[String](
+      "outputBucket",
+      descr = "Bucket in which to save data",
+      required = false,
+      default = Some("telemetry-test-bucket"))
+    val saveLocally = opt[Boolean](
+      "saveLocally",
+      descr = "Whether to save the processing output locally or not.")
+    verify()
+  }
 
   private val dimensionsSchema = new SchemaBuilder()
     .add[String]("channel")
@@ -118,7 +135,6 @@ object ErrorAggregator {
         .withColumn("timestamp", lit(new Timestamp(time.milliseconds)))
         .withColumn("date", lit(new java.sql.Date(time.milliseconds)))
         .coalesce(1)
-        //.show()
         .write
         .mode("append")
         .partitionBy("date", "timestamp")
@@ -128,12 +144,26 @@ object ErrorAggregator {
 
   def main(args: Array[String]): Unit = {
     val ssc = new StreamingContext(conf, Seconds(300))
+    val opts = new Opts(args)
+
+    val kafkaParams = Map(
+      "metadata.broker.list" -> opts.kafkaBroker(),
+      "group.id" -> opts.kafkaGroupId(),
+      "auto.offset.reset" -> "largest"
+    )
+
     val stream = KafkaUtils.createDirectStream[String, Message, StringDecoder, HekaMessageDecoder](
       ssc,
       kafkaParams,
       Set("telemetry"))
 
-    process("/tmp/parquet")(stream)  // TODO: parametrize the job
+
+    val prefix = s"error_aggregates/v1"
+    val outputBucket = opts.outputBucket()
+
+    val path = if(opts.saveLocally()) "/tmp/parquet" else s"s3://${outputBucket}/${prefix}/"
+
+    process(path)(stream)
     ssc.start()
     ssc.awaitTermination()
   }
