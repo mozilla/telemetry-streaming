@@ -38,14 +38,11 @@ object ErrorAggregator {
       "kafkaGroupId",
       descr = "A unique string that identifies the consumer group this consumer belongs to",
       required = true)
-    val outputBucket = opt[String](
-      "outputBucket",
-      descr = "Bucket in which to save data",
+    val outputPath = opt[String](
+      "outputPath",
+      descr = "Output path",
       required = false,
-      default = Some("telemetry-test-bucket"))
-    val saveLocally = opt[Boolean](
-      "saveLocally",
-      descr = "Whether to save the processing output locally or not.")
+      default = Some("/tmp/parquet"))
     verify()
   }
 
@@ -145,6 +142,8 @@ object ErrorAggregator {
   def main(args: Array[String]): Unit = {
     val ssc = new StreamingContext(conf, Seconds(300))
     val opts = new Opts(args)
+    val outputPath = opts.outputPath()
+    val prefix = s"error_aggregates/v1"
 
     val kafkaParams = Map(
       "metadata.broker.list" -> opts.kafkaBroker(),
@@ -157,13 +156,7 @@ object ErrorAggregator {
       kafkaParams,
       Set("telemetry"))
 
-
-    val prefix = s"error_aggregates/v1"
-    val outputBucket = opts.outputBucket()
-
-    val path = if(opts.saveLocally()) "/tmp/parquet" else s"s3://${outputBucket}/${prefix}/"
-
-    process(path)(stream)
+    process(s"${outputPath}/${prefix}/")(stream)
     ssc.start()
     ssc.awaitTermination()
   }
