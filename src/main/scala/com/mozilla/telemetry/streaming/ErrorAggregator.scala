@@ -6,14 +6,14 @@ import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.timeseries._
 import kafka.serializer.StringDecoder
 import org.apache.spark._
-import org.apache.spark.sql.{SparkSession, Row}
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.rogach.scallop.ScallopConf
+import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 case class EnvironmentBuild(version: Option[String],
                             buildId: Option[String],
@@ -30,15 +30,15 @@ case class PayloadInfo(subsessionLength: Option[Int])
 object ErrorAggregator {
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
-    val kafkaBroker = opt[String](
+    val kafkaBroker: ScallopOption[String] = opt[String](
       "kafkaBroker",
       descr = "From submission date",
       required = true)
-    val kafkaGroupId = opt[String](
+    val kafkaGroupId: ScallopOption[String] = opt[String](
       "kafkaGroupId",
       descr = "A unique string that identifies the consumer group this consumer belongs to",
       required = true)
-    val outputPath = opt[String](
+    val outputPath:ScallopOption[String] = opt[String](
       "outputPath",
       descr = "Output path",
       required = false,
@@ -157,6 +157,7 @@ object ErrorAggregator {
       Set("telemetry"))
 
     process(s"${outputPath}/${prefix}/")(stream)
+
     ssc.start()
     ssc.awaitTermination()
   }
