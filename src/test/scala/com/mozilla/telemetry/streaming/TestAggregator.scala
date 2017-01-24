@@ -43,7 +43,7 @@ class TestAggregator extends FlatSpec with Matchers with StreamingActionBase wit
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     val messages = List(generateCrashPings(42) ++ generateMainPings(42))
-    runAction(messages, ErrorAggregator.process(path.toString))
+    runAction(messages, ErrorAggregator.process(path.toString, true))
 
     val sqlContext = new SQLContext(sc)
     val df = sqlContext.read.parquet(path.toString)
