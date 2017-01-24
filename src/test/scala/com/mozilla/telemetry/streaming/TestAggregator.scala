@@ -16,7 +16,7 @@ case class Ping(docType: String,
                 subsessionLength: Int)
 
 class TestAggregator extends FlatSpec with Matchers with StreamingActionBase with BeforeAndAfterAll{
-  private var path: Path = Files.createTempDirectory("telemetry")
+  private val path: Path = Files.createTempDirectory("telemetry-test")
 
   def generateCrashPings(size: Int): Seq[(String, Message)] = {
     1.to(size).map { _ =>
@@ -36,7 +36,8 @@ class TestAggregator extends FlatSpec with Matchers with StreamingActionBase wit
         Field("normalizedChannel", valueString = List("release")),
         Field("appName", valueString = List("Firefox")),
         Field("geoCountry", valueString = List("IT")),
-        Field("payload.info", valueString = List("""{"subsessionLength": 3600}"""))
+        Field("payload.info", valueString = List("""{"subsessionLength": 3600}""")),
+        Field("payload.histograms", valueString = List("""{"BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}}}"""))
       )))
     }
   }
@@ -55,6 +56,7 @@ class TestAggregator extends FlatSpec with Matchers with StreamingActionBase wit
     df.select("crashes").first()(0) should be (42)
     df.select("count").first()(0) should be (42)
     df.select("usageHours").first()(0) should be (42.0)
+    df.select("BROWSER_SHIM_USAGE_BLOCKED").first()(0) should be (42)
     df.where("date is null").count() should be (0)
     df.where("timestamp is null").count() should be (0)
   }
