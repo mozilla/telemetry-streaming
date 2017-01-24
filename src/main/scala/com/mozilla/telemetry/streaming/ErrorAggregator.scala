@@ -43,6 +43,9 @@ object ErrorAggregator {
       descr = "Output path",
       required = false,
       default = Some("/tmp/parquet"))
+    val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
+      "raiseOnError",
+      descr = "Whether to program should exit on a data processing error or not.")
     verify()
   }
 
@@ -113,7 +116,10 @@ object ErrorAggregator {
     }
   }
 
-  private[streaming] def process(datasetPath: String)(stream: DStream[(String, Message)]): Unit = {
+  private[streaming] def process(
+                                  datasetPath: String,
+                                  raiseOnError: Boolean
+                                )(stream: DStream[(String, Message)]): Unit = {
     stream
       .map(_._2.fieldsAsMap)
       .filter{ fields =>
@@ -121,7 +127,14 @@ object ErrorAggregator {
         docType == "main" || docType == "crash"
       }.foreachRDD { (rdd, time) =>
       val rows = rdd
-        .flatMap(parsePing)
+        .flatMap(ping => {
+          try {
+            parsePing(ping)
+          } catch {
+            // TODO: count number of failures
+            case _: Throwable if !raiseOnError  => None
+          }
+        })
         .reduceByKey((x, y) => RowBuilder.add(x, y, metricsSchema))
         .map(RowBuilder.merge)
 
@@ -156,7 +169,7 @@ object ErrorAggregator {
       kafkaParams,
       Set("telemetry"))
 
-    process(s"${outputPath}/${prefix}/")(stream)
+    process(s"${outputPath}/${prefix}/", opts.raiseOnError())(stream)
 
     ssc.start()
     ssc.awaitTermination()
