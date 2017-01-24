@@ -49,6 +49,13 @@ object ErrorAggregator {
     verify()
   }
 
+  private val countHistogramErrorsSchema = new SchemaBuilder()
+    .add[Int]("BROWSER_SHIM_USAGE_BLOCKED")
+    .add[Int]("PERMISSIONS_SQL_CORRUPTED")
+    .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
+    .add[Int]("SLOW_SCRIPT_NOTICE_COUNT")
+    .build
+
   private val dimensionsSchema = new SchemaBuilder()
     .add[String]("channel")
     .add[String]("version")
@@ -66,54 +73,67 @@ object ErrorAggregator {
     .add[Int]("crashes")
     .build
 
+  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
+
   private val conf = new SparkConf().setMaster("local[*]").setAppName("StreamingAggregator")
 
-  private def parsePing(fields: Map[String, Any]): Option[(Row, Row)] = {
+  private def getCountHistogramValue(histogram: JValue): Int = {
     try {
-      implicit val formats = DefaultFormats
-
-      val environmentBuild = parse(fields.getOrElse("environment.build", "{}")
-        .asInstanceOf[String])
-        .extract[EnvironmentBuild]
-
-      val environmentSystem = parse(fields.getOrElse("environment.system", "{}")
-        .asInstanceOf[String])
-        .extract[EnvironmentSystem]
-
-      val payloadInfo = parse(fields.getOrElse("payload.info", "{}")
-        .asInstanceOf[String])
-        .extract[PayloadInfo]
-
-      val application = fields.get("appName").asInstanceOf[Option[String]]
-      val channel = fields.get("normalizedChannel").asInstanceOf[Option[String]]
-      val country = fields.get("geoCountry").asInstanceOf[Option[String]]
-      val docType = fields.get("docType").get.asInstanceOf[String]
-
-      val dimensions = new RowBuilder(dimensionsSchema)
-      dimensions("channel") = channel
-      dimensions("version") = environmentBuild.version
-      dimensions("build_id") = environmentBuild.buildId
-      dimensions("application") = application
-      dimensions("os_name") = environmentSystem.os.name
-      dimensions("os_version") = environmentSystem.os.version
-      dimensions("architecture") = environmentBuild.architecture
-      dimensions("country") = country
-
-      val metrics = new RowBuilder(metricsSchema)
-      if (docType == "main") {
-        assert(payloadInfo.subsessionLength.isDefined)
-        val sessionLength = payloadInfo.subsessionLength.get.toFloat
-        metrics("usageHours") = Some(Math.min(25, Math.max(0, sessionLength / 3600)))
-        metrics("count") = Some(1)
-      } else {
-        metrics("crashes") = Some(1)
+      histogram \ "values" \ "0" match {
+        case JInt(count) => count.toInt
+        case _ => 0
       }
+    } catch { case _: Throwable => 0 }
+  }
 
-      Some((dimensions.build, metrics.build))
-    } catch {
-      // TODO: count number of failures
-      case _: Throwable => None
+  private def parsePing(fields: Map[String, Any]): Option[(Row, Row)] = {
+    implicit val formats = DefaultFormats
+
+    val environmentBuild = parse(fields.getOrElse("environment.build", "{}")
+      .asInstanceOf[String])
+      .extract[EnvironmentBuild]
+
+    val environmentSystem = parse(fields.getOrElse("environment.system", "{}")
+      .asInstanceOf[String])
+      .extract[EnvironmentSystem]
+
+    val payloadInfo = parse(fields.getOrElse("payload.info", "{}")
+      .asInstanceOf[String])
+      .extract[PayloadInfo]
+
+    val keyedHistograms = parse(fields.getOrElse("payload.histograms", "{}")
+      .asInstanceOf[String]
+    )
+
+    val application = fields.get("appName").asInstanceOf[Option[String]]
+    val channel = fields.get("normalizedChannel").asInstanceOf[Option[String]]
+    val country = fields.get("geoCountry").asInstanceOf[Option[String]]
+    val docType = fields.get("docType").get.asInstanceOf[String]
+
+    val dimensions = new RowBuilder(dimensionsSchema)
+    dimensions("channel") = channel
+    dimensions("version") = environmentBuild.version
+    dimensions("build_id") = environmentBuild.buildId
+    dimensions("application") = application
+    dimensions("os_name") = environmentSystem.os.name
+    dimensions("os_version") = environmentSystem.os.version
+    dimensions("architecture") = environmentBuild.architecture
+    dimensions("country") = country
+
+    val stats = new RowBuilder(statsSchema)
+    if (docType == "main") {
+      assert(payloadInfo.subsessionLength.isDefined)
+      val sessionLength = payloadInfo.subsessionLength.get.toFloat
+      stats("usageHours") = Some(Math.min(25, Math.max(0, sessionLength / 3600)))
+      stats("count") = Some(1)
+      countHistogramErrorsSchema.fieldNames.foreach(key => {
+        stats(key) = Some(getCountHistogramValue(keyedHistograms \ key))
+      })
+    } else {
+      stats("crashes") = Some(1)
     }
+
+    Some((dimensions.build, stats.build))
   }
 
   private[streaming] def process(
@@ -135,10 +155,10 @@ object ErrorAggregator {
             case _: Throwable if !raiseOnError  => None
           }
         })
-        .reduceByKey((x, y) => RowBuilder.add(x, y, metricsSchema))
+        .reduceByKey((x, y) => RowBuilder.add(x, y, statsSchema))
         .map(RowBuilder.merge)
 
-      val mergedSchema = SchemaBuilder.merge(dimensionsSchema, metricsSchema)
+      val mergedSchema = SchemaBuilder.merge(dimensionsSchema, statsSchema)
       val spark = SparkSession.builder.config(rdd.sparkContext.getConf).getOrCreate()
       spark
         .createDataFrame(rows, mergedSchema)
