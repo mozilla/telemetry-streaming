@@ -1,4 +1,7 @@
-resolvers += "Conjars" at "http://conjars.org/repo"
+resolvers ++= Seq(
+  "Conjars" at "http://conjars.org/repo",
+  "Artima Maven Repository" at "http://repo.artima.com/releases"
+)
 
 name := "telemetry-streaming"
 
