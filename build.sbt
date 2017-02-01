@@ -11,19 +11,16 @@ organization := "com.mozilla"
 
 scalaVersion in ThisBuild := "2.11.8"
 
-val sparkVersion = "2.0.2"
+val sparkVersion = "2.1.0"
 
 lazy val root = (project in file(".")).
   settings(
-    libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.8",
     libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-    libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % s"${sparkVersion}_0.5.0",
-    libraryDependencies += "commons-io" % "commons-io" % "2.5",
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion,
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion,
     libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion,
-    libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion,
+    libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2"
   )
 
