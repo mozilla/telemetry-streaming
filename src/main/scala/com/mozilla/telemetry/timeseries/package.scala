@@ -1,6 +1,6 @@
 package com.mozilla.telemetry
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{StructField, _}
@@ -24,6 +24,8 @@ package object timeseries {
           fields += StructField (name, IntegerType, true)
         case t if t =:= typeOf[Timestamp] =>
           fields += StructField (name, TimestampType, true)
+        case t if t =:= typeOf[Date] =>
+          fields += StructField (name, DateType, true)
         case _ =>
           throw new Exception (s"Unsupported type for field $name")
       }
@@ -55,45 +57,6 @@ package object timeseries {
   }
 
   object RowBuilder {
-    def add(x: Row, y: Row, schema: StructType): Row = {
-    val result = ListBuffer[Any]()
-
-      for ((field, i) <- schema.fields.zipWithIndex) {
-        def fieldAdder[T]()(implicit num: Numeric[T]): T = {
-          if (x.isNullAt(i) && y.isNullAt(i)) {
-            null.asInstanceOf[T]
-          } else if (x.isNullAt(i)) {
-            y.getAs[T](i)
-          } else if (y.isNullAt(i)) {
-            x.getAs[T](i)
-          } else {
-            val a = x.getAs[T](i)
-            val b = y.getAs[T](i)
-            num.plus(a, b)
-          }
-        }
-
-        field.dataType match {
-          case FloatType =>
-            result += fieldAdder[Float]
-
-          case DoubleType =>
-            result += fieldAdder[Double]
-
-          case IntegerType =>
-            result += fieldAdder[Int]
-
-          case LongType =>
-            result += fieldAdder[Long]
-
-          case _ =>
-            throw new Exception(s"RowBuilder.add operation is not defined for field ${field.name}")
-        }
-      }
-
-      Row.fromSeq(result)
-    }
-
     def merge(x: (Row, Row)): Row = {
       Row.fromSeq(x._1.toSeq ++ x._2.toSeq)
     }
