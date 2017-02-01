@@ -3,10 +3,8 @@ package com.mozilla.telemetry.streaming
 import java.nio.file.{Files, Path}
 
 import com.google.protobuf.ByteString
-import com.holdenkarau.spark.testing.StreamingActionBase
 import com.mozilla.telemetry.heka.{Field, Message}
-import org.apache.commons.io.FileUtils
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.SparkSession
 import org.scalatest._
 
 case class Ping(docType: String,
@@ -15,39 +13,43 @@ case class Ping(docType: String,
                 geoCountry: String,
                 subsessionLength: Int)
 
-class TestAggregator extends FlatSpec with Matchers with StreamingActionBase with BeforeAndAfterAll{
+class TestAggregator extends FlatSpec with Matchers{
   private val path: Path = Files.createTempDirectory("telemetry-test")
 
-  def generateCrashPings(size: Int): Seq[(String, Message)] = {
+  def generateCrashPings(size: Int): Seq[Array[Byte]] = {
     1.to(size).map { _ =>
-      ("", Message(ByteString.EMPTY, 0, fields = List(
+      Message(ByteString.EMPTY, 0, fields = List(
         Field("docType", valueString = List("crash")),
         Field("normalizedChannel", valueString = List("release")),
         Field("appName", valueString = List("Firefox")),
         Field("geoCountry", valueString = List("IT"))
-      )))
+      )).toByteArray
     }
   }
 
-  def generateMainPings(size: Int): Seq[(String, Message)] = {
+  def generateMainPings(size: Int): Seq[Array[Byte]] = {
     1.to(size).map { _ =>
-      ("", Message(ByteString.EMPTY, 0, fields = List(
+      Message(ByteString.EMPTY, 0, fields = List(
         Field("docType", valueString = List("main")),
         Field("normalizedChannel", valueString = List("release")),
         Field("appName", valueString = List("Firefox")),
         Field("geoCountry", valueString = List("IT")),
         Field("payload.info", valueString = List("""{"subsessionLength": 3600}""")),
         Field("payload.histograms", valueString = List("""{"BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}}}"""))
-      )))
+      )).toByteArray
     }
   }
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
-    val messages = List(generateCrashPings(42) ++ generateMainPings(42))
-    runAction(messages, ErrorAggregator.process(path.toString, true))
+    val spark = SparkSession.builder()
+      .appName("Error Aggregates")
+      .master("local[1]")
+      .getOrCreate()
 
-    val sqlContext = new SQLContext(sc)
-    val df = sqlContext.read.parquet(path.toString)
+    import spark.implicits._
+
+    val messages = generateCrashPings(42) ++ generateMainPings(42)
+    val df = ErrorAggregator.aggregate(messages.toDF, raiseOnError = true, online = false)
 
     df.count() should be (1)
     df.select("channel").first()(0) should be ("release")
@@ -57,11 +59,7 @@ class TestAggregator extends FlatSpec with Matchers with StreamingActionBase wit
     df.select("count").first()(0) should be (42)
     df.select("usageHours").first()(0) should be (42.0)
     df.select("BROWSER_SHIM_USAGE_BLOCKED").first()(0) should be (42)
-    df.where("date is null").count() should be (0)
-    df.where("timestamp is null").count() should be (0)
-  }
-
-  override def afterAll(): Unit = {
-    FileUtils.deleteDirectory(path.toFile())
+    df.where("submission_date is null").count() should be (0)
+    df.where("window is null").count() should be (0)
   }
 }
