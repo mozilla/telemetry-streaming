@@ -39,3 +39,8 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeSca
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 parallelExecution in Test := false
+
+mergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
