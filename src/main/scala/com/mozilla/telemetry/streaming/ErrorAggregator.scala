@@ -196,6 +196,7 @@ object ErrorAggregator {
       .readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
+      .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("subscribe", "telemetry")
       .option("startingOffsets", "latest")
       .load()
