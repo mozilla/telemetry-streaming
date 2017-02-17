@@ -35,6 +35,9 @@ run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Comp
 // exclude Scala library from assembly
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
 
+// Don't run tests when assemblying the fat jar.
+test in assembly := {}
+
 // Default SBT settings suck
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
