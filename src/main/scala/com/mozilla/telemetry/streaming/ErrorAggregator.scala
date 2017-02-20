@@ -38,6 +38,9 @@ object ErrorAggregator {
     val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
       "raiseOnError",
       descr = "Whether to program should exit on a data processing error or not.")
+    val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
+      "failOnDataLoss",
+      descr = "Whether to fail the query when it’s possible that data is lost.")
     verify()
   }
 
@@ -196,6 +199,7 @@ object ErrorAggregator {
       .readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
+      .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", 1000)
       .option("subscribe", "telemetry")
