@@ -49,6 +49,7 @@ object ErrorAggregator {
     .add[Int]("PERMISSIONS_SQL_CORRUPTED")
     .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
     .add[Int]("SLOW_SCRIPT_NOTICE_COUNT")
+    .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
   private val dimensionsSchema = new SchemaBuilder()
