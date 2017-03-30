@@ -1,0 +1,16 @@
+#!/bin/bash
+
+git fetch
+git diff --quiet origin/master
+if [ $? == 1 ]; then
+  echo "Updating code..."
+  git pull
+  echo "Code updated."
+  echo "Killing outdated job..."
+  pkill -f erroraggregator
+  echo "Outdated job killed."
+  echo "The new job should be up in a few seconds"
+else
+  echo "Everything up-to-date"
+fi
+
