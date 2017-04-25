@@ -1,6 +1,7 @@
 resolvers ++= Seq(
   "Conjars" at "http://conjars.org/repo",
-  "Artima Maven Repository" at "http://repo.artima.com/releases"
+  "Artima Maven Repository" at "http://repo.artima.com/releases",
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 )
 
 name := "telemetry-streaming"
@@ -15,19 +16,15 @@ val sparkVersion = "2.1.0"
 
 lazy val root = (project in file(".")).
   settings(
-    libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf",
+    libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test",
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion,
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion,
     libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion,
     libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,
-    libraryDependencies += "org.rogach" %% "scallop" % "1.0.2"
+    libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
+    libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0"
   )
-
-// Compile proto files
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
-)
 
 // make run command include the provided dependencies
 run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run))
