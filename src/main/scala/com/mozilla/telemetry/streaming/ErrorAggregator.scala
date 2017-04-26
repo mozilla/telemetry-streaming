@@ -2,15 +2,17 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.{Date, Timestamp}
 
-import com.mozilla.telemetry.heka.Message
+import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{StructType, StructField, BinaryType}
+import org.apache.spark.sql.functions.{window, sum}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.ColumnName
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
+import org.joda.time.DateTime
 
 
 private case class EnvironmentBuild(version: Option[String],
@@ -25,11 +27,27 @@ private case class OS(name: Option[String],
 private case class PayloadInfo(subsessionLength: Option[Int])
 
 object ErrorAggregator {
+
+  private val allowedDocTypes = List("main", "crash")
+  private val outputPrefix = "error_aggregates/v1"
+
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
       "kafkaBroker",
-      descr = "From submission date",
-      required = true)
+      descr = "Kafka broker (streaming mode only)",
+      required = false)
+    val from: ScallopOption[String] = opt[String](
+      "from",
+      descr = "Start submission date (batch mode only). Format: YYYYMMDD",
+      required = false)
+    val to: ScallopOption[String] = opt[String](
+      "to",
+      descr = "End submission date (batch mode only). Default: yesterday. Format: YYYYMMDD",
+      required = false)
+    val fileLimit: ScallopOption[Int] = opt[Int](
+      "fileLimit",
+      descr = "Max number of files to retrieve (batch mode only). Default: All files",
+      required = false)
     val outputPath:ScallopOption[String] = opt[String](
       "outputPath",
       descr = "Output path",
@@ -41,6 +59,8 @@ object ErrorAggregator {
     val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
       "failOnDataLoss",
       descr = "Whether to fail the query when it’s possible that data is lost.")
+    requireOne(kafkaBroker, from)
+    conflicts(kafkaBroker, List(from, to, fileLimit))
     verify()
   }
 
@@ -132,7 +152,7 @@ object ErrorAggregator {
     val ping = message.fieldsAsMap
 
     val docType = ping.getOrElse("docType", "").asInstanceOf[String]
-    if (!List("main", "crash").contains(docType)) {
+    if (!allowedDocTypes.contains(docType)) {
       return Tuple1(null)
     }
 
@@ -186,17 +206,8 @@ object ErrorAggregator {
     Tuple1(RowBuilder.merge(dimensions.build, stats.build))
   }
 
-  def main(args: Array[String]): Unit = {
-    val opts = new Opts(args)
-    val outputPath = opts.outputPath()
-    val prefix = s"error_aggregates/v1"
-
-    val spark = SparkSession.builder()
-      .appName("Error Aggregates")
-      .master("local[*]")
-      .getOrCreate()
-
-    val rawPings = spark
+  def writeStreamingAggregates(spark: SparkSession, opts: Opts): Unit = {
+    val pings = spark
       .readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
@@ -207,13 +218,64 @@ object ErrorAggregator {
       .option("startingOffsets", "latest")
       .load()
 
-    aggregate(rawPings.select("value"), raiseOnError = opts.raiseOnError())
+    val outputPath = opts.outputPath()
+
+    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError())
       .writeStream
       .format("parquet")
-      .option("path", s"${outputPath}/${prefix}")
+      .option("path", s"${outputPath}/${outputPrefix}")
       .option("checkpointLocation", "/tmp/checkpoint")
       .partitionBy("submission_date")
       .start()
       .awaitTermination()
+  }
+
+  def writeBatchAggregates(spark: SparkSession, opts: Opts): Unit = {
+    val from = opts.from()
+    val to = opts.to.get match {
+      case Some(t) => t
+      case _ => DateTime.now.minusDays(1).toString("yyyyMMdd")
+    }
+
+    implicit val sc = spark.sparkContext
+    val pings = Dataset("telemetry")
+      .where("sourceName") {
+        case "telemetry" => true
+      }.where("sourceVersion") {
+        case "4" => true
+      }.where("docType") {
+        case docType if allowedDocTypes.contains(docType) => true
+      }.where("appName") {
+        case "Firefox" => true
+      }.where("submissionDate") {
+        case date if from <= date && date <= to => true
+      }.records(opts.fileLimit.get)
+      .map(m => Row(m.toByteArray))
+
+    val schema = StructType(List(
+        StructField("value", BinaryType, true)
+    ))
+
+    val pingsDataframe = spark.createDataFrame(pings, schema)
+    val outputPath = opts.outputPath()
+
+    aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false)
+      .write
+      .partitionBy("submission_date")
+      .parquet(s"${outputPath}/${outputPrefix}")
+  }
+
+  def main(args: Array[String]): Unit = {
+    val opts = new Opts(args)
+
+    val spark = SparkSession.builder()
+      .appName("Error Aggregates")
+      .master("local[*]")
+      .getOrCreate()
+
+    opts.kafkaBroker.get match {
+      case Some(broker) => writeStreamingAggregates(spark, opts)
+      case None => writeBatchAggregates(spark, opts)
+    }
   }
 }
