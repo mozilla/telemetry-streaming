@@ -28,7 +28,7 @@ lazy val root = (project in file(".")).
   )
 
 // make run command include the provided dependencies
-run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run))
+run in Compile := Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)).inputTaskValue
 
 // exclude Scala library from assembly
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
@@ -41,7 +41,32 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 
 parallelExecution in Test := false
 
-mergeStrategy in assembly := {
+assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first
 }
+
+// Settings for RPM package generation
+enablePlugins(JavaServerAppPackaging, RpmPlugin)
+rpmRelease := "1"
+rpmVendor := "mozilla"
+version in Rpm := version.value.stripSuffix("-SNAPSHOT")
+rpmUrl := Some("https://github.com/mozilla/telemetry-streaming")
+rpmLicense := Some("MPLv2")
+// autoServiceStart in Rpm := false
+
+// removes all jar mappings in universal and appends the fat jar
+mappings in Universal := {
+  // universalMappings: Seq[(File,String)]
+  val universalMappings = (mappings in Universal).value
+  val fatJar = (assembly in Compile).value
+  // removing means filtering
+  val filtered = universalMappings filter {
+    case (file, name) =>  ! name.endsWith(".jar")
+  }
+  // add the fat jar
+  filtered :+ (fatJar -> ("lib/" + fatJar.getName))
+}
+
+// the bash script classpath only needs the fat jar
+scriptClasspath := Seq((assemblyJarName in assembly).value)
