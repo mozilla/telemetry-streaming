@@ -3,26 +3,128 @@ package com.mozilla.telemetry.streaming
 import java.sql.{Date, Timestamp}
 
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.ColumnName
-import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
+import com.mozilla.telemetry.pings.{CrashPing, MainPing}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.functions.window
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 
-private case class EnvironmentBuild(version: Option[String],
-                            buildId: Option[String],
-                            architecture: Option[String])
+case class AggregateDimensions(
+                                submission_date: Date,
+                                channel: String,
+                                version: Double,
+                                build_id: String,
+                                application: String,
+                                os_name: String,
+                                os_version: String,
+                                architecture: String,
+                                country: String
+                              )
 
-private case class EnvironmentSystem(os: OS)
+case class CrashStats(main_crashes: Long=0){
 
-private case class OS(name: Option[String],
-              version: Option[String])
+  def +(that: CrashStats): CrashStats =
+    new CrashStats(this.main_crashes + that.main_crashes)
+}
 
-private case class PayloadInfo(subsessionLength: Option[Int])
+case class ErrorStats(
+                       browser_shim_usage_blocked: Long=0,
+                       permissions_sql_corrupted: Long=0,
+                       defective_permissions_sql_removed: Long=0,
+                       slow_script_notice_count: Long=0,
+                       slow_script_page_count :Long=0
+                     ){
+  def this(ping: MainPing) = this(
+    ping.getCountHistogramValue("browser_shim_usage_blocked"),
+    ping.getCountHistogramValue("permissions_sql_corrupted"),
+    ping.getCountHistogramValue("defective_permissions_sql_removed"),
+    ping.getCountHistogramValue("slow_script_notice_count"),
+    ping.getCountHistogramValue("slow_script_page_count")
+  )
+
+  def +(that: ErrorStats): ErrorStats =
+    new ErrorStats(
+      this.browser_shim_usage_blocked + that.browser_shim_usage_blocked,
+      this.permissions_sql_corrupted + that.permissions_sql_corrupted,
+      this.defective_permissions_sql_removed + that.defective_permissions_sql_removed,
+      this.slow_script_notice_count + that.slow_script_notice_count,
+      this.slow_script_page_count + that.slow_script_page_count
+    )
+}
+
+case class PingAggregate(
+                          dimensions: AggregateDimensions,
+                          crashes: CrashStats,
+                          errors: ErrorStats,
+                          usage_hours: Float = 0,
+                          size: Long = 1,
+                          timestamp: Timestamp,
+                          window_start: Timestamp,
+                          window_end: Timestamp
+                        ){
+  def this(ping: CrashPing) = this(
+    AggregateDimensions(
+      new Date(ping.meta.Timestamp / 1000000),
+      ping.meta.normalizedChannel,
+      ping.meta.appVersion,
+      ping.meta.appBuildId,
+      ping.meta.appName,
+      ping.meta.os,
+      ping.meta.`environment.system`.os.version,
+      ping.application.architecture,
+      ping.meta.geoCountry
+    ),
+    new CrashStats(1),
+    new ErrorStats(),
+    timestamp = ping.timestamp,
+    window_start = ping.timestamp,
+    window_end = ping.timestamp
+
+  )
+
+  def this(ping: MainPing) = this(
+    AggregateDimensions(
+      new Date(ping.meta.Timestamp / 1000000),
+      ping.meta.normalizedChannel,
+      ping.meta.appVersion,
+      ping.meta.appBuildId,
+      ping.meta.appName,
+      ping.meta.os,
+      ping.meta.`environment.system`.os.version,
+      ping.application.architecture,
+      ping.meta.geoCountry
+    ),
+    new CrashStats(),
+    new ErrorStats(ping),
+    ping.usageHours,
+    timestamp = ping.timestamp,
+    window_start = ping.timestamp,
+    window_end = ping.timestamp
+  )
+
+  def +(that: PingAggregate): PingAggregate = {
+    // When summing pings, they should always belong to the same window
+    assert(
+      this.dimensions == that.dimensions &&
+      this.window_start == that.window_start &&
+      this.window_end == that.window_end
+    )
+    new PingAggregate(
+      this.dimensions,
+      this.crashes + that.crashes,
+      this.errors + that.errors,
+      this.usage_hours + that.usage_hours,
+      this.size + that.size,
+      // if an aggregate represents more than a ping,
+      // timestamp = window_start for consistency
+      this.window_start,
+      this.window_start,
+      this.window_end
+    )
+  }
+}
 
 object ErrorAggregator {
   private class Opts(args: Array[String]) extends ScallopConf(args) {
@@ -44,146 +146,90 @@ object ErrorAggregator {
     verify()
   }
 
-  private val countHistogramErrorsSchema = new SchemaBuilder()
-    .add[Int]("BROWSER_SHIM_USAGE_BLOCKED")
-    .add[Int]("PERMISSIONS_SQL_CORRUPTED")
-    .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
-    .add[Int]("SLOW_SCRIPT_NOTICE_COUNT")
-    .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
-    .build
+  def messageToCrashPing(message: Message): CrashPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[CrashPing]
+  }
 
-  private val dimensionsSchema = new SchemaBuilder()
-    .add[Timestamp]("timestamp")  // Windowed
-    .add[Date]("submission_date")
-    .add[String]("channel")
-    .add[String]("version")
-    .add[String]("build_id")
-    .add[String]("application")
-    .add[String]("os_name")
-    .add[String]("os_version")
-    .add[String]("architecture")
-    .add[String]("country")
-    .build
+  def messageToMainPing(message: Message): MainPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons",
+      "payload.simpleMeasurements",
+      "payload.keyedHistograms",
+      "payload.histograms",
+      "payload.info"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[MainPing]
+  }
 
-  private val metricsSchema = new SchemaBuilder()
-    .add[Float]("usageHours")
-    .add[Int]("count")
-    .add[Int]("crashes")
-    .build
-
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
-
-  private def getCountHistogramValue(histogram: JValue): Int = {
-    try {
-      histogram \ "values" \ "0" match {
-        case JInt(count) => count.toInt
-        case _ => 0
-      }
-    } catch { case _: Throwable => 0 }
+  def messageToPing(message:Message, jsonFieldNames: List[String]): JValue = {
+    implicit val formats = DefaultFormats
+    val fields = message.fieldsAsMap
+    val jsonObj = Extraction.decompose(fields)
+    // Transform json fields into JValues
+    val meta = jsonObj transformField {
+      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
+    }
+    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
+    submission match {
+      case Some(value: String) => parse(value) ++ JObject(List(JField("meta", meta)))
+      case _ => JObject()
+    }
   }
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
-
-    // A custom row encoder is needed to use Rows within a Spark Dataset
-    val mergedSchema = SchemaBuilder.merge(dimensionsSchema, statsSchema)
-    implicit val rowEncoder = RowEncoder(mergedSchema).resolveAndBind()
-    implicit val optEncoder = ExpressionEncoder.tuple(rowEncoder)
-
     var parsedPings = pings
-      .map { case v =>
+      .flatMap { case v =>
         try {
-          parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]))
+          val message = Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]])
+          message.fieldsAsMap.get("docType") match {
+            case Some("main") => Some(new PingAggregate(messageToMainPing(message)))
+            case Some("crash") => {
+             val ping = messageToCrashPing(message)
+              // Non-main crashes are reported both in main pings and in crash pings.
+              // To keep compatibility with old clients discard non-main crash pings
+              if(ping.isMain) Some(new PingAggregate(ping)) else None
+            }
+            case _ => None
+          }
         } catch {
-          case _: Throwable if !raiseOnError => Tuple1(null)
+          case _: Throwable if !raiseOnError => None
         }
       }
-      .filter(_._1 != null)
-      .map(_._1)
 
-    val dimensions = List(window($"timestamp", "5 minute")) ++ dimensionsSchema.fieldNames
-      .filter(_ != "timestamp")
-      .map(new ColumnName(_))
-
-    val stats = for {
-      fieldName <- statsSchema.fieldNames
-      normFieldName = fieldName.toLowerCase
-    } yield {
-      sum(normFieldName).alias(normFieldName)
-    }
+    // Transform timestamp into a windowed time
+    parsedPings = parsedPings.toDF()
+      .withColumn("window", window($"timestamp", "5 minute"))
+      .withColumn("window_start", new Column("window.start"))
+      .withColumn("window_end", new Column("window.end"))
+      .drop("window")
+      .as[PingAggregate]
 
     if (online) {
       parsedPings = parsedPings.withWatermark("timestamp", "1 minute")
     }
-
-    parsedPings
-      .groupBy(dimensions:_*)
-      .agg(stats(0), stats.drop(1):_*)
+    parsedPings.groupByKey(p => {
+      p.dimensions.productIterator.mkString("-")+s"${p.window_start}-${p.window_end}"
+    })
+      .reduceGroups(_+_)
+      .map(_._2)
       .coalesce(1)
-  }
-
-  /*
-   We can't use an Option[Row] because entire rows cannot be null in Spark SQL. The best we can do is to resort to Tuple1[Row].
-   See https://github.com/apache/spark/blob/38b9e69623c14a675b14639e8291f5d29d2a0bc3/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/encoders/ExpressionEncoder.scala#L53
-   */
-  def parsePing(message: Message): Tuple1[Row] = {
-    implicit val formats = DefaultFormats
-
-    val ping = message.fieldsAsMap
-
-    val docType = ping.getOrElse("docType", "").asInstanceOf[String]
-    if (!List("main", "crash").contains(docType)) {
-      return Tuple1(null)
-    }
-
-    val environmentBuild = parse(ping.getOrElse("environment.build", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentBuild]
-
-    val environmentSystem = parse(ping.getOrElse("environment.system", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentSystem]
-
-    val payloadInfo = parse(ping.getOrElse("payload.info", "{}")
-      .asInstanceOf[String])
-      .extract[PayloadInfo]
-
-    val keyedHistograms = parse(ping.getOrElse("payload.histograms", "{}")
-      .asInstanceOf[String]
-    )
-
-    val application = ping.get("appName").asInstanceOf[Option[String]]
-    val channel = ping.get("normalizedChannel").asInstanceOf[Option[String]]
-    val country = ping.get("geoCountry").asInstanceOf[Option[String]]
-
-    val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(new Timestamp(message.timestamp / 1000000))
-    dimensions("submission_date") = Some(new Date(message.timestamp / 1000000))
-    dimensions("channel") = channel
-    dimensions("version") = environmentBuild.version
-    dimensions("build_id") = environmentBuild.buildId
-    dimensions("application") = application
-    dimensions("os_name") = environmentSystem.os.name
-    dimensions("os_version") = environmentSystem.os.version
-    dimensions("architecture") = environmentBuild.architecture
-    dimensions("country") = country
-
-    val stats = new RowBuilder(statsSchema)
-    if (docType == "main") {
-      assert(payloadInfo.subsessionLength.isDefined)
-
-      val sessionLength = payloadInfo.subsessionLength.get.toFloat
-      stats("usageHours") = Some(Math.min(25, Math.max(0, sessionLength / 3600)))
-      stats("count") = Some(1)
-
-      countHistogramErrorsSchema.fieldNames.foreach(key => {
-        stats(key) = Some(getCountHistogramValue(keyedHistograms \ key))
-      })
-    } else {
-      stats("crashes") = Some(1)
-    }
-
-    Tuple1(RowBuilder.merge(dimensions.build, stats.build))
+      .select("dimensions.*", "crashes.*", "errors.*", "usage_hours", "size", "window_start", "window_end")
   }
 
   def main(args: Array[String]): Unit = {
