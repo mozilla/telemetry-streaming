@@ -2,7 +2,9 @@ package com.mozilla.telemetry
 
 import java.sql.Timestamp
 
+import com.mozilla.telemetry.heka.Message
 import org.json4s._
+import org.json4s.jackson.JsonMethods.parse
 
 package object pings {
   case class Application(
@@ -139,7 +141,7 @@ package object pings {
 
     def getCountKeyedHistogramValue(histogram_name: String, key: String): Int = {
       try {
-        this.meta.`payload.histograms` \ histogram_name \ key \ "values" \ "0" match {
+        this.meta.`payload.keyedHistograms` \ histogram_name \ key \ "values" \ "0" match {
           case JInt(count) => count.toInt
           case _ => 0
         }
@@ -147,13 +149,13 @@ package object pings {
     }
 
 
-    def usageHours(): Option[Float] = {
+    def usageHours(): Float = {
       try {
         this.meta.`payload.info` \ "subsessionLength" match {
-          case JInt(length) => Some(Math.min(25, Math.max(0, length.toFloat / 3600)))
-          case _ => None
+          case JInt(length) => Math.min(25, Math.max(0, length.toFloat / 3600))
+          case _ => 0
         }
-      } catch { case _: Throwable => None }
+      } catch { case _: Throwable => 0 }
     }
 
     def timestamp(): Timestamp = {
@@ -174,5 +176,50 @@ package object pings {
   case class OS(
                  name: Option[String],
                  version: Option[String])
+
+  def messageToCrashPing(message: Message): CrashPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[CrashPing]
+  }
+
+  def messageToMainPing(message: Message): MainPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons",
+      "payload.simpleMeasurements",
+      "payload.keyedHistograms",
+      "payload.histograms",
+      "payload.info"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[MainPing]
+  }
+
+  def messageToPing(message:Message, jsonFieldNames: List[String]): JValue = {
+    implicit val formats = DefaultFormats
+    val fields = message.fieldsAsMap ++ Map("Timestamp" -> message.timestamp)
+    val jsonObj = Extraction.decompose(fields)
+    // Transform json fields into JValues
+    val meta = jsonObj transformField {
+      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
+    }
+    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
+    submission match {
+      case Some(value: String) => parse(value) ++ JObject(List(JField("meta", meta)))
+      case _ => JObject()
+    }
+  }
 
 }
