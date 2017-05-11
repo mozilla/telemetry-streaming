@@ -3,7 +3,7 @@ package com.mozilla.telemetry.streaming
 import java.sql.{Date, Timestamp}
 
 import com.mozilla.telemetry.heka.{Dataset, Message}
-import com.mozilla.telemetry.pings.{CrashPing, MainPing, Meta}
+import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.functions.{sum, window}
@@ -11,7 +11,6 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.ColumnName
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
-import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
@@ -79,54 +78,14 @@ object ErrorAggregator {
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("main_crashes")
+    .add[Int]("content_crashes")
+    .add[Int]("gpu_crashes")
+    .add[Int]("plugin_crashes")
+    .add[Int]("gmplugin_crashes")
+    .add[Int]("content_shutdown_crashes")
     .build
 
   private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
-
-  def messageToCrashPing(message: Message): CrashPing = {
-    implicit val formats = DefaultFormats
-    val jsonFieldNames = List(
-      "environment.build",
-      "environment.settings",
-      "environment.system",
-      "environment.profile",
-      "environment.addons"
-    )
-    val ping = messageToPing(message, jsonFieldNames)
-    ping.extract[CrashPing]
-  }
-
-  def messageToMainPing(message: Message): MainPing = {
-    implicit val formats = DefaultFormats
-    val jsonFieldNames = List(
-      "environment.build",
-      "environment.settings",
-      "environment.system",
-      "environment.profile",
-      "environment.addons",
-      "payload.simpleMeasurements",
-      "payload.keyedHistograms",
-      "payload.histograms",
-      "payload.info"
-    )
-    val ping = messageToPing(message, jsonFieldNames)
-    ping.extract[MainPing]
-  }
-
-  def messageToPing(message:Message, jsonFieldNames: List[String]): JValue = {
-    implicit val formats = DefaultFormats
-    val fields = message.fieldsAsMap
-    val jsonObj = Extraction.decompose(fields)
-    // Transform json fields into JValues
-    val meta = jsonObj transformField {
-      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
-    }
-    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
-    submission match {
-      case Some(value: String) => parse(value) ++ JObject(List(JField("meta", meta)))
-      case _ => JObject()
-    }
-  }
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -196,15 +155,21 @@ object ErrorAggregator {
   private def parseMainPing(ping: MainPing): Tuple1[Row] = {
     // If a main ping has no usage hours discard it.
     val usageHours = ping.usageHours()
-    if (usageHours.isEmpty) return Tuple1(null)
+    if (usageHours == 0) return Tuple1(null)
 
     val dimensions = buildDimensions(ping.meta)
     val stats = new RowBuilder(statsSchema)
     stats("count") = Some(1)
-    stats("usage_hours") = usageHours
+    stats("usage_hours") = Some(usageHours)
     countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
       stats(stats_name) = Some(ping.getCountHistogramValue(stats_name))
     })
+    stats("content_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content"))
+    stats("gpu_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu"))
+    stats("plugin_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin"))
+    stats("gmplugin_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin"))
+    stats("content_shutdown_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill"))
+
     Tuple1(RowBuilder.merge(dimensions, stats.build))
   }
   /*
