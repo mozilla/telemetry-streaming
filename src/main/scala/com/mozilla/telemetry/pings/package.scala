@@ -2,6 +2,7 @@ package com.mozilla.telemetry
 
 import java.sql.Timestamp
 
+import org.json4s._
 
 package object pings {
   case class Application(
@@ -67,7 +68,7 @@ package object pings {
                    appName: String,
                    appUpdateChannel: Option[String],
                    appVendor: Option[String],
-                   appVersion: Double,
+                   appVersion: String,
                    clientId: Option[String],
                    creationTimestamp: Option[Float],
                    docType: Option[String],
@@ -82,16 +83,16 @@ package object pings {
                    submissionDate: String,
                    telemetryEnabled: Option[Boolean],
                    // Common fields preparsed by hindsight
-                   `environment.build`: Option[Build],
+                   `environment.build`: Option[EnvironmentBuild],
                    `environment.settings`: Option[Settings],
-                   `environment.system`: System,
+                   `environment.system`: Option[System],
                    `environment.profile`: Option[Profile],
-                   `environment.addons`: Option[Addons],
+                   //`environment.addons`: Option[Addons],
                    // Main ping fields preparsed by hindsight
-                   `payload.simpleMeasurements`: Option[Map[String, Any]],
-                   `payload.keyedHistograms`: Option[Map[String, Any]],
-                   `payload.histograms`: Option[Map[String, Any]],
-                   `payload.info`: Option[PayloadInfo]
+                   `payload.simpleMeasurements`: JValue,
+                   `payload.keyedHistograms`: JValue,
+                   `payload.histograms`: JValue,
+                   `payload.info`: JValue
                  )
 
   case class CrashPayload(
@@ -109,6 +110,7 @@ package object pings {
                         // Environment is omitted it's partially available under meta
                         meta: Meta
                       ){
+
     def isMain(): Boolean = {
       payload.processType.getOrElse("main") == "main"
     }
@@ -126,34 +128,34 @@ package object pings {
                        // Environment omitted because it's mostly available under meta
                        meta: Meta
                      ){
-    def getCountHistogramValue(histogramName: String): Long ={
-      type StringMap = Map[String, Any]
-      this.meta.`payload.histograms` match {
-        case Some(payloadHistogram: StringMap) =>
-          payloadHistogram.get(histogramName.toUpperCase) match {
-            case Some(histogram: StringMap) => histogram.get("values") match {
-              case Some(bucket: StringMap) => {
-                bucket.get("0") match {
-                  case Some(count: BigInt) => count.toLong
-                  case _ => 0
-                }
-              }
-              case _ => 0
-            }
-            case _ => 0
-          }
-        case _ => 0
-      }
-    }
-    def usageHours(): Float = {
-      this.meta.`payload.info` match {
-        case Some(payloadInfo: PayloadInfo)=> {
-          val sessionLength = payloadInfo.subsessionLength.get.toFloat
-          Math.min(25, Math.max(0, sessionLength / 3600))
+    def getCountHistogramValue(histogram_name: String): Int = {
+      try {
+        this.meta.`payload.histograms` \ histogram_name \ "values" \ "0" match {
+          case JInt(count) => count.toInt
+          case _ => 0
         }
-        case _ => 0
-      }
+      } catch { case _: Throwable => 0 }
     }
+
+    def getCountKeyedHistogramValue(histogram_name: String, key: String): Int = {
+      try {
+        this.meta.`payload.histograms` \ histogram_name \ key \ "values" \ "0" match {
+          case JInt(count) => count.toInt
+          case _ => 0
+        }
+      } catch { case _: Throwable => 0 }
+    }
+
+
+    def usageHours(): Option[Float] = {
+      try {
+        this.meta.`payload.info` \ "subsessionLength" match {
+          case JInt(length) => Some(Math.min(25, Math.max(0, length.toFloat / 3600)))
+          case _ => None
+        }
+      } catch { case _: Throwable => None }
+    }
+
     def timestamp(): Timestamp = {
       new Timestamp(this.meta.Timestamp / 1000000)
     }
