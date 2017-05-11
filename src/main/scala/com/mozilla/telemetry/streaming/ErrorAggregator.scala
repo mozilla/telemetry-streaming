@@ -3,9 +3,10 @@ package com.mozilla.telemetry.streaming
 import java.sql.{Date, Timestamp}
 
 import com.mozilla.telemetry.heka.{Dataset, Message}
+import com.mozilla.telemetry.pings.{CrashPing, MainPing, Meta}
 import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.types.{StructType, StructField, BinaryType}
-import org.apache.spark.sql.functions.{window, sum}
+import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.apache.spark.sql.functions.{sum, window}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.ColumnName
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
@@ -14,17 +15,6 @@ import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
-
-private case class EnvironmentBuild(version: Option[String],
-                            buildId: Option[String],
-                            architecture: Option[String])
-
-private case class EnvironmentSystem(os: OS)
-
-private case class OS(name: Option[String],
-              version: Option[String])
-
-private case class PayloadInfo(subsessionLength: Option[Int])
 
 object ErrorAggregator {
 
@@ -86,20 +76,56 @@ object ErrorAggregator {
     .build
 
   private val metricsSchema = new SchemaBuilder()
-    .add[Float]("usageHours")
+    .add[Float]("usage_hours")
     .add[Int]("count")
-    .add[Int]("crashes")
+    .add[Int]("main_crashes")
     .build
 
   private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
 
-  private def getCountHistogramValue(histogram: JValue): Int = {
-    try {
-      histogram \ "values" \ "0" match {
-        case JInt(count) => count.toInt
-        case _ => 0
-      }
-    } catch { case _: Throwable => 0 }
+  def messageToCrashPing(message: Message): CrashPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[CrashPing]
+  }
+
+  def messageToMainPing(message: Message): MainPing = {
+    implicit val formats = DefaultFormats
+    val jsonFieldNames = List(
+      "environment.build",
+      "environment.settings",
+      "environment.system",
+      "environment.profile",
+      "environment.addons",
+      "payload.simpleMeasurements",
+      "payload.keyedHistograms",
+      "payload.histograms",
+      "payload.info"
+    )
+    val ping = messageToPing(message, jsonFieldNames)
+    ping.extract[MainPing]
+  }
+
+  def messageToPing(message:Message, jsonFieldNames: List[String]): JValue = {
+    implicit val formats = DefaultFormats
+    val fields = message.fieldsAsMap
+    val jsonObj = Extraction.decompose(fields)
+    // Transform json fields into JValues
+    val meta = jsonObj transformField {
+      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
+    }
+    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
+    submission match {
+      case Some(value: String) => parse(value) ++ JObject(List(JField("meta", meta)))
+      case _ => JObject()
+    }
   }
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
@@ -141,7 +167,46 @@ object ErrorAggregator {
       .agg(stats(0), stats.drop(1):_*)
       .coalesce(1)
   }
+  private def buildDimensions(meta: Meta): Row = {
+    val dimensions = new RowBuilder(dimensionsSchema)
+    dimensions("timestamp") = Some(new Timestamp(meta.Timestamp / 1000000))
+    dimensions("submission_date") = Some(new Date(meta.Timestamp / 1000000))
+    dimensions("channel") = Some(meta.normalizedChannel)
+    dimensions("version") = meta.`environment.build`.flatMap(_.version)
+    dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)
+    dimensions("application") = Some(meta.appName)
+    dimensions("os_name") = meta.`environment.system`.map(_.os.name)
+    dimensions("os_version") = meta.`environment.system`.map(_.os.version)
+    dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
+    dimensions("country") = Some(meta.geoCountry)
+    dimensions.build
+  }
 
+  private def parseCrashPing(ping: CrashPing): Tuple1[Row] = {
+    // Non-main crashes are already retrieved from main pings
+    if(!ping.isMain()) return Tuple1(null)
+
+    val dimensions = buildDimensions(ping.meta)
+    val stats = new RowBuilder(statsSchema)
+    stats("count") = Some(1)
+    stats("main_crashes") = Some(1)
+    Tuple1(RowBuilder.merge(dimensions, stats.build))
+  }
+
+  private def parseMainPing(ping: MainPing): Tuple1[Row] = {
+    // If a main ping has no usage hours discard it.
+    val usageHours = ping.usageHours()
+    if (usageHours.isEmpty) return Tuple1(null)
+
+    val dimensions = buildDimensions(ping.meta)
+    val stats = new RowBuilder(statsSchema)
+    stats("count") = Some(1)
+    stats("usage_hours") = usageHours
+    countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
+      stats(stats_name) = Some(ping.getCountHistogramValue(stats_name))
+    })
+    Tuple1(RowBuilder.merge(dimensions, stats.build))
+  }
   /*
    We can't use an Option[Row] because entire rows cannot be null in Spark SQL. The best we can do is to resort to Tuple1[Row].
    See https://github.com/apache/spark/blob/38b9e69623c14a675b14639e8291f5d29d2a0bc3/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/encoders/ExpressionEncoder.scala#L53
@@ -149,61 +214,16 @@ object ErrorAggregator {
   def parsePing(message: Message): Tuple1[Row] = {
     implicit val formats = DefaultFormats
 
-    val ping = message.fieldsAsMap
-
-    val docType = ping.getOrElse("docType", "").asInstanceOf[String]
+    val fields = message.fieldsAsMap
+    val docType = fields.getOrElse("docType", "").asInstanceOf[String]
     if (!allowedDocTypes.contains(docType)) {
       return Tuple1(null)
     }
-
-    val environmentBuild = parse(ping.getOrElse("environment.build", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentBuild]
-
-    val environmentSystem = parse(ping.getOrElse("environment.system", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentSystem]
-
-    val payloadInfo = parse(ping.getOrElse("payload.info", "{}")
-      .asInstanceOf[String])
-      .extract[PayloadInfo]
-
-    val keyedHistograms = parse(ping.getOrElse("payload.histograms", "{}")
-      .asInstanceOf[String]
-    )
-
-    val application = ping.get("appName").asInstanceOf[Option[String]]
-    val channel = ping.get("normalizedChannel").asInstanceOf[Option[String]]
-    val country = ping.get("geoCountry").asInstanceOf[Option[String]]
-
-    val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(new Timestamp(message.timestamp / 1000000))
-    dimensions("submission_date") = Some(new Date(message.timestamp / 1000000))
-    dimensions("channel") = channel
-    dimensions("version") = environmentBuild.version
-    dimensions("build_id") = environmentBuild.buildId
-    dimensions("application") = application
-    dimensions("os_name") = environmentSystem.os.name
-    dimensions("os_version") = environmentSystem.os.version
-    dimensions("architecture") = environmentBuild.architecture
-    dimensions("country") = country
-
-    val stats = new RowBuilder(statsSchema)
-    if (docType == "main") {
-      assert(payloadInfo.subsessionLength.isDefined)
-
-      val sessionLength = payloadInfo.subsessionLength.get.toFloat
-      stats("usageHours") = Some(Math.min(25, Math.max(0, sessionLength / 3600)))
-      stats("count") = Some(1)
-
-      countHistogramErrorsSchema.fieldNames.foreach(key => {
-        stats(key) = Some(getCountHistogramValue(keyedHistograms \ key))
-      })
+    if(docType == "crash") {
+      parseCrashPing(messageToCrashPing(message))
     } else {
-      stats("crashes") = Some(1)
+      parseMainPing(messageToMainPing(message))
     }
-
-    Tuple1(RowBuilder.merge(dimensions.build, stats.build))
   }
 
   def writeStreamingAggregates(spark: SparkSession, opts: Opts): Unit = {
