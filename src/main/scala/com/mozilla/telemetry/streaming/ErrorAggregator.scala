@@ -144,7 +144,7 @@ object ErrorAggregator {
   class ParsableCrashPing(ping: CrashPing) {
     def parse(): Tuple1[Row] = {
       // Non-main crashes are already retrieved from main pings
-      if(!ping.isMain()) return Tuple1(null)
+      if(!ping.isMainCrash()) return Tuple1(null)
 
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
