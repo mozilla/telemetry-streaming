@@ -14,6 +14,8 @@ package object timeseries {
       typeOf[T] match {
         case t if t =:= typeOf[String] =>
           fields += StructField (name, StringType, true)
+        case t if t =:= typeOf[Boolean] =>
+          fields += StructField (name, BooleanType, true)
         case t if t =:= typeOf[Float] =>
           fields += StructField (name, FloatType, true)
         case t if t =:= typeOf[Double] =>

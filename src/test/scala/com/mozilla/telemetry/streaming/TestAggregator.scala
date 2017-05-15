@@ -35,8 +35,11 @@ class TestAggregator extends FlatSpec with Matchers{
     df.select("count").first()(0) should be (84)
     df.select("usage_hours").first()(0) should be (42.0)
     df.select("browser_shim_usage_blocked").first()(0) should be (42)
+    df.select("experiment_id").first()(0) should be ("experiment1")
+    df.select("experiment_branch").first()(0) should be ("control")
+    df.select("e10s_enabled").first()(0) should equal (true)
+    df.select("e10s_cohort").first()(0) should be ("test")
+    df.select("gfx_compositor").first()(0) should be ("opengl")
     df.where("window is null").count() should be (0)
   }
-
-
 }
