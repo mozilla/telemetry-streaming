@@ -72,6 +72,11 @@ object ErrorAggregator {
     .add[String]("os_version")
     .add[String]("architecture")
     .add[String]("country")
+    .add[String]("experiment_id")
+    .add[String]("experiment_branch")
+    .add[Boolean]("e10s_enabled")
+    .add[String]("e10s_cohort")
+    .add[String]("gfx_compositor")
     .build
 
   private val metricsSchema = new SchemaBuilder()
@@ -138,6 +143,22 @@ object ErrorAggregator {
     dimensions("os_version") = meta.`environment.system`.map(_.os.version)
     dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
     dimensions("country") = Some(meta.geoCountry)
+    dimensions("experiment_id") = for {
+      addons <- meta.`environment.addons`
+      experiment <- addons.activeExperiment
+    } yield experiment.id
+    dimensions("experiment_branch") = for {
+      addons <- meta.`environment.addons`
+      experiment <- addons.activeExperiment
+    } yield experiment.branch
+    dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
+    dimensions("e10s_cohort") = meta.`environment.settings`.flatMap(_.e10sCohort)
+    dimensions("gfx_compositor") = for {
+      system <- meta.`environment.system`
+      gfx <- system.gfx
+      features <- gfx.features
+      compositor <- features.compositor
+    } yield compositor
     dimensions.build
   }
 

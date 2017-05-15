@@ -51,8 +51,8 @@ package object pings {
                        isDefaultBrowser: Option[Boolean],
                        e10sEnabled: Option[Boolean],
                        e10sCohort: Option[String],
-                       locale: String,
-                       telemetryEnabled: Boolean
+                       locale: Option[String],
+                       telemetryEnabled: Option[Boolean]
                      )
 
   case class Profile(
@@ -89,7 +89,7 @@ package object pings {
                    `environment.settings`: Option[Settings],
                    `environment.system`: Option[System],
                    `environment.profile`: Option[Profile],
-                   //`environment.addons`: Option[Addons],
+                   `environment.addons`: Option[Addons],
                    // Main ping fields preparsed by hindsight
                    `payload.simpleMeasurements`: JValue,
                    `payload.keyedHistograms`: JValue,
