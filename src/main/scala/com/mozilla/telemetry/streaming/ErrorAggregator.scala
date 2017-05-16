@@ -182,21 +182,21 @@ object ErrorAggregator {
   class ParsableMainPing(ping: MainPing) {
     def parse(): Tuple1[Row] = {
       // If a main ping has no usage hours discard it.
-      val usageHours = ping.usageHours()
-      if (usageHours == 0) return Tuple1(null)
+      val usageHours = ping.usageHours
+      if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
-      stats("usage_hours") = Some(usageHours)
+      stats("usage_hours") = usageHours
       countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
-        stats(stats_name) = Some(ping.getCountHistogramValue(stats_name))
+        stats(stats_name) = ping.getCountHistogramValue(stats_name)
       })
-      stats("content_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content"))
-      stats("gpu_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu"))
-      stats("plugin_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin"))
-      stats("gmplugin_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin"))
-      stats("content_shutdown_crashes") = Some(ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill"))
+      stats("content_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content")
+      stats("gpu_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu")
+      stats("plugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin")
+      stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
+      stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
 
       Tuple1(RowBuilder.merge(dimensions, stats.build))
     }
