@@ -163,7 +163,7 @@ object ErrorAggregator {
     dimensions.build
   }
 
-  class ParsableCrashPing(ping: CrashPing) {
+  class ErrorAggregatorCrashPing(ping: CrashPing) {
     def parse(): Array[Row] = {
       // Non-main crashes are already retrieved from main pings
       if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
@@ -174,9 +174,9 @@ object ErrorAggregator {
       Array(RowBuilder.merge(dimensions, stats.build))
     }
   }
-  implicit def ParsableCrashPingToCrashPing(ping: CrashPing) = new ParsableCrashPing(ping)
+  implicit def errorAggregatorCrashPing(ping: CrashPing): ErrorAggregatorCrashPing = new ErrorAggregatorCrashPing(ping)
 
-  class ParsableMainPing(ping: MainPing) {
+  class ErrorAggregatorMainPing(ping: MainPing) {
     def parse(): Array[Row] = {
       // If a main ping has no usage hours discard it.
       val usageHours = ping.usageHours
@@ -198,7 +198,7 @@ object ErrorAggregator {
       Array(RowBuilder.merge(dimensions, stats.build))
     }
   }
-  implicit def ParsableCrashPingToMainPing(ping: MainPing) = new ParsableMainPing(ping)
+  implicit def errorAggregatorMainPing(ping: MainPing): ErrorAggregatorMainPing = new ErrorAggregatorMainPing(ping)
 
   /*
    * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
