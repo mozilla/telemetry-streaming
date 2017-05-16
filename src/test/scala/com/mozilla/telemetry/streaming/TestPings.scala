@@ -24,10 +24,10 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content") should be (1)
   }
   it should "return the value of its usage hours" in {
-    mainPing.usageHours() should be (1.0)
+    mainPing.usageHours should be (1.0)
     val messageNoUsageHours = TestUtils.generateMainMessages(1, Some(Map("payload.info" -> "{}"))).head
     val pingNoUsageHours = messageToMainPing(messageNoUsageHours)
-    pingNoUsageHours.usageHours() should be (0.0)
+    pingNoUsageHours.usageHours should be (0.0)
   }
   it should "return its timestamp" in {
     mainPing.meta.normalizedTimestamp() should be (new Timestamp(1460036116829L))

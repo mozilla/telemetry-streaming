@@ -138,32 +138,34 @@ package object pings {
                        // Environment omitted because it's mostly available under meta
                        meta: Meta
                      ){
-    def getCountHistogramValue(histogram_name: String): Int = {
+    def getCountHistogramValue(histogram_name: String): Option[Int] = {
       try {
         this.meta.`payload.histograms` \ histogram_name \ "values" \ "0" match {
-          case JInt(count) => count.toInt
-          case _ => 0
+          case JInt(count) => Some(count.toInt)
+          case _ => None
         }
-      } catch { case _: Throwable => 0 }
+      } catch { case _: Throwable => None }
     }
 
-    def getCountKeyedHistogramValue(histogram_name: String, key: String): Int = {
+    def getCountKeyedHistogramValue(histogram_name: String, key: String): Option[Int] = {
       try {
         this.meta.`payload.keyedHistograms` \ histogram_name \ key \ "values" \ "0" match {
-          case JInt(count) => count.toInt
-          case _ => 0
+          case JInt(count) => Some(count.toInt)
+          case _ => None
         }
-      } catch { case _: Throwable => 0 }
+      } catch { case _: Throwable => None }
     }
 
-
-    def usageHours(): Float = {
+    def usageHours: Option[Float] = {
+      val seconds_per_hour = 3600
+      val max_hours = 25
+      val min_hours = 0
       try {
         this.meta.`payload.info` \ "subsessionLength" match {
-          case JInt(length) => Math.min(25, Math.max(0, length.toFloat / 3600))
-          case _ => 0
+          case JInt(length) => Some(Math.min(max_hours, Math.max(min_hours, length.toFloat / seconds_per_hour)))
+          case _ => None
         }
-      } catch { case _: Throwable => 0 }
+      } catch { case _: Throwable => None }
     }
   }
 
