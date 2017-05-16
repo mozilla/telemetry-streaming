@@ -15,6 +15,9 @@ object TestUtils {
     "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", "x86-msvc"
   )
   private val applicationJson = compact(render(Extraction.decompose(application)))
+  val scalarValue = 42
+  val testTimestampNano = 1460036116829920000L
+  val testTimestampMillis = testTimestampNano / 1000000
 
   def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
     val defaultMap = Map(
@@ -57,7 +60,7 @@ object TestUtils {
              |  },
              |  "application": ${applicationJson}
              |}""".stripMargin),
-        timestamp=1460036116829920000L
+        timestamp=testTimestampNano
       )
     }
   }
@@ -110,7 +113,7 @@ object TestUtils {
       RichMessage(s"main-${index}",
         outputMap,
         Some(s"""{"application": ${applicationJson}}""".stripMargin),
-        timestamp=1460036116829920000L
+        timestamp=testTimestampNano
       )
     }
   }
