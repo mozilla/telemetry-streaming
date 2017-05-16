@@ -22,6 +22,7 @@ object ErrorAggregator {
 
   private val allowedDocTypes = List("main", "crash")
   private val outputPrefix = "error_aggregates/v1"
+  private val kafkaCacheMaxCapacity = 1000
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
@@ -227,7 +228,7 @@ object ErrorAggregator {
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
       .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
-      .option("spark.streaming.kafka.consumer.cache.maxCapacity", 1000)
+      .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
       .option("subscribe", "telemetry")
       .option("startingOffsets", "latest")
       .load()
@@ -288,7 +289,7 @@ object ErrorAggregator {
       .getOrCreate()
 
     opts.kafkaBroker.get match {
-      case Some(broker) => writeStreamingAggregates(spark, opts)
+      case Some(_) => writeStreamingAggregates(spark, opts)
       case None => writeBatchAggregates(spark, opts)
     }
   }

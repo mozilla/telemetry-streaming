@@ -125,7 +125,7 @@ package object pings {
                         meta: Meta
                       ){
 
-    def isMainCrash(): Boolean = {
+    def isMainCrash: Boolean = {
       payload.processType.getOrElse("main") == "main"
     }
   }
