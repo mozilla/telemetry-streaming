@@ -30,7 +30,7 @@ class TestPings extends FlatSpec with Matchers{
     pingNoUsageHours.usageHours() should be (0.0)
   }
   it should "return its timestamp" in {
-    mainPing.timestamp() should be (new Timestamp(1460036116829L))
+    mainPing.meta.normalizedTimestamp() should be (new Timestamp(1460036116829L))
   }
 
 
