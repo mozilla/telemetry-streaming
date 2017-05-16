@@ -32,6 +32,4 @@ class TestPings extends FlatSpec with Matchers{
   it should "return its timestamp" in {
     mainPing.meta.normalizedTimestamp() should be (new Timestamp(1460036116829L))
   }
-
-
 }
