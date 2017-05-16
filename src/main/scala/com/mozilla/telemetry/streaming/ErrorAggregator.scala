@@ -136,8 +136,8 @@ object ErrorAggregator {
   }
   private def buildDimensions(meta: Meta): Row = {
     val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(new Timestamp(meta.Timestamp / 1000000))
-    dimensions("submission_date") = Some(new Date(meta.Timestamp / 1000000))
+    dimensions("timestamp") = Some(meta.normalizedTimestamp())
+    dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
     dimensions("channel") = Some(meta.normalizedChannel)
     dimensions("version") = meta.`environment.build`.flatMap(_.version)
     dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)

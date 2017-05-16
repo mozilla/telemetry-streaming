@@ -98,7 +98,16 @@ package object pings {
                    `payload.keyedHistograms`: JValue,
                    `payload.histograms`: JValue,
                    `payload.info`: JValue
-                 )
+                 ){
+
+    /**
+      * Returns a java Timestamp obj with microseconds resolution.
+      * The source Timestamp field has nanoseconds resolution
+      */
+    def normalizedTimestamp(): Timestamp = {
+      new Timestamp(this.Timestamp / 1000000)
+    }
+  }
 
   case class CrashPayload(
                            crashDate: String,
@@ -118,10 +127,6 @@ package object pings {
 
     def isMainCrash(): Boolean = {
       payload.processType.getOrElse("main") == "main"
-    }
-
-    def timestamp(): Timestamp = {
-      new Timestamp(this.meta.Timestamp / 1000000)
     }
   }
 
@@ -159,10 +164,6 @@ package object pings {
           case _ => 0
         }
       } catch { case _: Throwable => 0 }
-    }
-
-    def timestamp(): Timestamp = {
-      new Timestamp(this.meta.Timestamp / 1000000)
     }
   }
 
