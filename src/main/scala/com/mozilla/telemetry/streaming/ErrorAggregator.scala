@@ -104,15 +104,13 @@ object ErrorAggregator {
     implicit val optEncoder = ExpressionEncoder.tuple(rowEncoder)
 
     var parsedPings = pings
-      .map { case v =>
+      .flatMap( v => {
         try {
           parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]))
         } catch {
-          case _: Throwable if !raiseOnError => Tuple1(null)
+          case _: Throwable if !raiseOnError => Array[Row]()
         }
-      }
-      .filter(_._1 != null)
-      .map(_._1)
+      })
 
     val dimensions = List(window($"timestamp", "5 minute")) ++ dimensionsSchema.fieldNames
       .filter(_ != "timestamp")
@@ -166,21 +164,20 @@ object ErrorAggregator {
   }
 
   class ParsableCrashPing(ping: CrashPing) {
-    def parse(): Tuple1[Row] = {
+    def parse(): Array[Row] = {
       // Non-main crashes are already retrieved from main pings
-      if(!ping.isMainCrash()) return Tuple1(null)
-
+      if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
       stats("main_crashes") = Some(1)
-      Tuple1(RowBuilder.merge(dimensions, stats.build))
+      Array(RowBuilder.merge(dimensions, stats.build))
     }
   }
   implicit def ParsableCrashPingToCrashPing(ping: CrashPing) = new ParsableCrashPing(ping)
 
   class ParsableMainPing(ping: MainPing) {
-    def parse(): Tuple1[Row] = {
+    def parse(): Array[Row] = {
       // If a main ping has no usage hours discard it.
       val usageHours = ping.usageHours
       if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
@@ -198,22 +195,23 @@ object ErrorAggregator {
       stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
       stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
 
-      Tuple1(RowBuilder.merge(dimensions, stats.build))
+      Array(RowBuilder.merge(dimensions, stats.build))
     }
   }
   implicit def ParsableCrashPingToMainPing(ping: MainPing) = new ParsableMainPing(ping)
 
   /*
-   We can't use an Option[Row] because entire rows cannot be null in Spark SQL. The best we can do is to resort to Tuple1[Row].
-   See https://github.com/apache/spark/blob/38b9e69623c14a675b14639e8291f5d29d2a0bc3/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/encoders/ExpressionEncoder.scala#L53
+   * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
+   * The best we can do is to resort to use a container, e.g. Array.
+   * This will also give us the ability to parse more than one row from the same ping.
    */
-  def parsePing(message: Message): Tuple1[Row] = {
+  def parsePing(message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
     val fields = message.fieldsAsMap
     val docType = fields.getOrElse("docType", "").asInstanceOf[String]
     if (!allowedDocTypes.contains(docType)) {
-      return Tuple1(null)
+      throw new Exception("Doctype should be one of " + allowedDocTypes.mkString(sep = ","))
     }
     if(docType == "crash") {
       messageToCrashPing(message).parse()
