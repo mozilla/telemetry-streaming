@@ -41,9 +41,11 @@ package object pings {
 
   case class System(os: SystemOs, gfx: Option[SystemGfx])
 
-  case class ActiveExperiment(id: String, branch: String)
+  case class OldStyleExperiment(id: String, branch: String)
 
-  case class Addons(activeExperiment: Option[ActiveExperiment])
+  case class NewStyleExperiment(branch: String)
+
+  case class Addons(activeExperiment: Option[OldStyleExperiment])
 
   case class Settings(
       blocklistEnabled: Option[Boolean],
@@ -85,6 +87,7 @@ package object pings {
       `environment.system`: Option[System],
       `environment.profile`: Option[Profile],
       `environment.addons`: Option[Addons],
+      `environment.experiments`: Option[Map[String, NewStyleExperiment]],
       // Main ping fields preparsed by hindsight
       `payload.simpleMeasurements`: JValue,
       `payload.keyedHistograms`: JValue,
@@ -97,6 +100,29 @@ package object pings {
       */
     def normalizedTimestamp(): Timestamp = {
       new Timestamp(this.Timestamp / 1000000)
+    }
+
+    /**
+      * Returns a Tuple2(experimentId, experimentBranch).
+      *
+      * This information could be in 2 different locations depending on whether the
+      * user is enrolled in a new style experiment or in a old style one.
+      *
+      * To further complicate things, in case of a new style experiment, the user
+      * could be enrolled in more than one experiment. In that case we arbitrary decide
+      * to pick the first experiment.
+      */
+    def experiment: Option[(String, String)] = {
+      val oldStyleExperiment = for {
+        addons <- this.`environment.addons`
+        experiment <- addons.activeExperiment
+      } yield (experiment.id, experiment.branch)
+
+      val newStyleExperiment = for {
+        experiments <- this.`environment.experiments`
+        (experimentId, experiment) <- experiments.headOption
+      } yield (experimentId, experiment.branch)
+      oldStyleExperiment orElse newStyleExperiment
     }
   }
 
