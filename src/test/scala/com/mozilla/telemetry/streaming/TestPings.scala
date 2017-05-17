@@ -12,7 +12,7 @@ import com.mozilla.telemetry.pings._
 class TestPings extends FlatSpec with Matchers{
 
   val message = TestUtils.generateMainMessages(1).head
-  val mainPing = messageToMainPing(message)
+  val mainPing = MainPing(message)
   val ts = TestUtils.testTimestampMillis
 
   "MainPing" should "return the value of a count histogram" in {
@@ -27,7 +27,7 @@ class TestPings extends FlatSpec with Matchers{
   it should "return the value of its usage hours" in {
     mainPing.usageHours.get should be (1.0)
     val messageNoUsageHours = TestUtils.generateMainMessages(1, Some(Map("payload.info" -> "{}"))).head
-    val pingNoUsageHours = messageToMainPing(messageNoUsageHours)
+    val pingNoUsageHours = MainPing(messageNoUsageHours)
     pingNoUsageHours.usageHours.isEmpty should be (true)
   }
   it should "return its timestamp" in {

@@ -211,9 +211,9 @@ object ErrorAggregator {
       throw new Exception("Doctype should be one of " + allowedDocTypes.mkString(sep = ","))
     }
     if(docType == "crash") {
-      messageToCrashPing(message).parse()
+      CrashPing(message).parse()
     } else {
-      messageToMainPing(message).parse()
+      MainPing(message).parse()
     }
   }
 
