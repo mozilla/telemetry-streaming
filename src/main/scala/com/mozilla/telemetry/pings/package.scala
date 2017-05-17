@@ -145,6 +145,21 @@ package object pings {
     }
   }
 
+  object CrashPing {
+    def apply(message: Message): CrashPing = {
+      implicit val formats = DefaultFormats
+      val jsonFieldNames = List(
+        "environment.build",
+        "environment.settings",
+        "environment.system",
+        "environment.profile",
+        "environment.addons"
+      )
+      val ping = messageToPing(message, jsonFieldNames)
+      ping.extract[CrashPing]
+    }
+  }
+
   case class PayloadInfo(subsessionLength: Option[Int])
 
   case class MainPing(
@@ -182,6 +197,24 @@ package object pings {
       } catch { case _: Throwable => None }
     }
   }
+  object MainPing {
+    def apply(message: Message): MainPing = {
+      implicit val formats = DefaultFormats
+      val jsonFieldNames = List(
+        "environment.build",
+        "environment.settings",
+        "environment.system",
+        "environment.profile",
+        "environment.addons",
+        "payload.simpleMeasurements",
+        "payload.keyedHistograms",
+        "payload.histograms",
+        "payload.info"
+      )
+      val ping = messageToPing(message, jsonFieldNames)
+      ping.extract[MainPing]
+    }
+  }
 
   case class Environment(build: EnvironmentBuild, system: EnvironmentSystem)
 
@@ -194,37 +227,7 @@ package object pings {
 
   case class OS(name: Option[String], version: Option[String])
 
-  def messageToCrashPing(message: Message): CrashPing = {
-    implicit val formats = DefaultFormats
-    val jsonFieldNames = List(
-      "environment.build",
-      "environment.settings",
-      "environment.system",
-      "environment.profile",
-      "environment.addons"
-    )
-    val ping = messageToPing(message, jsonFieldNames)
-    ping.extract[CrashPing]
-  }
-
-  def messageToMainPing(message: Message): MainPing = {
-    implicit val formats = DefaultFormats
-    val jsonFieldNames = List(
-      "environment.build",
-      "environment.settings",
-      "environment.system",
-      "environment.profile",
-      "environment.addons",
-      "payload.simpleMeasurements",
-      "payload.keyedHistograms",
-      "payload.histograms",
-      "payload.info"
-    )
-    val ping = messageToPing(message, jsonFieldNames)
-    ping.extract[MainPing]
-  }
-
-  def messageToPing(message:Message, jsonFieldNames: List[String]): JValue = {
+  def messageToPing(message: Message, jsonFieldNames: List[String]): JValue = {
     implicit val formats = DefaultFormats
     val fields = message.fieldsAsMap ++ Map("Timestamp" -> message.timestamp)
     val jsonObj = Extraction.decompose(fields)
