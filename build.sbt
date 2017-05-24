@@ -21,9 +21,9 @@ lazy val root = (project in file(".")).
   settings(
     libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-    libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion,
-    libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion,
-    libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion,
+    libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+    libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
+    libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
     libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0",
@@ -44,9 +44,11 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 
 parallelExecution in Test := false
 
-mergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
+assemblyMergeStrategy in assembly := {
+  case PathList("org", "apache", xs @ _*) => MergeStrategy.last
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
 }
 
 addCommandAlias("ci", ";clean ;compile ;scalastyle ;coverage ;test ;coverageReport")
