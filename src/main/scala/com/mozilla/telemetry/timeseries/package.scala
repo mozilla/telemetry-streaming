@@ -42,7 +42,8 @@ package object timeseries {
   }
 
   object SchemaBuilder {
-    def merge(x: StructType, y: StructType): StructType = StructType(x.fields ++ y.fields)
+    def merge(x: StructType, y: StructType*): StructType =
+      y.foldLeft(x)((acc, curr) => {StructType(acc.fields ++ curr.fields)})
   }
 
   class RowBuilder(schema: StructType) extends Serializable {
