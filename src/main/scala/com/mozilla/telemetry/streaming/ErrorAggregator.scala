@@ -281,7 +281,6 @@ object ErrorAggregator {
 
     val spark = SparkSession.builder()
       .appName("Error Aggregates")
-      .master("local[*]")
       .getOrCreate()
 
     opts.kafkaBroker.get match {
