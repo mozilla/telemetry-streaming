@@ -47,7 +47,13 @@ class TestAggregator extends FlatSpec with Matchers{
       "experiment_branch",
       "e10s_enabled",
       "e10s_cohort",
-      "gfx_compositor"
+      "gfx_compositor",
+      "input_event_response_coalesced_ms_main_above_150",
+      "input_event_response_coalesced_ms_main_above_250",
+      "input_event_response_coalesced_ms_main_above_2500",
+      "input_event_response_coalesced_ms_content_above_150",
+      "input_event_response_coalesced_ms_content_above_250",
+      "input_event_response_coalesced_ms_content_above_2500"
     )
     val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
     val results = 0.to(inspectedFields.length-1).map(x => (inspectedFields(x), row(x))).toMap
@@ -75,6 +81,12 @@ class TestAggregator extends FlatSpec with Matchers{
     results("e10s_enabled") should equal (true)
     results("e10s_cohort") should be ("test")
     results("gfx_compositor") should be ("opengl")
+    results("input_event_response_coalesced_ms_main_above_150") should be (42 * 14)
+    results("input_event_response_coalesced_ms_main_above_250") should be (42 * 12)
+    results("input_event_response_coalesced_ms_main_above_2500") should be (42 * 9)
+    results("input_event_response_coalesced_ms_content_above_150") should be (42 * 4)
+    results("input_event_response_coalesced_ms_content_above_250") should be (42 * 3)
+    results("input_event_response_coalesced_ms_content_above_2500") should be (42 * 2)
 
     df.where("window is null").count() should be (0)
   }

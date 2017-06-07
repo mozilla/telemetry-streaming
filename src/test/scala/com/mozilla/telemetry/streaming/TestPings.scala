@@ -33,4 +33,13 @@ class TestPings extends FlatSpec with Matchers{
   it should "return its timestamp" in {
     mainPing.meta.normalizedTimestamp() should be (new Timestamp(ts))
   }
+  it should "return the right threshold count" in {
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 150, "main") should be (14)
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "main") should be (12)
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 2500, "main") should be (9)
+
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 150, "content") should be (4)
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "content") should be (3)
+    mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 2500, "content") should be (2)
+  }
 }

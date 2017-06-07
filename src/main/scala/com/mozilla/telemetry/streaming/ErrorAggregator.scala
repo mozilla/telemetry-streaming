@@ -75,6 +75,13 @@ object ErrorAggregator {
     .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
+  private val thresholdHistograms = Map(
+    "INPUT_EVENT_RESPONSE_COALESCED_MS" -> (List("main", "content"), List(150, 250, 2500)),
+    "GHOST_WINDOWS" -> (List("main", "content"), List(1)),
+    "GC_MAX_PAUSE_MS_2" -> (List("main", "content"), List(150, 250, 2500)),
+    "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
+  )
+
   private val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
@@ -104,7 +111,24 @@ object ErrorAggregator {
     .add[Int]("content_shutdown_crashes")
     .build
 
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
+  private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
+    s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
+
+  private val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
+    val histogramName = kv._1
+    kv._2 match {
+      case (processTypes: List[String], thresholds: List[Int]) => {
+        val fields = for {
+          processType <- processTypes
+          threshold <- thresholds
+        } yield thresholdHistogramName(histogramName, processType, threshold)
+        fields.foldLeft(schema)((acc, curr) => {acc.add[Long](curr)})
+      }
+      case _ => schema
+    }
+  }).build
+
+  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -202,6 +226,13 @@ object ErrorAggregator {
       stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
       stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
 
+      for {
+        (histogramName, (processTypes, thresholds)) <- thresholdHistograms
+        processType <- processTypes
+        threshold <- thresholds
+      } stats(thresholdHistogramName(histogramName, processType, threshold)) =
+        Some(ping.histogramThresholdCount(histogramName, threshold, processType))
+
       Array(RowBuilder.merge(dimensions, stats.build))
     }
   }
@@ -282,8 +313,10 @@ object ErrorAggregator {
 
     aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false)
       .write
+      .mode("overwrite")
       .partitionBy("submission_date")
       .parquet(s"${outputPath}/${outputPrefix}")
+    spark.stop()
   }
 
   def main(args: Array[String]): Unit = {
