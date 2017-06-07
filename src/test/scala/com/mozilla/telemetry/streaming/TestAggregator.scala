@@ -24,29 +24,58 @@ class TestAggregator extends FlatSpec with Matchers{
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
     df.count() should be (1)
-    df.select("submission_date").first()(0).toString should be ("2016-04-07")
-    df.select("channel").first()(0) should be (app.channel)
-    df.select("version").first()(0) should be (app.version)
-    df.select("build_id").first()(0) should be (app.buildId)
-    df.select("application").first()(0) should be (app.name)
-    df.select("os_name").first()(0) should be ("Linux")
-    df.select("os_version").first()(0) should be (s"${k}")
-    df.select("architecture").first()(0) should be (app.architecture)
-    df.select("country").first()(0) should be ("IT")
-    df.select("main_crashes").first()(0) should be (k)
-    df.select("content_crashes").first()(0) should be (k)
-    df.select("gpu_crashes").first()(0) should be (k)
-    df.select("plugin_crashes").first()(0) should be (k)
-    df.select("gmplugin_crashes").first()(0) should be (k)
-    df.select("content_shutdown_crashes").first()(0) should be (k)
-    df.select("count").first()(0) should be (k * 2)
-    df.select("usage_hours").first()(0) should be (k.toFloat)
-    df.select("browser_shim_usage_blocked").first()(0) should be (k)
-    df.select("experiment_id").first()(0) should be ("experiment1")
-    df.select("experiment_branch").first()(0) should be ("control")
-    df.select("e10s_enabled").first()(0) should equal (true)
-    df.select("e10s_cohort").first()(0) should be ("test")
-    df.select("gfx_compositor").first()(0) should be ("opengl")
+    val inspectedFields = List(
+      "submission_date",
+      "channel",
+      "version",
+      "build_id",
+      "application",
+      "os_name",
+      "os_version",
+      "architecture",
+      "country",
+      "main_crashes",
+      "content_crashes",
+      "gpu_crashes",
+      "plugin_crashes",
+      "gmplugin_crashes",
+      "content_shutdown_crashes",
+      "count",
+      "usage_hours",
+      "browser_shim_usage_blocked",
+      "experiment_id",
+      "experiment_branch",
+      "e10s_enabled",
+      "e10s_cohort",
+      "gfx_compositor"
+    )
+    val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
+    val results = 0.to(inspectedFields.length-1).map(x => (inspectedFields(x), row(x))).toMap
+
+    results("submission_date").toString should be ("2016-04-07")
+    results("channel") should be (app.channel)
+    results("version") should be (app.version)
+    results("build_id") should be (app.buildId)
+    results("application") should be (app.name)
+    results("os_name") should be ("Linux")
+    results("os_version") should be (s"${k}")
+    results("architecture") should be (app.architecture)
+    results("country") should be ("IT")
+    results("main_crashes") should be (k)
+    results("content_crashes") should be (k)
+    results("gpu_crashes") should be (k)
+    results("plugin_crashes") should be (k)
+    results("gmplugin_crashes") should be (k)
+    results("content_shutdown_crashes") should be (k)
+    results("count") should be (k * 2)
+    results("usage_hours") should be (k.toFloat)
+    results("browser_shim_usage_blocked") should be (k)
+    results("experiment_id") should be ("experiment1")
+    results("experiment_branch") should be ("control")
+    results("e10s_enabled") should equal (true)
+    results("e10s_cohort") should be ("test")
+    results("gfx_compositor") should be ("opengl")
+
     df.where("window is null").count() should be (0)
   }
 }
