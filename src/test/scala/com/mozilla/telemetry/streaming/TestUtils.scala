@@ -49,7 +49,7 @@ object TestUtils {
       case Some(m) => defaultMap ++ m
       case _ => defaultMap
     }
-    1.to(size)map { index =>
+    1.to(size) map { index =>
       RichMessage(s"crash-${index}",
         outputMap,
         Some(
@@ -89,7 +89,19 @@ object TestUtils {
            |  "buildId": "${application.buildId}",
            |  "version": "${application.version}"
            |}""".stripMargin,
-      "payload.histograms" ->"""{"BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}}}""",
+      "payload.histograms" ->
+            """{
+          |  "BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}},
+          |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
+          |    "values": {
+          |      "1": 1,
+          |      "150": 2,
+          |      "250": 3,
+          |      "2500": 4,
+          |      "10000": 5
+          |    }
+          |  }
+          |}""".stripMargin,
       "payload.keyedHistograms" ->
         """
           |{
@@ -112,7 +124,26 @@ object TestUtils {
     1.to(size) map { index =>
       RichMessage(s"main-${index}",
         outputMap,
-        Some(s"""{"application": ${applicationJson}}""".stripMargin),
+        Some(s"""{
+             |  "application": ${applicationJson},
+             |  "payload": {
+             |    "processes": {
+             |      "content": {
+             |        "histograms": {
+             |          "INPUT_EVENT_RESPONSE_COALESCED_MS": {
+             |            "values": {
+             |              "1": 1,
+             |              "150": 1,
+             |              "250": 1,
+             |              "2500": 1,
+             |              "10000": 1
+             |            }
+             |          }
+             |        }
+             |      }
+             |    }
+             |  }
+             |}""".stripMargin),
         timestamp=testTimestampNano
       )
     }

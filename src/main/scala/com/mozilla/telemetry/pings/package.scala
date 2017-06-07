@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry
 
+import scala.util.{Success, Try}
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.Message
@@ -162,11 +163,15 @@ package object pings {
 
   case class PayloadInfo(subsessionLength: Option[Int])
 
+  case class MainPingPayload(processes: JValue)
+
   case class MainPing(
       application: Application,
       clientId: Option[String],
       // Environment omitted because it's mostly available under meta
-      meta: Meta) {
+      meta: Meta,
+      payload: MainPingPayload
+  ) {
     def getCountHistogramValue(histogram_name: String): Option[Int] = {
       try {
         this.meta.`payload.histograms` \ histogram_name \ "values" \ "0" match {
@@ -185,6 +190,27 @@ package object pings {
       } catch { case _: Throwable => None }
     }
 
+    // Return the number of values greater than threshold
+    def histogramThresholdCount(histogramName: String, threshold: Int, processType: String): Long = {
+      implicit val formats = org.json4s.DefaultFormats
+      val histogram = processType match {
+        case "main" => this.meta.`payload.histograms`
+        case _ => this.payload.processes \ processType \ "histograms"
+      }
+
+      histogram \ histogramName \ "values" match {
+        case JNothing => 0
+        case v => Try(v.extract[Map[String, Int]]) match {
+          case Success(m) =>
+            m.filterKeys(s => Try(s.toInt).toOption match {
+              case Some(key) => key >= threshold
+              case None => false
+            }).foldLeft(0)(_ + _._2)
+          case _ => 0
+        }
+      }
+    }
+
     def usageHours: Option[Float] = {
       val seconds_per_hour = 3600
       val max_hours = 25
@@ -198,6 +224,9 @@ package object pings {
     }
   }
   object MainPing {
+
+    val processTypes = ("main", "content")
+
     def apply(message: Message): MainPing = {
       implicit val formats = DefaultFormats
       val jsonFieldNames = List(
