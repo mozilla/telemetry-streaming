@@ -48,10 +48,20 @@ object ErrorAggregator {
       default = Some("/tmp/parquet"))
     val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
       "raiseOnError",
-      descr = "Whether to program should exit on a data processing error or not.")
+      descr = "Whether the program should exit on a data processing error or not.")
     val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
       "failOnDataLoss",
       descr = "Whether to fail the query when it’s possible that data is lost.")
+    val checkpointPath:ScallopOption[String] = opt[String](
+      "checkpointPath",
+      descr = "Checkpoint path (streaming mode only)",
+      required = false,
+      default = Some("/tmp/checkpoint"))
+    val startingOffsets:ScallopOption[String] = opt[String](
+      "startingOffsets",
+      descr = "Starting offsets (streaming mode only)",
+      required = false,
+      default = Some("latest"))
     requireOne(kafkaBroker, from)
     conflicts(kafkaBroker, List(from, to, fileLimit))
     verify()
@@ -226,7 +236,7 @@ object ErrorAggregator {
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
       .option("subscribe", "telemetry")
-      .option("startingOffsets", "latest")
+      .option("startingOffsets", opts.startingOffsets())
       .load()
 
     val outputPath = opts.outputPath()
@@ -235,7 +245,7 @@ object ErrorAggregator {
       .writeStream
       .format("parquet")
       .option("path", s"${outputPath}/${outputPrefix}")
-      .option("checkpointLocation", "/tmp/checkpoint")
+      .option("checkpointLocation", opts.checkpointPath())
       .partitionBy("submission_date")
       .start()
       .awaitTermination()
@@ -281,7 +291,6 @@ object ErrorAggregator {
 
     val spark = SparkSession.builder()
       .appName("Error Aggregates")
-      .master("local[*]")
       .getOrCreate()
 
     opts.kafkaBroker.get match {
