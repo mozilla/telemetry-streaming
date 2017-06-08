@@ -1,35 +1,28 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
 import java.sql.{Date, Timestamp}
 
 import com.mozilla.telemetry.heka.{Dataset, Message}
+import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.types.{StructType, StructField, BinaryType}
-import org.apache.spark.sql.functions.{window, sum}
+import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.apache.spark.sql.functions.{sum, window}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.ColumnName
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
-import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
-
-private case class EnvironmentBuild(version: Option[String],
-                            buildId: Option[String],
-                            architecture: Option[String])
-
-private case class EnvironmentSystem(os: OS)
-
-private case class OS(name: Option[String],
-              version: Option[String])
-
-private case class PayloadInfo(subsessionLength: Option[Int])
 
 object ErrorAggregator {
 
   private val allowedDocTypes = List("main", "crash")
   private val outputPrefix = "error_aggregates/v1"
+  private val kafkaCacheMaxCapacity = 1000
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
@@ -83,24 +76,25 @@ object ErrorAggregator {
     .add[String]("os_version")
     .add[String]("architecture")
     .add[String]("country")
+    .add[String]("experiment_id")
+    .add[String]("experiment_branch")
+    .add[Boolean]("e10s_enabled")
+    .add[String]("e10s_cohort")
+    .add[String]("gfx_compositor")
     .build
 
   private val metricsSchema = new SchemaBuilder()
-    .add[Float]("usageHours")
+    .add[Float]("usage_hours")
     .add[Int]("count")
-    .add[Int]("crashes")
+    .add[Int]("main_crashes")
+    .add[Int]("content_crashes")
+    .add[Int]("gpu_crashes")
+    .add[Int]("plugin_crashes")
+    .add[Int]("gmplugin_crashes")
+    .add[Int]("content_shutdown_crashes")
     .build
 
   private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema)
-
-  private def getCountHistogramValue(histogram: JValue): Int = {
-    try {
-      histogram \ "values" \ "0" match {
-        case JInt(count) => count.toInt
-        case _ => 0
-      }
-    } catch { case _: Throwable => 0 }
-  }
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -111,15 +105,13 @@ object ErrorAggregator {
     implicit val optEncoder = ExpressionEncoder.tuple(rowEncoder)
 
     var parsedPings = pings
-      .map { case v =>
+      .flatMap( v => {
         try {
           parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]))
         } catch {
-          case _: Throwable if !raiseOnError => Tuple1(null)
+          case _: Throwable if !raiseOnError => Array[Row]()
         }
-      }
-      .filter(_._1 != null)
-      .map(_._1)
+      })
 
     val dimensions = List(window($"timestamp", "5 minute")) ++ dimensionsSchema.fieldNames
       .filter(_ != "timestamp")
@@ -141,69 +133,88 @@ object ErrorAggregator {
       .agg(stats(0), stats.drop(1):_*)
       .coalesce(1)
   }
+  private def buildDimensions(meta: Meta): Row = {
+    val dimensions = new RowBuilder(dimensionsSchema)
+    dimensions("timestamp") = Some(meta.normalizedTimestamp())
+    dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
+    dimensions("channel") = Some(meta.normalizedChannel)
+    dimensions("version") = meta.`environment.build`.flatMap(_.version)
+    dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)
+    dimensions("application") = Some(meta.appName)
+    dimensions("os_name") = meta.`environment.system`.map(_.os.name)
+    dimensions("os_version") = meta.`environment.system`.map(_.os.version)
+    dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
+    dimensions("country") = Some(meta.geoCountry)
+    meta.experiment.foreach(experiment =>{
+      dimensions("experiment_id") = Some(experiment._1)
+      dimensions("experiment_branch") = Some(experiment._2)
+    })
+    dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
+    dimensions("e10s_cohort") = meta.`environment.settings`.flatMap(_.e10sCohort)
+    dimensions("gfx_compositor") = for {
+      system <- meta.`environment.system`
+      gfx <- system.gfx
+      features <- gfx.features
+      compositor <- features.compositor
+    } yield compositor
+    dimensions.build
+  }
+
+  class ErrorAggregatorCrashPing(ping: CrashPing) {
+    def parse(): Array[Row] = {
+      // Non-main crashes are already retrieved from main pings
+      if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
+      val dimensions = buildDimensions(ping.meta)
+      val stats = new RowBuilder(statsSchema)
+      stats("count") = Some(1)
+      stats("main_crashes") = Some(1)
+      Array(RowBuilder.merge(dimensions, stats.build))
+    }
+  }
+  implicit def errorAggregatorCrashPing(ping: CrashPing): ErrorAggregatorCrashPing = new ErrorAggregatorCrashPing(ping)
+
+  class ErrorAggregatorMainPing(ping: MainPing) {
+    def parse(): Array[Row] = {
+      // If a main ping has no usage hours discard it.
+      val usageHours = ping.usageHours
+      if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
+
+      val dimensions = buildDimensions(ping.meta)
+      val stats = new RowBuilder(statsSchema)
+      stats("count") = Some(1)
+      stats("usage_hours") = usageHours
+      countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
+        stats(stats_name) = ping.getCountHistogramValue(stats_name)
+      })
+      stats("content_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content")
+      stats("gpu_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu")
+      stats("plugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin")
+      stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
+      stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
+
+      Array(RowBuilder.merge(dimensions, stats.build))
+    }
+  }
+  implicit def errorAggregatorMainPing(ping: MainPing): ErrorAggregatorMainPing = new ErrorAggregatorMainPing(ping)
 
   /*
-   We can't use an Option[Row] because entire rows cannot be null in Spark SQL. The best we can do is to resort to Tuple1[Row].
-   See https://github.com/apache/spark/blob/38b9e69623c14a675b14639e8291f5d29d2a0bc3/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/encoders/ExpressionEncoder.scala#L53
+   * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
+   * The best we can do is to resort to use a container, e.g. Array.
+   * This will also give us the ability to parse more than one row from the same ping.
    */
-  def parsePing(message: Message): Tuple1[Row] = {
+  def parsePing(message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
-    val ping = message.fieldsAsMap
-
-    val docType = ping.getOrElse("docType", "").asInstanceOf[String]
+    val fields = message.fieldsAsMap
+    val docType = fields.getOrElse("docType", "").asInstanceOf[String]
     if (!allowedDocTypes.contains(docType)) {
-      return Tuple1(null)
+      throw new Exception("Doctype should be one of " + allowedDocTypes.mkString(sep = ","))
     }
-
-    val environmentBuild = parse(ping.getOrElse("environment.build", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentBuild]
-
-    val environmentSystem = parse(ping.getOrElse("environment.system", "{}")
-      .asInstanceOf[String])
-      .extract[EnvironmentSystem]
-
-    val payloadInfo = parse(ping.getOrElse("payload.info", "{}")
-      .asInstanceOf[String])
-      .extract[PayloadInfo]
-
-    val keyedHistograms = parse(ping.getOrElse("payload.histograms", "{}")
-      .asInstanceOf[String]
-    )
-
-    val application = ping.get("appName").asInstanceOf[Option[String]]
-    val channel = ping.get("normalizedChannel").asInstanceOf[Option[String]]
-    val country = ping.get("geoCountry").asInstanceOf[Option[String]]
-
-    val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(new Timestamp(message.timestamp / 1000000))
-    dimensions("submission_date") = Some(new Date(message.timestamp / 1000000))
-    dimensions("channel") = channel
-    dimensions("version") = environmentBuild.version
-    dimensions("build_id") = environmentBuild.buildId
-    dimensions("application") = application
-    dimensions("os_name") = environmentSystem.os.name
-    dimensions("os_version") = environmentSystem.os.version
-    dimensions("architecture") = environmentBuild.architecture
-    dimensions("country") = country
-
-    val stats = new RowBuilder(statsSchema)
-    if (docType == "main") {
-      assert(payloadInfo.subsessionLength.isDefined)
-
-      val sessionLength = payloadInfo.subsessionLength.get.toFloat
-      stats("usageHours") = Some(Math.min(25, Math.max(0, sessionLength / 3600)))
-      stats("count") = Some(1)
-
-      countHistogramErrorsSchema.fieldNames.foreach(key => {
-        stats(key) = Some(getCountHistogramValue(keyedHistograms \ key))
-      })
+    if(docType == "crash") {
+      CrashPing(message).parse()
     } else {
-      stats("crashes") = Some(1)
+      MainPing(message).parse()
     }
-
-    Tuple1(RowBuilder.merge(dimensions.build, stats.build))
   }
 
   def writeStreamingAggregates(spark: SparkSession, opts: Opts): Unit = {
@@ -213,7 +224,7 @@ object ErrorAggregator {
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
       .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
-      .option("spark.streaming.kafka.consumer.cache.maxCapacity", 1000)
+      .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
       .option("subscribe", "telemetry")
       .option("startingOffsets", "latest")
       .load()
@@ -274,7 +285,7 @@ object ErrorAggregator {
       .getOrCreate()
 
     opts.kafkaBroker.get match {
-      case Some(broker) => writeStreamingAggregates(spark, opts)
+      case Some(_) => writeStreamingAggregates(spark, opts)
       case None => writeBatchAggregates(spark, opts)
     }
   }
