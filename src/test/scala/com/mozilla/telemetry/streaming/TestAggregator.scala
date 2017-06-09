@@ -54,7 +54,9 @@ class TestAggregator extends FlatSpec with Matchers{
       "input_event_response_coalesced_ms_main_above_2500",
       "input_event_response_coalesced_ms_content_above_150",
       "input_event_response_coalesced_ms_content_above_250",
-      "input_event_response_coalesced_ms_content_above_2500"
+      "input_event_response_coalesced_ms_content_above_2500",
+      "first_paint",
+      "first_subsession_count"
     )
     val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
     val results = 0.to(inspectedFields.length-1).map(x => (inspectedFields(x), row(x))).toMap
@@ -89,6 +91,8 @@ class TestAggregator extends FlatSpec with Matchers{
     results("input_event_response_coalesced_ms_content_above_150") should be (42 * 4)
     results("input_event_response_coalesced_ms_content_above_250") should be (42 * 3)
     results("input_event_response_coalesced_ms_content_above_2500") should be (42 * 2)
+    results("first_paint") should be (42 * 1200)
+    results("first_subsession_count") should be (42)
 
     df.where("window is null").count() should be (0)
   }
