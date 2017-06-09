@@ -261,6 +261,27 @@ package object pings {
         }
       } catch { case _: Throwable => None }
     }
+
+    /*
+    * firstPaint is tricky because we only want to know this value if it
+    * comes from the first subsession.
+    */
+    def firstPaint: Option[Int] = {
+      this.isFirstSubsession match {
+        case Some(true) => this.meta.`payload.simpleMeasurements` \ "firstPaint" match {
+          case JInt(value) => Some(value.toInt)
+          case _ => None
+        }
+        case _ => None
+      }
+    }
+
+    def isFirstSubsession: Option[Boolean] = {
+      this.meta.`payload.info` \ "subsessionCounter" match {
+        case JInt(v)  => Some(v == 1)
+        case _ => None
+      }
+    }
   }
   object MainPing {
 

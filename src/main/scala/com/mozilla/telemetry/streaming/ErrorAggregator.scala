@@ -9,9 +9,8 @@ import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.functions.{sum, window}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.ColumnName
+import org.apache.spark.sql.functions.{sum, window, avg}
+import org.apache.spark.sql.{Column, ColumnName, DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
@@ -110,6 +109,8 @@ object ErrorAggregator {
     .add[Int]("plugin_crashes")
     .add[Int]("gmplugin_crashes")
     .add[Int]("content_shutdown_crashes")
+    .add[Int]("first_paint")
+    .add[Int]("first_subsession_count")
     .build
 
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
@@ -155,9 +156,7 @@ object ErrorAggregator {
     val stats = for {
       fieldName <- statsSchema.fieldNames
       normFieldName = fieldName.toLowerCase
-    } yield {
-      sum(normFieldName).alias(normFieldName)
-    }
+    } yield sum(normFieldName).alias(normFieldName)
 
     if (online) {
       parsedPings = parsedPings.withWatermark("timestamp", "1 minute")
@@ -227,6 +226,11 @@ object ErrorAggregator {
       stats("plugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin")
       stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
       stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
+      stats("first_paint") = ping.firstPaint
+      stats("first_subsession_count") = ping.isFirstSubsession match {
+        case Some(true) => Some(1)
+        case _ => Some(0)
+      }
 
       for {
         (histogramName, (processTypes, thresholds)) <- thresholdHistograms

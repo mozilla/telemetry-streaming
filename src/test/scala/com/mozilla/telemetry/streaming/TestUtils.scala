@@ -127,7 +127,8 @@ object TestUtils {
           |    "ShutDownKill": {"values": {"0": 1}}
           |  }
           |}""".stripMargin,
-      "payload.info" -> """{"subsessionLength": 3600}"""
+      "payload.simpleMeasurements" -> """{"firstPaint": 1200}""",
+      "payload.info" -> """{"subsessionLength": 3600, "subsessionCounter": 1}"""
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m

@@ -42,6 +42,21 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "content") should be (3)
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 2500, "content") should be (2)
   }
+  it should "return its firstPaint value" in {
+    mainPing.firstPaint should be (Some(1200))
+  }
+
+  it should "detect if it's the first subsession" in {
+    mainPing.isFirstSubsession should be (Some(true))
+  }
+
+  it should "not return its firstPaint value if non-first subsession" in {
+    val subsequentMessage = TestUtils.generateMainMessages(1, Some(Map(
+      "payload.info" -> """{"subsessionLength": 3600, "subsessionCounter": 2}"""
+    ))).head
+    val subsequentPing = MainPing(subsequentMessage)
+    subsequentPing.firstPaint should be(None)
+  }
 
   val recentTheme = new Theme("firefox-compact-dark@mozilla.org")
   val oldTheme = new Theme("the-oldest-theme-ever")
