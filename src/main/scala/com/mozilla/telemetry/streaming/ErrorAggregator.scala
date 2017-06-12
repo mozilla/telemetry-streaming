@@ -98,6 +98,7 @@ object ErrorAggregator {
     .add[Boolean]("e10s_enabled")
     .add[String]("e10s_cohort")
     .add[String]("gfx_compositor")
+    .add[Boolean]("quantum_ready")
     .build
 
   private val metricsSchema = new SchemaBuilder()
@@ -191,6 +192,7 @@ object ErrorAggregator {
       features <- gfx.features
       compositor <- features.compositor
     } yield compositor
+    dimensions("quantum_ready") = meta.isQuantumReady
     dimensions.build
   }
 

@@ -43,7 +43,13 @@ object TestUtils {
           | "os": {"name": "Linux", "version": "42"},
           | "gfx": {"features": {"compositor": "opengl"}}
           |}""".stripMargin,
-      "environment.addons" ->"""{"activeExperiment": {"id": "experiment1", "branch": "control"}}"""
+      "environment.addons" ->
+        """
+          |{
+          | "activeExperiment": {"id": "experiment1", "branch": "control"},
+          | "activeAddons": {"my-addon": {"isSystem": true}},
+          | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+          |}""".stripMargin
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m
@@ -81,7 +87,13 @@ object TestUtils {
           | "os": {"name": "Linux", "version": "42"},
           | "gfx": {"features": {"compositor": "opengl"}}
           |}""".stripMargin,
-      "environment.addons" ->"""{"activeExperiment": {"id": "experiment1", "branch": "control"}}""",
+      "environment.addons" ->
+        """
+          |{
+          | "activeExperiment": {"id": "experiment1", "branch": "control"},
+          | "activeAddons": {"my-addon": {"isSystem": true}},
+          | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+          |}""".stripMargin,
       "environment.build" ->
         s"""
            |{
