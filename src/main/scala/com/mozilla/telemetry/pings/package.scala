@@ -46,7 +46,36 @@ package object pings {
 
   case class NewStyleExperiment(branch: String)
 
-  case class Addons(activeExperiment: Option[OldStyleExperiment])
+  case class ActiveAddon(isSystem: Option[Boolean], isWebExtension: Option[Boolean]) {
+    def isQuantumReady: Boolean = {
+      (this.isSystem contains true) || (this.isWebExtension contains true)
+    }
+  }
+
+  object Theme {
+    val newThemes = List(
+      "{972ce4c6-7e08-4474-a285-3208198ce6fd}",
+      "firefox-compact-light@mozilla.org",
+      "firefox-compact-dark@mozilla.org"
+    )
+  }
+
+  case class Theme(id: String) {
+    def isOld: Boolean = ! Theme.newThemes.contains(this.id)
+  }
+
+  case class Addons(
+      activeAddons: Option[Map[String, ActiveAddon]],
+      activeExperiment: Option[OldStyleExperiment],
+      theme: Option[Theme]
+  ) {
+    def isQuantumReady: Option[Boolean] = {
+      for {
+        activeAddons <- this.activeAddons
+        theme <- this.theme
+      } yield activeAddons.values.forall(_.isQuantumReady) && ! theme.isOld
+    }
+  }
 
   case class Settings(
       blocklistEnabled: Option[Boolean],
@@ -124,6 +153,16 @@ package object pings {
         (experimentId, experiment) <- experiments.headOption
       } yield (experimentId, experiment.branch)
       oldStyleExperiment orElse newStyleExperiment
+    }
+
+    def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
+
+    def isQuantumReady: Option[Boolean] = {
+      for {
+        addons <- this.`environment.addons`
+        addonsReady <- addons.isQuantumReady
+        e10sEnabled <- this.isE10sEnabled
+      } yield  addonsReady && e10sEnabled
     }
   }
 

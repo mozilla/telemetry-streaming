@@ -34,6 +34,7 @@ class TestAggregator extends FlatSpec with Matchers{
       "os_version",
       "architecture",
       "country",
+      "quantum_ready",
       "main_crashes",
       "content_crashes",
       "gpu_crashes",
@@ -67,6 +68,7 @@ class TestAggregator extends FlatSpec with Matchers{
     results("os_version") should be (s"${k}")
     results("architecture") should be (app.architecture)
     results("country") should be ("IT")
+    results("quantum_ready") should equal (true)
     results("main_crashes") should be (k)
     results("content_crashes") should be (k)
     results("gpu_crashes") should be (k)

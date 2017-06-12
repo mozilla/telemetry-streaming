@@ -42,4 +42,92 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "content") should be (3)
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 2500, "content") should be (2)
   }
+
+  val recentTheme = new Theme("firefox-compact-dark@mozilla.org")
+  val oldTheme = new Theme("the-oldest-theme-ever")
+
+  val webExtension = ActiveAddon(None, Some(true))
+  val systemAddon = ActiveAddon(Some(true), None)
+  val legacyAddon = ActiveAddon(None, None)
+
+  val validAddonMap = Map("new-addon" -> webExtension)
+  val invalidAddonMap = Map("new-addon" -> webExtension, "old-addon" -> legacyAddon)
+
+  val quantumReadyPing = TestUtils.generateMainMessages(1, Some(Map(
+    "environment.settings" -> """{"e10sEnabled": true}""",
+    "environment.addons" -> """{
+        |"activeAddons": {"mySystemAddon": {"isSystem": true}},
+        |"theme": {"id": "firefox-compact-dark@mozilla.org"}
+     }""".stripMargin)
+  )).head
+  val notQuantumReadyPing = TestUtils.generateMainMessages(1, Some(Map(
+    "environment.settings" -> """{"e10sEnabled": false}""",
+    "environment.addons" -> """{
+        |"activeAddons": {"mySystemAddon": {"isSystem": true}},
+        |"theme": {"id": "firefox-compact-dark@mozilla.org"}
+     }""".stripMargin)
+  )).head
+  val unknownThemeQuantumReadyPing = TestUtils.generateMainMessages(1, Some(Map(
+    "environment.settings" -> """{"e10sEnabled": true}""",
+    "environment.addons" -> """{
+        |"activeAddons": {"mySystemAddon": {"isSystem": true}}
+     }""".stripMargin)
+  )).head
+  val unknownE10sQuantumReadyPing = TestUtils.generateMainMessages(1, Some(Map(
+    "environment.settings" -> """{}""",
+    "environment.addons" -> """{
+        |"activeAddons": {"mySystemAddon": {"isSystem": true}},
+        |"theme": {"id": "firefox-compact-dark@mozilla.org"}
+     }""".stripMargin)
+  )).head
+
+  "A Theme instance" should "know whether it's old or not" in {
+    recentTheme.isOld should be (false)
+    oldTheme.isOld should be (true)
+  }
+
+  "An ActiveAddon instance" should "know whether it's quantumReady or not" in {
+    webExtension.isQuantumReady should be (true)
+    systemAddon.isQuantumReady should be (true)
+    legacyAddon.isQuantumReady should be (false)
+  }
+
+  "An empty Addons instance" should "have an unknown quantumReady" in {
+    Addons(None, None, None).isQuantumReady should be (None)
+  }
+
+  "An Addons instance with no theme" should "have unknown quantumReady" in {
+    Addons(Some(validAddonMap), None, None).isQuantumReady should be (None)
+  }
+
+  "An Addons instance with no addons" should "be quantumReady" in {
+    Addons(None, None, Some(recentTheme)).isQuantumReady should be (None)
+  }
+
+  "An Addons instance with valid Addons and old theme" should "not be quantum ready" in {
+    Addons(Some(validAddonMap), None, Some(oldTheme)).isQuantumReady should be (Some(false))
+  }
+
+  "An Addons instance with invalid Addons and new theme" should "not be quantum ready" in {
+    Addons(Some(invalidAddonMap), None, Some(recentTheme)).isQuantumReady should be (Some(false))
+  }
+
+  "An Addons instance with valid Addons and new theme" should "be quantum ready" in {
+    Addons(Some(validAddonMap), None, Some(recentTheme)).isQuantumReady should be (Some(true))
+  }
+
+  "A Meta instance with unknown e10sEnable and quantumReady addons" should "be quantumReady unknown" in {
+    MainPing(unknownE10sQuantumReadyPing).meta.isQuantumReady should be (None)
+  }
+
+  "A Meta instance with e10s disabled and quantumReady addons" should "not be quantumReady" in {
+    MainPing(notQuantumReadyPing).meta.isQuantumReady should be (Some(false))
+  }
+
+  "A Meta instance with e10s enabled and quantumReady addons" should "be quantumReady" in {
+    MainPing(quantumReadyPing).meta.isQuantumReady should be (Some(true))
+  }
+  "A Meta instance with e10s enabled and unknown quantumReady addons" should "be quantumReady unknown" in {
+    MainPing(unknownThemeQuantumReadyPing).meta.isQuantumReady should be (None)
+  }
 }
