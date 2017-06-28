@@ -3,6 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
+import java.sql.Timestamp
+
 import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest._
@@ -56,11 +58,12 @@ class TestAggregator extends FlatSpec with Matchers{
       "input_event_response_coalesced_ms_content_above_250",
       "input_event_response_coalesced_ms_content_above_2500",
       "first_paint",
-      "first_subsession_count"
+      "first_subsession_count",
+      "window_start",
+      "window_end"
     )
     val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
     val results = 0.to(inspectedFields.length-1).map(x => (inspectedFields(x), row(x))).toMap
-
     results("submission_date").toString should be ("2016-04-07")
     results("channel") should be (app.channel)
     results("version") should be (app.version)
@@ -94,6 +97,7 @@ class TestAggregator extends FlatSpec with Matchers{
     results("first_paint") should be (42 * 1200)
     results("first_subsession_count") should be (42)
 
-    df.where("window is null").count() should be (0)
+    results("window_start").asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
+    results("window_end").asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
   }
 }
