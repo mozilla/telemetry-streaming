@@ -49,7 +49,12 @@ object TestUtils {
           | "activeExperiment": {"id": "experiment1", "branch": "control"},
           | "activeAddons": {"my-addon": {"isSystem": true}},
           | "theme": {"id": "firefox-compact-dark@mozilla.org"}
-          |}""".stripMargin
+          |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |  "experiment2": {"branch": "chaos"}
+            |}""".stripMargin
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m
@@ -94,15 +99,20 @@ object TestUtils {
           | "activeAddons": {"my-addon": {"isSystem": true}},
           | "theme": {"id": "firefox-compact-dark@mozilla.org"}
           |}""".stripMargin,
+      "environment.experiments" ->
+        """
+          |{
+          |  "experiment2": {"branch": "chaos"}
+          |}""".stripMargin,
       "environment.build" ->
         s"""
-           |{
-             "architecture": "${application.architecture}",
-           |  "buildId": "${application.buildId}",
-           |  "version": "${application.version}"
-           |}""".stripMargin,
+          |{
+          |  "architecture": "${application.architecture}",
+          |  "buildId": "${application.buildId}",
+          |  "version": "${application.version}"
+          |}""".stripMargin,
       "payload.histograms" ->
-            """{
+        """{
           |  "BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}},
           |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
           |    "values": {

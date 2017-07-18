@@ -7,19 +7,24 @@ import java.sql.Timestamp
 
 import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
-import org.scalatest._
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
-class TestAggregator extends FlatSpec with Matchers{
+class TestAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
 
+  val spark = SparkSession.builder()
+    .appName("Error Aggregates")
+    .master("local[1]")
+    .getOrCreate()
+
+  override def afterAll() {
+    spark.stop()
+  }
+
   "The aggregator" should "sum metrics over a set of dimensions" in {
-    val spark = SparkSession.builder()
-      .appName("Error Aggregates")
-      .master("local[1]")
-      .getOrCreate()
     import spark.implicits._
     val messages =
       (TestUtils.generateCrashMessages(k)
@@ -63,7 +68,7 @@ class TestAggregator extends FlatSpec with Matchers{
       "window_end"
     )
     val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
-    val results = 0.to(inspectedFields.length-1).map(x => (inspectedFields(x), row(x))).toMap
+    val results = inspectedFields.zip(row.toSeq).toMap
     results("submission_date").toString should be ("2016-04-07")
     results("channel") should be (app.channel)
     results("version") should be (app.version)
@@ -99,5 +104,52 @@ class TestAggregator extends FlatSpec with Matchers{
 
     results("window_start").asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
+  }
+
+  "The aggregator" should "handle new style experiments" in {
+    import spark.implicits._
+    val crashMessage = TestUtils.generateCrashMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |  "new-experiment-1": {"branch": "control"},
+            |  "new-experiment-2": {"branch": "chaos"}
+            |}""".stripMargin
+      )))
+    val mainMessage = TestUtils.generateMainMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |  "new-experiment-1": {"branch": "control"},
+            |  "new-experiment-2": {"branch": "chaos"}
+            |}""".stripMargin
+      )))
+    val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    df.count() should be (1)
+    val inspectedFields = List(
+      "experiment_id",
+      "experiment_branch"
+    )
+    val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
+    val results = inspectedFields.zip(row.toSeq).toMap
+    results("experiment_id") should be ("new-experiment-1")
+    results("experiment_branch") should be ("control")
   }
 }
