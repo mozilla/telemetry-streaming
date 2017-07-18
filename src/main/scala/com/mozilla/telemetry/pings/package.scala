@@ -193,7 +193,8 @@ package object pings {
         "environment.settings",
         "environment.system",
         "environment.profile",
-        "environment.addons"
+        "environment.addons",
+        "environment.experiments"
       )
       val ping = messageToPing(message, jsonFieldNames)
       ping.extract[CrashPing]
@@ -295,6 +296,7 @@ package object pings {
         "environment.system",
         "environment.profile",
         "environment.addons",
+        "environment.experiments",
         "payload.simpleMeasurements",
         "payload.keyedHistograms",
         "payload.histograms",
