@@ -16,14 +16,13 @@ import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
+class ErrorAggregator extends Serializable {
 
-object ErrorAggregator {
+  protected val allowedDocTypes = List("main", "crash")
+  protected val outputPrefix = "error_aggregates/v1"
+  protected val kafkaCacheMaxCapacity = 1000
 
-  private val allowedDocTypes = List("main", "crash")
-  private val outputPrefix = "error_aggregates/v1"
-  private val kafkaCacheMaxCapacity = 1000
-
-  private class Opts(args: Array[String]) extends ScallopConf(args) {
+  protected class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
       "kafkaBroker",
       descr = "Kafka broker (streaming mode only)",
@@ -66,7 +65,7 @@ object ErrorAggregator {
     verify()
   }
 
-  private val countHistogramErrorsSchema = new SchemaBuilder()
+  protected val countHistogramErrorsSchema = new SchemaBuilder()
     .add[Int]("BROWSER_SHIM_USAGE_BLOCKED")
     .add[Int]("PERMISSIONS_SQL_CORRUPTED")
     .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
@@ -74,14 +73,14 @@ object ErrorAggregator {
     .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
-  private val thresholdHistograms = Map(
+  protected val thresholdHistograms = Map(
     "INPUT_EVENT_RESPONSE_COALESCED_MS" -> (List("main", "content"), List(150, 250, 2500)),
     "GHOST_WINDOWS" -> (List("main", "content"), List(1)),
     "GC_MAX_PAUSE_MS_2" -> (List("main", "content"), List(150, 250, 2500)),
     "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
   )
 
-  private val dimensionsSchema = new SchemaBuilder()
+  protected val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
     .add[String]("channel")
@@ -98,7 +97,7 @@ object ErrorAggregator {
     .add[Boolean]("quantum_ready")
     .build
 
-  private val metricsSchema = new SchemaBuilder()
+  protected val metricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("main_crashes")
@@ -111,10 +110,10 @@ object ErrorAggregator {
     .add[Int]("first_subsession_count")
     .build
 
-  private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
+  protected def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
     s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
 
-  private val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
+  protected val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
     val histogramName = kv._1
     kv._2 match {
       case (processTypes: List[String], thresholds: List[Int]) => {
@@ -128,9 +127,9 @@ object ErrorAggregator {
     }
   }).build
 
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
+  protected val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
 
-  private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
+  protected[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
 
     // A custom row encoder is needed to use Rows within a Spark Dataset
@@ -168,7 +167,8 @@ object ErrorAggregator {
       .withColumn("window_end", $"window.end")
       .drop("window")
   }
-  private def buildDimensions(meta: Meta): Row = {
+
+  protected def buildDimensions(meta: Meta): Array[Row] = {
     val dimensions = new RowBuilder(dimensionsSchema)
     dimensions("timestamp") = Some(meta.normalizedTimestamp())
     dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
@@ -189,7 +189,7 @@ object ErrorAggregator {
       compositor <- features.compositor
     } yield compositor
     dimensions("quantum_ready") = meta.isQuantumReady
-    dimensions.build
+    Array(dimensions.build)
   }
 
   implicit class ErrorAggregatorCrashPing(ping: CrashPing) {
@@ -200,7 +200,8 @@ object ErrorAggregator {
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
       stats("main_crashes") = Some(1)
-      Array(RowBuilder.merge(dimensions, stats.build))
+
+      dimensions.map(d => RowBuilder.merge(d, stats.build))
     }
   }
 
@@ -235,7 +236,7 @@ object ErrorAggregator {
       } stats(thresholdHistogramName(histogramName, processType, threshold)) =
         Some(ping.histogramThresholdCount(histogramName, threshold, processType))
 
-      Array(RowBuilder.merge(dimensions, stats.build))
+      dimensions.map(d => RowBuilder.merge(d, stats.build))
     }
   }
 

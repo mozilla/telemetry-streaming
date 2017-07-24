@@ -134,12 +134,20 @@ package object pings {
 
     def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
 
+    def experiments: Array[(String, String)] = {
+      val exps = for {
+        experiments <- this.`environment.experiments`.toSeq
+        (experimentId, experiment) <- experiments
+      } yield (experimentId, experiment.branch)
+      exps.toArray[(String,String)]
+    }
+
     def isQuantumReady: Option[Boolean] = {
       for {
         addons <- this.`environment.addons`
         addonsReady <- addons.isQuantumReady
         e10sEnabled <- this.isE10sEnabled
-      } yield  addonsReady && e10sEnabled
+      } yield addonsReady && e10sEnabled
     }
   }
 

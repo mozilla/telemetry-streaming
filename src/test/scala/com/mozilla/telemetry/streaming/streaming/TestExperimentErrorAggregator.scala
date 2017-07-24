@@ -9,15 +9,15 @@ import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
-class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
+class TestExperimentErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
-  val errorAggregator = new ErrorAggregator()
+  val errorAggregator = new ExperimentErrorAggregator()
 
   val spark = SparkSession.builder()
-    .appName("Error Aggregates")
+    .appName("Experiment Error Aggregates")
     .master("local[1]")
     .getOrCreate()
 
@@ -25,7 +25,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     spark.stop()
   }
 
-  "The aggregator" should "sum metrics over a set of dimensions" in {
+  "The experiment aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
     val messages =
       (TestUtils.generateCrashMessages(k)
@@ -52,6 +52,8 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "count",
       "usage_hours",
       "browser_shim_usage_blocked",
+      "experiment_id",
+      "experiment_branch",
       "e10s_enabled",
       "e10s_cohort",
       "gfx_compositor",
@@ -87,6 +89,8 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("count") should be (k * 2)
     results("usage_hours") should be (k.toFloat)
     results("browser_shim_usage_blocked") should be (k)
+    results("experiment_id") should be ("experiment2")
+    results("experiment_branch") should be ("chaos")
     results("e10s_enabled") should equal (true)
     results("e10s_cohort") should be ("test")
     results("gfx_compositor") should be ("opengl")
@@ -101,5 +105,91 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     results("window_start").asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
+  }
+
+  it should "handle multiple experiments" in {
+    import spark.implicits._
+    val crashMessage = TestUtils.generateCrashMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |  "new-experiment-1": {"branch": "control"},
+            |  "new-experiment-2": {"branch": "chaos"}
+            |}""".stripMargin
+      )))
+    val mainMessage = TestUtils.generateMainMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |  "new-experiment-1": {"branch": "control"},
+            |  "new-experiment-2": {"branch": "chaos"}
+            |}""".stripMargin
+      )))
+    val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
+    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    df.count() should be (2)
+
+    val inspectedFields = List(
+      "experiment_id",
+      "experiment_branch"
+    )
+    val rows = df.select(inspectedFields(0), inspectedFields.drop(1):_*).collect()
+    val results = rows.map(row => inspectedFields.zip(row.toSeq).toMap)
+    val ids = results.map(_("experiment_id")).toSet
+    val branches = results.map(_("experiment_branch")).toSet
+
+    ids should be (Set("new-experiment-1", "new-experiment-2"))
+    branches should be (Set("control", "chaos"))
+  }
+
+  it should "handle no experiments" in {
+    import spark.implicits._
+    val crashMessage = TestUtils.generateCrashMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |}""".stripMargin
+      )))
+    val mainMessage = TestUtils.generateMainMessages(
+      k,
+      Some(Map(
+        "environment.addons" ->
+          """
+            |{
+            | "activeAddons": {"my-addon": {"isSystem": true}},
+            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+            |}""".stripMargin,
+        "environment.experiments" ->
+          """
+            |{
+            |}""".stripMargin
+      )))
+    val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
+    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    df.count() should be (0)
   }
 }
