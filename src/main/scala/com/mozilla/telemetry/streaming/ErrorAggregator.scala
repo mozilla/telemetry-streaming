@@ -92,8 +92,6 @@ object ErrorAggregator {
     .add[String]("os_version")
     .add[String]("architecture")
     .add[String]("country")
-    .add[String]("experiment_id")
-    .add[String]("experiment_branch")
     .add[Boolean]("e10s_enabled")
     .add[String]("e10s_cohort")
     .add[String]("gfx_compositor")
@@ -182,10 +180,6 @@ object ErrorAggregator {
     dimensions("os_version") = meta.`environment.system`.map(_.os.version)
     dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
     dimensions("country") = Some(meta.geoCountry)
-    meta.experiment.foreach(experiment =>{
-      dimensions("experiment_id") = Some(experiment._1)
-      dimensions("experiment_branch") = Some(experiment._2)
-    })
     dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
     dimensions("e10s_cohort") = meta.`environment.settings`.flatMap(_.e10sCohort)
     dimensions("gfx_compositor") = for {

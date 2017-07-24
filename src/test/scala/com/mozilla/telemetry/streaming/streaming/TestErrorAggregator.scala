@@ -51,8 +51,6 @@ class TestAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
       "count",
       "usage_hours",
       "browser_shim_usage_blocked",
-      "experiment_id",
-      "experiment_branch",
       "e10s_enabled",
       "e10s_cohort",
       "gfx_compositor",
@@ -88,8 +86,6 @@ class TestAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
     results("count") should be (k * 2)
     results("usage_hours") should be (k.toFloat)
     results("browser_shim_usage_blocked") should be (k)
-    results("experiment_id") should be ("experiment1")
-    results("experiment_branch") should be ("control")
     results("e10s_enabled") should equal (true)
     results("e10s_cohort") should be ("test")
     results("gfx_compositor") should be ("opengl")
@@ -104,52 +100,5 @@ class TestAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
 
     results("window_start").asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
-  }
-
-  "The aggregator" should "handle new style experiments" in {
-    import spark.implicits._
-    val crashMessage = TestUtils.generateCrashMessages(
-      k,
-      Some(Map(
-        "environment.addons" ->
-          """
-            |{
-            | "activeAddons": {"my-addon": {"isSystem": true}},
-            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
-            |}""".stripMargin,
-        "environment.experiments" ->
-          """
-            |{
-            |  "new-experiment-1": {"branch": "control"},
-            |  "new-experiment-2": {"branch": "chaos"}
-            |}""".stripMargin
-      )))
-    val mainMessage = TestUtils.generateMainMessages(
-      k,
-      Some(Map(
-        "environment.addons" ->
-          """
-            |{
-            | "activeAddons": {"my-addon": {"isSystem": true}},
-            | "theme": {"id": "firefox-compact-dark@mozilla.org"}
-            |}""".stripMargin,
-        "environment.experiments" ->
-          """
-            |{
-            |  "new-experiment-1": {"branch": "control"},
-            |  "new-experiment-2": {"branch": "chaos"}
-            |}""".stripMargin
-      )))
-    val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-    df.count() should be (1)
-    val inspectedFields = List(
-      "experiment_id",
-      "experiment_branch"
-    )
-    val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
-    val results = inspectedFields.zip(row.toSeq).toMap
-    results("experiment_id") should be ("new-experiment-1")
-    results("experiment_branch") should be ("control")
   }
 }
