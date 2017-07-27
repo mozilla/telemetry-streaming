@@ -310,6 +310,7 @@ package object pings {
   case class Environment(build: EnvironmentBuild, system: EnvironmentSystem)
 
   case class EnvironmentBuild(
+      displayVersion: Option[String],
       version: Option[String],
       buildId: Option[String],
       architecture: Option[String])
