@@ -71,7 +71,7 @@ class TestAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
     val results = inspectedFields.zip(row.toSeq).toMap
     results("submission_date").toString should be ("2016-04-07")
     results("channel") should be (app.channel)
-    results("version") should be (app.version)
+    results("version") should be (app.displayVersion)
     results("build_id") should be (app.buildId)
     results("application") should be (app.name)
     results("os_name") should be ("Linux")
