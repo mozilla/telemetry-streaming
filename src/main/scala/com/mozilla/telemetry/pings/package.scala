@@ -16,6 +16,7 @@ package object pings {
       buildId: String,
       channel: String,
       name: String,
+      displayVersion: String,
       platformVersion: String,
       vendor: String,
       version: String,
