@@ -132,37 +132,28 @@ package object pings {
       new Timestamp(this.Timestamp / 1000000)
     }
 
-    /**
-      * Returns a Tuple2(experimentId, experimentBranch).
-      *
-      * This information could be in 2 different locations depending on whether the
-      * user is enrolled in a new style experiment or in a old style one.
-      *
-      * To further complicate things, in case of a new style experiment, the user
-      * could be enrolled in more than one experiment. In that case we arbitrary decide
-      * to pick the first experiment.
-      */
-    def experiment: Option[(String, String)] = {
+    def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
+
+    def experiments: Seq[(Option[String], Option[String])] = {
       val oldStyleExperiment = for {
         addons <- this.`environment.addons`
         experiment <- addons.activeExperiment
-      } yield (experiment.id, experiment.branch)
+      } yield (Some(experiment.id), Some(experiment.branch))
 
-      val newStyleExperiment = for {
-        experiments <- this.`environment.experiments`
-        (experimentId, experiment) <- experiments.headOption
-      } yield (experimentId, experiment.branch)
-      oldStyleExperiment orElse newStyleExperiment
+      val newStyleExperiments = for {
+        experiments <- this.`environment.experiments`.toSeq
+        (experimentId, experiment) <- experiments
+      } yield (Some(experimentId), Some(experiment.branch))
+
+      newStyleExperiments ++ oldStyleExperiment
     }
-
-    def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
 
     def isQuantumReady: Option[Boolean] = {
       for {
         addons <- this.`environment.addons`
         addonsReady <- addons.isQuantumReady
         e10sEnabled <- this.isE10sEnabled
-      } yield  addonsReady && e10sEnabled
+      } yield addonsReady && e10sEnabled
     }
   }
 
