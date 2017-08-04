@@ -170,32 +170,37 @@ object ErrorAggregator {
       .withColumn("window_end", $"window.end")
       .drop("window")
   }
-  private def buildDimensions(meta: Meta): Row = {
-    val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(meta.normalizedTimestamp())
-    dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
-    dimensions("channel") = Some(meta.normalizedChannel)
-    dimensions("version") = meta.`environment.build`.flatMap(_.version)
-    dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)
-    dimensions("application") = Some(meta.appName)
-    dimensions("os_name") = meta.`environment.system`.map(_.os.name)
-    dimensions("os_version") = meta.`environment.system`.map(_.os.version)
-    dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
-    dimensions("country") = Some(meta.geoCountry)
-    meta.experiment.foreach(experiment =>{
-      dimensions("experiment_id") = Some(experiment._1)
-      dimensions("experiment_branch") = Some(experiment._2)
-    })
-    dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
-    dimensions("e10s_cohort") = meta.`environment.settings`.flatMap(_.e10sCohort)
-    dimensions("gfx_compositor") = for {
-      system <- meta.`environment.system`
-      gfx <- system.gfx
-      features <- gfx.features
-      compositor <- features.compositor
-    } yield compositor
-    dimensions("quantum_ready") = meta.isQuantumReady
-    dimensions.build
+
+  private def buildDimensions(meta: Meta): Array[Row] = {
+
+    // add a null experiment_id and experiment_branch for each ping
+    val experiments = (meta.experiments :+ (None, None)).toSet.toArray
+
+    experiments.map{ case (experiment_id, experiment_branch) =>
+      val dimensions = new RowBuilder(dimensionsSchema)
+      dimensions("timestamp") = Some(meta.normalizedTimestamp())
+      dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
+      dimensions("channel") = Some(meta.normalizedChannel)
+      dimensions("version") = meta.`environment.build`.flatMap(_.version)
+      dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)
+      dimensions("application") = Some(meta.appName)
+      dimensions("os_name") = meta.`environment.system`.map(_.os.name)
+      dimensions("os_version") = meta.`environment.system`.map(_.os.version)
+      dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
+      dimensions("country") = Some(meta.geoCountry)
+      dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
+      dimensions("e10s_cohort") = meta.`environment.settings`.flatMap(_.e10sCohort)
+      dimensions("gfx_compositor") = for {
+        system <- meta.`environment.system`
+        gfx <- system.gfx
+        features <- gfx.features
+        compositor <- features.compositor
+      } yield compositor
+      dimensions("quantum_ready") = meta.isQuantumReady
+      dimensions("experiment_id") = experiment_id
+      dimensions("experiment_branch") = experiment_branch
+      dimensions.build
+    }
   }
 
   implicit class ErrorAggregatorCrashPing(ping: CrashPing) {
@@ -206,7 +211,8 @@ object ErrorAggregator {
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
       stats("main_crashes") = Some(1)
-      Array(RowBuilder.merge(dimensions, stats.build))
+
+      dimensions.map(RowBuilder.merge(_, stats.build))
     }
   }
 
@@ -241,7 +247,7 @@ object ErrorAggregator {
       } stats(thresholdHistogramName(histogramName, processType, threshold)) =
         Some(ping.histogramThresholdCount(histogramName, threshold, processType))
 
-      Array(RowBuilder.merge(dimensions, stats.build))
+      dimensions.map(RowBuilder.merge(_, stats.build))
     }
   }
 
