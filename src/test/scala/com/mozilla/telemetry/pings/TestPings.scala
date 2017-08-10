@@ -7,6 +7,7 @@ import java.sql.Timestamp
 
 import org.scalatest.{FlatSpec, Matchers}
 import com.mozilla.telemetry.pings._
+import org.joda.time.{DateTime, Duration}
 
 
 class TestPings extends FlatSpec with Matchers{
@@ -148,5 +149,24 @@ class TestPings extends FlatSpec with Matchers{
   }
   "A Meta instance with e10s enabled and unknown quantumReady addons" should "be quantumReady unknown" in {
     MainPing(unknownThemeQuantumReadyPing).meta.isQuantumReady should be (None)
+  }
+
+  "A Profile instance" should "return its age in days" in {
+    val today = TestUtils.today
+    val todayDays = TestUtils.todayDays
+    // Profile with age zero
+    Profile(Some(todayDays), None).ageDays(today) should be (Some(0))
+    // Profile with positive age
+    Profile(Some(todayDays - 10), None).ageDays(today) should be (Some(10))
+    // Profile with negative age
+    Profile(Some(todayDays + 10), None).ageDays(today) should be (None)
+
+    Profile(Some(todayDays - 42), None).ageDaysBin(today) should be (Some(42))
+    Profile(Some(todayDays - 43), None).ageDaysBin(today) should be (Some(49))
+    Profile(Some(todayDays - 49), None).ageDaysBin(today) should be (Some(49))
+    Profile(Some(todayDays - 364), None).ageDaysBin(today) should be (Some(364))
+    Profile(Some(todayDays - 367), None).ageDaysBin(today) should be (Some(365))
+    Profile(Some(todayDays - 3000), None).ageDaysBin(today) should be (Some(365))
+
   }
 }
