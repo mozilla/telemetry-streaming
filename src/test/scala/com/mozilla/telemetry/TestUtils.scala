@@ -5,6 +5,7 @@ package com.mozilla.telemetry.streaming
 
 import com.mozilla.telemetry.heka.{Message, RichMessage}
 import com.mozilla.telemetry.pings
+import org.joda.time.{DateTime, Duration}
 import org.json4s.{DefaultFormats, Extraction}
 import org.json4s.jackson.JsonMethods.{compact, render}
 
@@ -18,6 +19,8 @@ object TestUtils {
   val scalarValue = 42
   val testTimestampNano = 1460036116829920000L
   val testTimestampMillis = testTimestampNano / 1000000
+  val today = new DateTime(testTimestampMillis)
+  val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
 
   def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
     val defaultMap = Map(
@@ -51,11 +54,16 @@ object TestUtils {
           | "activeAddons": {"my-addon": {"isSystem": true}},
           | "theme": {"id": "firefox-compact-dark@mozilla.org"}
           |}""".stripMargin,
-        "environment.experiments" ->
-          """
-            |{
-            |  "experiment2": {"branch": "chaos"}
-            |}""".stripMargin
+      "environment.profile" ->
+        s"""
+          |{
+          | "creationDate": ${todayDays-70}
+          | }""".stripMargin,
+      "environment.experiments" ->
+        """
+          |{
+          |  "experiment2": {"branch": "chaos"}
+          |}""".stripMargin
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m
@@ -101,6 +109,11 @@ object TestUtils {
           | "activeAddons": {"my-addon": {"isSystem": true}},
           | "theme": {"id": "firefox-compact-dark@mozilla.org"}
           |}""".stripMargin,
+      "environment.profile" ->
+        s"""
+           |{
+           | "creationDate": ${todayDays-70}
+           | }""".stripMargin,
       "environment.experiments" ->
         """
           |{
