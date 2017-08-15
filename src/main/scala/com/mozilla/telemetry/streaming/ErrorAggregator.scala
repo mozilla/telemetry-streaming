@@ -9,8 +9,8 @@ import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.functions.{sum, window}
-import org.apache.spark.sql.{ColumnName, DataFrame, Row, SparkSession}
+import org.apache.spark.sql.functions.{sum, window, col}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
@@ -149,26 +149,28 @@ object ErrorAggregator {
         }
       })
 
-    val dimensions = List(window($"timestamp", "5 minute")) ++ dimensionsSchema.fieldNames
-      .filter(_ != "timestamp")
-      .map(new ColumnName(_))
-
-    val stats = for {
-      fieldName <- statsSchema.fieldNames
-      normFieldName = fieldName.toLowerCase
-    } yield sum(normFieldName).alias(normFieldName)
-
     if (online) {
       parsedPings = parsedPings.withWatermark("timestamp", "1 minute")
     }
 
+    val dimensionsCols = List(
+      col("window.start").as("window_start"),
+      col("window.end").as("window_end")
+    ) ++ dimensionsSchema.fieldNames.filter(_ != "timestamp").map(col(_))
+
+    val stats = statsSchema.fieldNames.map(_.toLowerCase)
+    val sumCols = stats.map(s => sum(s).as(s))
+
+
+    /*
+    * The resulting DataFrame will contain the grouping columns + the columns aggregated.
+    * Everything else gets dropped by .agg()
+    * */
     parsedPings
-      .groupBy(dimensions:_*)
-      .agg(stats(0), stats.drop(1):_*)
+      .withColumn("window", window($"timestamp", "5 minute").as("window"))
+      .groupBy(dimensionsCols: _*)
+      .agg(sumCols(0), sumCols.drop(1): _*)
       .coalesce(1)
-      .withColumn("window_start", $"window.start")
-      .withColumn("window_end", $"window.end")
-      .drop("window")
   }
 
   private def buildDimensions(meta: Meta): Array[Row] = {
