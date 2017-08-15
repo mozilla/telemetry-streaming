@@ -4,7 +4,7 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
-
+import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
 import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -19,6 +19,9 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     .appName("Error Aggregates")
     .master("local[1]")
     .getOrCreate()
+
+  spark.udf.register("HllCreate", hllCreate _)
+  spark.udf.register("HllCardinality", hllCardinality _)
 
   override def afterAll() {
     spark.stop()
@@ -67,11 +70,15 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "first_paint",
       "first_subsession_count",
       "window_start",
-      "window_end"
+      "window_end",
+      "HllCardinality(client_count) as client_count",
+      "HllCardinality(long_main_input_latency_client_count) as long_main_input_latency_client_count"
     )
 
-    val rows = df.select(inspectedFields(0), inspectedFields.drop(1):_*).collect()
-    val results = inspectedFields.zip( inspectedFields.map(field => rows.map(row => row.getAs[Any](field)).toSet) ).toMap
+    val query = df.selectExpr(inspectedFields:_*)
+    val columns = query.columns
+    val results = columns.zip(columns.map(field => query.collect().map(row => row.getAs[Any](field)).toSet) ).toMap
+
 
     results("submission_date").map(_.toString) should be (Set("2016-04-07"))
     results("channel") should be (Set(app.channel))
@@ -105,9 +112,10 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("input_event_response_coalesced_ms_content_above_2500") should be (Set(42 * 2))
     results("first_paint") should be (Set(42 * 1200))
     results("first_subsession_count") should be (Set(42))
-
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
+    results("client_count") should be (Set(1))
+    results("long_main_input_latency_client_count") should be (Set(1))
   }
 
   "The aggregator" should "handle new style experiments" in {
@@ -159,5 +167,74 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     results("experiment_id").toSet should be (Set("new-experiment-1", "new-experiment-2", null))
     results("experiment_branch").toSet should be (Set("control", "chaos", null))
+  }
+
+  "The aggregator" should "correctly compute client counts" in {
+    import spark.implicits._
+    val crashMessages = 1 to 10 flatMap (i =>
+      TestUtils.generateCrashMessages(
+        2, Some(Map("clientId" -> s"client${i}")))
+      )
+
+    val mainMessages = 1 to 10 flatMap (i =>
+      TestUtils.generateMainMessages(
+        2, Some(Map("clientId" -> s"client${i}")))
+      )
+
+    val messages = (crashMessages ++ mainMessages).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val client_count = df.selectExpr("HllCardinality(client_count) as client_count").collect()(0).getAs[Any]("client_count")
+    client_count should be (10)
+  }
+
+  "The aggregator" should "correctly compute filtered client counts" in {
+    import spark.implicits._
+
+    val mainMessagesAffected = 1 to 5 flatMap (i =>
+      TestUtils.generateMainMessages(
+        2, Some(
+          Map(
+            "clientId" -> s"client${i}",
+            "payload.histograms" ->
+              """{
+                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
+                |    "values": {
+                |      "1": 1,
+                |      "150": 2,
+                |      "250": 3,
+                |      "2500": 4,
+                |      "10000": 5
+                |    }
+                |  }
+                |}""".stripMargin
+          )))
+      )
+
+    val mainMessagesNotAffected = 6 to 10 flatMap (i =>
+      TestUtils.generateMainMessages(
+        2, Some(
+          Map(
+            "clientId" -> s"client${i}",
+            "payload.histograms" ->
+              """{
+                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
+                |    "values": {
+                |      "1": 1,
+                |      "150": 2,
+                |      "250": 3,
+                |      "2500": 0,
+                |      "10000": 0
+                |    }
+                |  }
+                |}""".stripMargin
+          )))
+      )
+
+    val messages = (mainMessagesAffected ++ mainMessagesNotAffected).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val client_count = df.selectExpr(
+      "HllCardinality(long_main_input_latency_client_count) as long_main_input_latency_client_count"
+    ).collect()(0).getAs[Any]("long_main_input_latency_client_count")
+    client_count should be (5)
   }
 }

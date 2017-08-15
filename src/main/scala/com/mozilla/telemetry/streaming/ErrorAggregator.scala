@@ -5,11 +5,13 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.{Date, Timestamp}
 
+import com.mozilla.spark.sql.hyperloglog.aggregates._
+import com.mozilla.spark.sql.hyperloglog.functions._
 import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.functions.{sum, window, col}
+import org.apache.spark.sql.functions.{sum, window, col, expr}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.json4s._
@@ -81,6 +83,15 @@ object ErrorAggregator {
     "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
   )
 
+  private val clientCounts = Map(
+    "long_main_gc_or_cc_pause" -> "gc_max_pause_ms_2_main_above_150 > 0 OR cycle_collector_max_pause_main_above_150 > 0",
+    "long_content_gc_or_cc_pause" -> "gc_max_pause_ms_2_content_above_2500 > 0 OR cycle_collector_max_pause_content_above_2500 > 0",
+    "ghost_windows_main" -> "ghost_windows_main_above_1 > 0",
+    "ghost_windows_content" -> "ghost_windows_content_above_1 > 0",
+    "long_main_input_latency" -> "input_event_response_coalesced_ms_main_above_2500 > 0",
+    "long_content_input_latency" -> "input_event_response_coalesced_ms_content_above_2500 > 0"
+  )
+
   private val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
@@ -113,6 +124,12 @@ object ErrorAggregator {
     .add[Int]("first_subsession_count")
     .build
 
+  // this part of the schema is used to temporarily hold
+  // data that will not be part of the final schema
+  private val tempSchema = new SchemaBuilder()
+    .add[String]("client_id")
+    .build
+
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
     s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
 
@@ -130,7 +147,10 @@ object ErrorAggregator {
     }
   }).build
 
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
+  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema, tempSchema)
+
+  private val HllMerge = new HyperLogLogMerge
+  private val FilteredHllMerge = new FilteredHyperLogLogMerge
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -161,14 +181,18 @@ object ErrorAggregator {
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
     val sumCols = stats.map(s => sum(s).as(s))
+    val countCols = clientCounts.map{
+      case (key, value) => FilteredHllMerge($"hll", expr(value)).as(s"${key}_client_count")
+    }
 
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
     * Everything else gets dropped by .agg()
     * */
     parsedPings
+      .withColumn("hll", expr("HllCreate(client_id, 12)"))
       .groupBy(dimensionsCols: _*)
-      .agg(sumCols(0), sumCols.drop(1): _*)
+      .agg(HllMerge($"hll").as("client_count"), sumCols ++ countCols: _*)
       .drop("window")
       .coalesce(1)
   }
@@ -212,6 +236,7 @@ object ErrorAggregator {
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
+      stats("client_id") = ping.meta.clientId
       stats("main_crashes") = Some(1)
 
       dimensions.map(RowBuilder.merge(_, stats.build))
@@ -227,6 +252,7 @@ object ErrorAggregator {
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
+      stats("client_id") = ping.meta.clientId
       stats("usage_hours") = usageHours
       countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
         stats(stats_name) = ping.getCountHistogramValue(stats_name)
@@ -340,6 +366,9 @@ object ErrorAggregator {
     val spark = SparkSession.builder()
       .appName("Error Aggregates")
       .getOrCreate()
+
+    spark.udf.register("HllCreate", hllCreate _)
+
 
     opts.kafkaBroker.get match {
       case Some(_) => writeStreamingAggregates(spark, opts)
