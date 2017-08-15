@@ -21,6 +21,7 @@ object TestUtils {
 
   def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
     val defaultMap = Map(
+      "clientId" -> "client1",
       "docType" -> "crash",
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
@@ -77,6 +78,7 @@ object TestUtils {
   }
   def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
     val defaultMap = Map(
+      "clientId" -> "client1",
       "docType" -> "main",
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
