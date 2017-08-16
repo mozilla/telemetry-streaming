@@ -274,6 +274,14 @@ package object pings {
         case _ => None
       }
     }
+
+    def sessionId: Option[String] = {
+      this.meta.`payload.info` \ "sessionId" match {
+        case JString(v) => Some(v)
+        case _ => None
+      }
+    }
+
   }
   object MainPing {
 
