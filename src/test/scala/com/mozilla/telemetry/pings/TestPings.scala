@@ -58,6 +58,10 @@ class TestPings extends FlatSpec with Matchers{
     subsequentPing.firstPaint should be(None)
   }
 
+  it should "return its sessionId" in {
+    mainPing.sessionId should be (Some("sample-session-id"))
+  }
+
   val recentTheme = new Theme("firefox-compact-dark@mozilla.org")
   val oldTheme = new Theme("the-oldest-theme-ever")
 

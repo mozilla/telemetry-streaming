@@ -140,7 +140,7 @@ object TestUtils {
           |  }
           |}""".stripMargin,
       "payload.simpleMeasurements" -> """{"firstPaint": 1200}""",
-      "payload.info" -> """{"subsessionLength": 3600, "subsessionCounter": 1}"""
+      "payload.info" -> """{"subsessionLength": 3600, "subsessionCounter": 1, "sessionId": "sample-session-id"}"""
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m

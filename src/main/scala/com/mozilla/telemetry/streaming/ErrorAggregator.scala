@@ -128,6 +128,7 @@ object ErrorAggregator {
   // data that will not be part of the final schema
   private val tempSchema = new SchemaBuilder()
     .add[String]("client_id")
+    .add[String]("session_id")
     .build
 
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
@@ -180,9 +181,18 @@ object ErrorAggregator {
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
     val sumCols = stats.map(s => sum(s).as(s))
-    val countCols = clientCounts.map{
-      case (key, value) => FilteredHllMerge($"hll", expr(value)).as(s"${key}_client_count")
+    val countCols = clientCounts.flatMap{
+      case (key, value) => {
+        FilteredHllMerge($"client_hll", expr(value)).as(s"${key}_client_count") ::
+        FilteredHllMerge($"session_hll", expr(value)).as(s"${key}_session_count") :: Nil
+      }
     }
+    val aggCols =
+      HllMerge($"client_hll").as("client_count") ::
+      HllMerge($"session_hll").as("session_count") :: Nil ++
+      sumCols ++
+      countCols
+
 
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
@@ -190,9 +200,10 @@ object ErrorAggregator {
     * */
     parsedPings
       .withColumn("window", window($"timestamp", "5 minute").as("window"))
-      .withColumn("hll", expr("HllCreate(client_id, 12)"))
+      .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
+      .withColumn("session_hll", expr("HllCreate(concat(client_id, session_id), 12)"))
       .groupBy(dimensionsCols: _*)
-      .agg(HllMerge($"hll").as("client_count"), sumCols ++ countCols: _*)
+      .agg(aggCols(0), aggCols.drop(0): _*)
       .coalesce(1)
   }
 
@@ -252,6 +263,7 @@ object ErrorAggregator {
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
       stats("client_id") = ping.meta.clientId
+      stats("session_id") = ping.sessionId
       stats("usage_hours") = usageHours
       countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
         stats(stats_name) = ping.getCountHistogramValue(stats_name)
