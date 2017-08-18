@@ -54,6 +54,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "gmplugin_crashes",
       "content_shutdown_crashes",
       "count",
+      "subsession_count",
       "usage_hours",
       "browser_shim_usage_blocked",
       "experiment_id",
@@ -97,6 +98,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("gmplugin_crashes") should be (Set(k))
     results("content_shutdown_crashes") should be (Set(k))
     results("count") should be (Set(k * 2))
+    results("subsession_count") should be (Set(k))
     results("usage_hours") should be (Set(k.toFloat))
     results("browser_shim_usage_blocked") should be (Set(k))
     results("experiment_id") should be (Set("experiment1", "experiment2", null))
@@ -198,6 +200,19 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
     val session_count = df.selectExpr("HllCardinality(session_count) as session_count").collect()(0).getAs[Any]("session_count")
     session_count should be (5)
+  }
+
+  "The aggregator" should "correctly compute subsession counts" in {
+    import spark.implicits._
+    val mainMessages = 1 to 10 flatMap (i =>
+      TestUtils.generateMainMessages(
+        1, Some(Map("payload.info" -> s"""{"subsessionLength": 3600, "sessionId": "session${i%5}"}""")))
+      )
+
+    val messages = mainMessages.map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
+    subsession_count should be (10)
   }
 
   "The aggregator" should "correctly compute filtered client counts" in {
