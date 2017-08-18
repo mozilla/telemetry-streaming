@@ -114,6 +114,7 @@ object ErrorAggregator {
   private val metricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
+    .add[Int]("subsession_count")
     .add[Int]("main_crashes")
     .add[Int]("content_crashes")
     .add[Int]("gpu_crashes")
@@ -262,6 +263,7 @@ object ErrorAggregator {
       val dimensions = buildDimensions(ping.meta)
       val stats = new RowBuilder(statsSchema)
       stats("count") = Some(1)
+      stats("subsession_count") = Some(1)
       stats("client_id") = ping.meta.clientId
       stats("session_id") = ping.sessionId
       stats("usage_hours") = usageHours
