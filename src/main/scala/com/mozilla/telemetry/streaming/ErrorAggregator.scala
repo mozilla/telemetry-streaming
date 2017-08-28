@@ -154,6 +154,7 @@ object ErrorAggregator {
     }
 
     val dimensionsCols = List(
+      window($"timestamp", "5 minute").as("window"),
       col("window.start").as("window_start"),
       col("window.end").as("window_end")
     ) ++ dimensionsSchema.fieldNames.filter(_ != "timestamp").map(col(_))
@@ -161,15 +162,14 @@ object ErrorAggregator {
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
     val sumCols = stats.map(s => sum(s).as(s))
 
-
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
     * Everything else gets dropped by .agg()
     * */
     parsedPings
-      .withColumn("window", window($"timestamp", "5 minute").as("window"))
       .groupBy(dimensionsCols: _*)
       .agg(sumCols(0), sumCols.drop(1): _*)
+      .drop("window")
       .coalesce(1)
   }
 
