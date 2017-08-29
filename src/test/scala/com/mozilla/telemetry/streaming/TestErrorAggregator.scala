@@ -373,4 +373,19 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     results should be (Set(41, 56, 365))
   }
+
+  "The aggregator" should "discard non-Firefox pings" in {
+    import spark.implicits._
+    val fxCrashMessage = TestUtils.generateCrashMessages(k)
+    val fxMainMessage = TestUtils.generateMainMessages(k)
+    val otherCrashMessage = TestUtils.generateCrashMessages(k, Some(Map("appName" -> "Icefox")))
+    val otherMainMessage = TestUtils.generateMainMessages(k, Some(Map("appName" -> "Icefox")))
+
+    val messages =
+      (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    df.where("application <> 'Firefox'").count() should be (0)
+
+  }
 }

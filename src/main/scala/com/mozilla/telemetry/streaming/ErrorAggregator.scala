@@ -22,6 +22,7 @@ import org.joda.time.DateTime
 object ErrorAggregator {
 
   private val allowedDocTypes = List("main", "crash")
+  private val allowedAppNames = List("Firefox")
   private val outputPrefix = "error_aggregates/v2"
   private val kafkaCacheMaxCapacity = 1000
 
@@ -309,6 +310,10 @@ object ErrorAggregator {
     if (!allowedDocTypes.contains(docType)) {
       throw new Exception("Doctype should be one of " + allowedDocTypes.mkString(sep = ","))
     }
+    val appName = fields.getOrElse("appName", "").asInstanceOf[String]
+    if (!allowedAppNames.contains(appName)) {
+      throw new Exception("AppName should be one of " + allowedAppNames.mkString(sep = ","))
+    }
     if(docType == "crash") {
       CrashPing(message).parse()
     } else {
@@ -356,7 +361,7 @@ object ErrorAggregator {
       }.where("docType") {
         case docType if allowedDocTypes.contains(docType) => true
       }.where("appName") {
-        case "Firefox" => true
+        case appName if allowedAppNames.contains(appName) => true
       }.where("submissionDate") {
         case date if from <= date && date <= to => true
       }.records(opts.fileLimit.get)
