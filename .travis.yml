@@ -1,6 +1,11 @@
+sudo: required
 language: scala
 jdk:
   - oraclejdk8
+addons:
+  apt:
+    packages: # Required for docker build
+      - net-tools
 # These directories are cached to S3 at the end of the build
 cache:
   directories:
@@ -10,9 +15,13 @@ before_cache:
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
+services:
+  - docker
 scala:
   - 2.11.8
+env:
+  - DOCKER_DIR="../docker/"
 script:
   - sbt ci
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)

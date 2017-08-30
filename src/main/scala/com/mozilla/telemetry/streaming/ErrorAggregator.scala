@@ -21,9 +21,12 @@ import org.joda.time.DateTime
 
 object ErrorAggregator {
 
+  val kafkaTopic = "telemetry"
+  val outputPrefix = "error_aggregates/v2"
+  val queryName = "error_aggregates"
+
   private val allowedDocTypes = List("main", "crash")
   private val allowedAppNames = List("Firefox")
-  private val outputPrefix = "error_aggregates/v2"
   private val kafkaCacheMaxCapacity = 1000
 
   // This is the number of files output per submission_date
@@ -311,7 +314,7 @@ object ErrorAggregator {
       .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
-      .option("subscribe", "telemetry")
+      .option("subscribe", kafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
       .load()
 
@@ -319,6 +322,7 @@ object ErrorAggregator {
 
     aggregate(pings.select("value"), raiseOnError = opts.raiseOnError())
       .writeStream
+      .queryName(queryName)
       .format("parquet")
       .option("path", s"${outputPath}/${outputPrefix}")
       .option("checkpointLocation", opts.checkpointPath())
@@ -370,10 +374,10 @@ object ErrorAggregator {
 
     val spark = SparkSession.builder()
       .appName("Error Aggregates")
+      .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .getOrCreate()
 
     spark.udf.register("HllCreate", hllCreate _)
-
 
     opts.kafkaBroker.get match {
       case Some(_) => writeStreamingAggregates(spark, opts)

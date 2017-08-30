@@ -22,7 +22,7 @@ object TestUtils {
   val today = new DateTime(testTimestampMillis)
   val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
 
-  def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
+  def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "crash",
@@ -80,11 +80,12 @@ object TestUtils {
              |  },
              |  "application": ${applicationJson}
              |}""".stripMargin),
-        timestamp=testTimestampNano
+        timestamp=timestamp.getOrElse(testTimestampNano)
       )
     }
   }
-  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
+
+  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "main",
@@ -182,7 +183,7 @@ object TestUtils {
              |    }
              |  }
              |}""".stripMargin),
-        timestamp=testTimestampNano
+        timestamp=timestamp.getOrElse(testTimestampNano)
       )
     }
   }
