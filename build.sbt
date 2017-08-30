@@ -15,21 +15,40 @@ organization := "com.mozilla"
 
 scalaVersion in ThisBuild := "2.11.8"
 
-val sparkVersion = "2.1.1"
+val sparkVersion = "2.2.0"
 
 lazy val root = (project in file(".")).
   settings(
     libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.0-SNAPSHOT",
     libraryDependencies += "com.mozilla.telemetry" %% "spark-hyperloglog" % "2.0.0-SNAPSHOT",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
     libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0",
-    libraryDependencies += "joda-time" % "joda-time" % "2.9.2"
+    libraryDependencies += "joda-time" % "joda-time" % "2.9.2",
+    libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.0.1"
   )
+
+// Setup docker task
+enablePlugins(DockerComposePlugin, DockerPlugin)
+dockerImageCreationTask := docker.value
+composeFile := sys.props.getOrElse("DOCKER_DIR", default = "docker/") + "docker-compose.yml"
+variablesForSubstitutionTask := {
+    val dockerKafkaHost: String = "./docker_setup.sh" !!;
+    Map("DOCKER_KAFKA_HOST" -> dockerKafkaHost)
+}
+
+// Only run docker tasks on `sbt dockerComposeTest`
+testOptions in Test += Tests.Argument("-l", "DockerComposeTag")
+
+dockerfile in docker := {
+  new Dockerfile {
+    from("java")
+  }
+}
 
 // make run command include the provided dependencies
 run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run))
@@ -52,4 +71,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-addCommandAlias("ci", ";clean ;compile ;scalastyle ;coverage ;test ;coverageReport")
+addCommandAlias("ci", ";clean ;compile ;scalastyle ;coverage ;dockerComposeTest ;coverageReport")

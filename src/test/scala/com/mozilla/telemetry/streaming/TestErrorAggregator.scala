@@ -4,22 +4,46 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
+import java.util.Properties
+
+import kafka.admin.AdminUtils
+import kafka.utils.ZkUtils
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
 import com.mozilla.telemetry.streaming.TestUtils.todayDays
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.spark.sql.SparkSession
-import org.joda.time.{DateTime, Duration}
+import org.apache.spark.sql.streaming.StreamingQueryListener
+import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, AsyncFlatSpec, Matchers, Tag}
 
-class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
+import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.sys.process._
+
+class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
+
+  object DockerComposeTag extends Tag("DockerComposeTag")
+
+  val zkHostInfo = "localhost:2181"
+  val kafkaTopicPartitions = 1
+  val kafkaBrokers = "localhost:9092"
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
 
+  // 2016-04-07T02:01:56.000Z
+  val earlierTimestamp = 1459994516000000000L
+
+  // 2016-04-07T02:35:16.000Z
+  val laterTimestamp = 1459996516000000000L
+
   val spark = SparkSession.builder()
     .appName("Error Aggregates")
+    .config("spark.streaming.stopGracefullyOnShutdown", "true")
     .master("local[1]")
     .getOrCreate()
 
@@ -28,6 +52,27 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   override def afterAll() {
     spark.stop()
+  }
+
+  def topicExists(zkUtils: ZkUtils, topic: String): Boolean = {
+    // taken from
+    // https://github.com/apache/spark/blob/master/external/kafka-0-10-sql +
+    // src/test/scala/org/apache/spark/sql/kafka010/KafkaTestUtils.scala#L350
+    return zkUtils.getAllTopics().contains(topic)
+  }
+
+  def createTopic(topic: String, numPartitions: Int) = {
+    val timeoutMs = 10000
+    val isSecureKafkaCluster = false
+    val replicationFactor = 1
+    val topicConfig = new Properties
+    val zkUtils = ZkUtils.apply(zkHostInfo, timeoutMs, timeoutMs, isSecureKafkaCluster)
+
+    if(!topicExists(zkUtils, topic)) {
+      AdminUtils.createTopic(zkUtils, topic, numPartitions, replicationFactor, topicConfig)
+    }
+
+    zkUtils.close()
   }
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
@@ -160,7 +205,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
-    //one count for each experiment-branch, and one for null-null
+    // one count for each experiment-branch, and one for null-null
     df.count() should be (3)
 
     val inspectedFields = List(
@@ -264,7 +309,91 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
 
     df.where("application <> 'Firefox'").count() should be (0)
+  }
 
+  "the aggregator" should "correctly read from kafka" taggedAs(DockerComposeTag) in {
+    spark.sparkContext.setLogLevel("WARN")
+
+    val conf = new Properties()
+    conf.put("bootstrap.servers", kafkaBrokers)
+    conf.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    conf.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer")
+
+    val kafkaProducer = new KafkaProducer[String, Array[Byte]](conf)
+    createTopic(ErrorAggregator.kafkaTopic, kafkaTopicPartitions)
+
+    def send(rs: Seq[Array[Byte]]): Unit = {
+      rs.foreach{ v =>
+        val record = new ProducerRecord[String, Array[Byte]](ErrorAggregator.kafkaTopic, v)
+        kafkaProducer.send(record)
+        kafkaProducer.flush()
+      }
+    }
+
+    val earlier = (TestUtils.generateMainMessages(k, timestamp=Some(earlierTimestamp)) ++
+      TestUtils.generateCrashMessages(k, timestamp=Some(earlierTimestamp))).map(_.toByteArray)
+
+    val later = TestUtils.generateMainMessages(1, timestamp=Some(laterTimestamp)).map(_.toByteArray)
+
+    val expectedTotalMsgs = 2 * k
+
+    val listener = new StreamingQueryListener {
+      val DefaultWatermark = "1970-01-01T00:00:00.000Z"
+
+      var messagesSeen = 0L
+      var sentMessages = false
+      var watermarks: Set[String] = Set(DefaultWatermark)
+
+      override def onQueryStarted(event: StreamingQueryListener.QueryStartedEvent): Unit = {}
+
+      override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {
+        messagesSeen += event.progress.numInputRows
+
+        if(!sentMessages){
+          send(earlier)
+          sentMessages = true
+        }
+
+        // If we only send this message once (i.e. set a flag that we've sent it), Spark will recieve
+        // it and process the new rows (should be 3: 1 per experiment), and will update the eventTime["max"]
+        // to be this message's time -- but it will not update the watermark, and thus will not write
+        // the old rows (from earlier) to disk. You can follow this by reading the QueryProgress log events.
+        // If we send more than one, however, it eventually updates the value.
+        if(messagesSeen >= expectedTotalMsgs){
+          send(later)
+        }
+
+        val watermark = event.progress.eventTime.getOrDefault("watermark", DefaultWatermark)
+        watermarks = watermarks | Set(watermark)
+
+        // We're done when we've gone through 3 watermarks -- the default, the earlier, and the later
+        // when we're on the later watermark, the data from the earlier window is written to disk
+        if(watermarks.size == 3){
+          spark.streams.active.foreach(_.processAllAvailable)
+          spark.streams.active.foreach(_.stop)
+        }
+      }
+
+      override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {
+        if(messagesSeen < expectedTotalMsgs){
+          println(s"Terminated Early: Expected $expectedTotalMsgs messages, saw $messagesSeen")
+        }
+      }
+    }
+
+    spark.streams.addListener(listener)
+
+    val outputPath = "/tmp/parquet"
+    val args = "--kafkaBroker" :: kafkaBrokers ::
+      "--outputPath" :: outputPath ::
+      "--startingOffsets" :: "latest" ::
+      "--raiseOnError" :: Nil
+
+    val mainRes: Future[Unit] = Future {
+      ErrorAggregator.main(args.toArray)
+    }
+
+    mainRes map {_ => assert(spark.read.parquet(s"$outputPath/${ErrorAggregator.outputPrefix}").count() == 3)}
   }
 
   "The resulting schema" should "not have fields belonging to the tempSchema" in {
