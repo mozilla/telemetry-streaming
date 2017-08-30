@@ -205,7 +205,7 @@ object ErrorAggregator {
       .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
       .withColumn("session_hll", expr("HllCreate(concat(client_id, session_id), 12)"))
       .groupBy(dimensionsCols: _*)
-      .agg(aggCols(0), aggCols.drop(0): _*)
+      .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
       .coalesce(1)
   }
