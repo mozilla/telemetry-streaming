@@ -25,6 +25,11 @@ object ErrorAggregator {
   private val outputPrefix = "error_aggregates/v1"
   private val kafkaCacheMaxCapacity = 1000
 
+  // This is the number of files output per submission_date
+  // in a batch run.
+  // 180GB total per day, so ~300MB per parquet file.
+  private val numPartitions = 600
+
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
       "kafkaBroker",
@@ -353,6 +358,7 @@ object ErrorAggregator {
     val outputPath = opts.outputPath()
 
     aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false)
+      .repartition(numPartitions)
       .write
       .mode("overwrite")
       .partitionBy("submission_date")
