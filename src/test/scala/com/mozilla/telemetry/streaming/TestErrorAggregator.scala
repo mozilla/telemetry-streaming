@@ -388,4 +388,11 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     df.where("application <> 'Firefox'").count() should be (0)
 
   }
+
+  "The resulting schema" should "not have fields belonging to the tempSchema" in {
+    import spark.implicits._
+    val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    df.schema.fields.map(_.name) should not contain ("client_id")
+  }
 }
