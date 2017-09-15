@@ -89,15 +89,6 @@ object ErrorAggregator {
     "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
   )
 
-  private val clientCounts = Map(
-    "long_main_gc_or_cc_pause" -> "gc_max_pause_ms_2_main_above_150 > 0 OR cycle_collector_max_pause_main_above_150 > 0",
-    "long_content_gc_or_cc_pause" -> "gc_max_pause_ms_2_content_above_2500 > 0 OR cycle_collector_max_pause_content_above_2500 > 0",
-    "ghost_windows_main" -> "ghost_windows_main_above_1 > 0",
-    "ghost_windows_content" -> "ghost_windows_content_above_1 > 0",
-    "long_main_input_latency" -> "input_event_response_coalesced_ms_main_above_2500 > 0",
-    "long_content_input_latency" -> "input_event_response_coalesced_ms_content_above_2500 > 0"
-  )
-
   private val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
@@ -136,7 +127,6 @@ object ErrorAggregator {
   // data that will not be part of the final schema
   private val tempSchema = new SchemaBuilder()
     .add[String]("client_id")
-    .add[String]("session_id")
     .build
 
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
@@ -159,7 +149,6 @@ object ErrorAggregator {
   private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
 
   private val HllMerge = new HyperLogLogMerge
-  private val FilteredHllMerge = new FilteredHyperLogLogMerge
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -190,17 +179,7 @@ object ErrorAggregator {
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
     val sumCols = stats.map(s => sum(s).as(s))
-    val countCols = clientCounts.flatMap{
-      case (key, value) => {
-        FilteredHllMerge($"client_hll", expr(value)).as(s"${key}_client_count") ::
-        FilteredHllMerge($"session_hll", expr(value)).as(s"${key}_session_count") :: Nil
-      }
-    }
-    val aggCols =
-      HllMerge($"client_hll").as("client_count") ::
-      HllMerge($"session_hll").as("session_count") :: Nil ++
-      sumCols ++
-      countCols
+    val aggCols = HllMerge($"client_hll").as("client_count") :: Nil ++ sumCols
 
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
@@ -208,7 +187,6 @@ object ErrorAggregator {
     * */
     parsedPings
       .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
-      .withColumn("session_hll", expr("HllCreate(concat(client_id, session_id), 12)"))
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
@@ -275,7 +253,6 @@ object ErrorAggregator {
       stats("count") = Some(1)
       stats("subsession_count") = Some(1)
       stats("client_id") = ping.meta.clientId
-      stats("session_id") = ping.sessionId
       stats("usage_hours") = usageHours
       countHistogramErrorsSchema.fieldNames.foreach(stats_name => {
         stats(stats_name) = ping.getCountHistogramValue(stats_name)
