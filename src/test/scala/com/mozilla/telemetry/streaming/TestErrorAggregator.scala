@@ -76,7 +76,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "window_start",
       "window_end",
       "HllCardinality(client_count) as client_count",
-      "HllCardinality(long_main_input_latency_client_count) as long_main_input_latency_client_count",
       "profile_age_days"
     )
 
@@ -121,7 +120,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
     results("client_count") should be (Set(1))
-    results("long_main_input_latency_client_count") should be (Set(1))
     results("profile_age_days") should be (Set(70))
   }
 
@@ -194,19 +192,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     client_count should be (10)
   }
 
-  "The aggregator" should "correctly compute session counts" in {
-    import spark.implicits._
-    val mainMessages = 1 to 10 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(Map("payload.info" -> s"""{"subsessionLength": 3600, "sessionId": "session${i%5}"}""")))
-      )
-
-    val messages = mainMessages.map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-    val session_count = df.selectExpr("HllCardinality(session_count) as session_count").collect()(0).getAs[Any]("session_count")
-    session_count should be (5)
-  }
-
   "The aggregator" should "correctly compute subsession counts" in {
     import spark.implicits._
     val mainMessages = 1 to 10 flatMap (i =>
@@ -218,113 +203,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
     val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
     subsession_count should be (10)
-  }
-
-  "The aggregator" should "correctly compute filtered client counts" in {
-    import spark.implicits._
-
-    val mainMessagesAffected = 1 to 5 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(
-          Map(
-            "clientId" -> s"client${i}",
-            "payload.histograms" ->
-              """{
-                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-                |    "values": {
-                |      "1": 1,
-                |      "150": 2,
-                |      "250": 3,
-                |      "2500": 4,
-                |      "10000": 5
-                |    }
-                |  }
-                |}""".stripMargin
-          )))
-      )
-
-    val mainMessagesNotAffected = 6 to 10 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(
-          Map(
-            "clientId" -> s"client${i}",
-            "payload.histograms" ->
-              """{
-                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-                |    "values": {
-                |      "1": 1,
-                |      "150": 2,
-                |      "250": 3,
-                |      "2500": 0,
-                |      "10000": 0
-                |    }
-                |  }
-                |}""".stripMargin
-          )))
-      )
-
-    val messages = (mainMessagesAffected ++ mainMessagesNotAffected).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-    val client_count = df.selectExpr(
-      "HllCardinality(long_main_input_latency_client_count) as long_main_input_latency_client_count"
-    ).collect()(0).getAs[Any]("long_main_input_latency_client_count")
-    client_count should be (5)
-  }
-
-  "The aggregator" should "correctly compute filtered session counts" in {
-    import spark.implicits._
-
-    val mainMessagesAffected = 1 to 5 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(
-          Map(
-            "payload.info" -> s"""{"subsessionLength": 3600, "sessionId": "session${i}"}""",
-            "payload.histograms" ->
-              """{
-                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-                |    "values": {
-                |      "1": 1,
-                |      "150": 2,
-                |      "250": 3,
-                |      "2500": 4,
-                |      "10000": 5
-                |    }
-                |  }
-                |}""".stripMargin
-          )))
-      )
-
-    val mainMessagesNotAffected = 6 to 10 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(
-          Map(
-            "payload.info" -> s"""{"subsessionLength": 3600, "sessionId": "session${i}"}""",
-            "payload.histograms" ->
-              """{
-                |  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-                |    "values": {
-                |      "1": 1,
-                |      "150": 2,
-                |      "250": 3,
-                |      "2500": 0,
-                |      "10000": 0
-                |    }
-                |  }
-                |}""".stripMargin
-          )))
-      )
-
-    val messages = (mainMessagesAffected ++ mainMessagesNotAffected).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-
-    val results = df.selectExpr(
-      "HllCardinality(long_main_input_latency_session_count) as long_main_input_latency_session_count",
-      "HllCardinality(client_count) as client_count",
-      "HllCardinality(session_count) as session_count"
-    ).collect()(0)
-    results.getAs[Any]("long_main_input_latency_session_count") should be (5)
-    results.getAs[Any]("client_count") should be (1)
-    results.getAs[Any]("session_count") should be (10)
   }
 
   "The aggregator" should "use proper bins for profile age" in {
