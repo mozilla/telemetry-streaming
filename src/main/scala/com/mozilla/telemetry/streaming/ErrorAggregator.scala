@@ -147,7 +147,7 @@ object ErrorAggregator {
     }
   }).build
 
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema, tempSchema)
+  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
 
   private val HllMerge = new HyperLogLogMerge
   private val FilteredHllMerge = new FilteredHyperLogLogMerge
@@ -156,7 +156,7 @@ object ErrorAggregator {
     import pings.sparkSession.implicits._
 
     // A custom row encoder is needed to use Rows within a Spark Dataset
-    val mergedSchema = SchemaBuilder.merge(dimensionsSchema, statsSchema)
+    val mergedSchema = SchemaBuilder.merge(dimensionsSchema, statsSchema, tempSchema)
     implicit val rowEncoder = RowEncoder(mergedSchema).resolveAndBind()
     implicit val optEncoder = ExpressionEncoder.tuple(rowEncoder)
 
@@ -234,7 +234,7 @@ object ErrorAggregator {
       // Non-main crashes are already retrieved from main pings
       if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
       val dimensions = buildDimensions(ping.meta)
-      val stats = new RowBuilder(statsSchema)
+      val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
       stats("count") = Some(1)
       stats("client_id") = ping.meta.clientId
       stats("main_crashes") = Some(1)
@@ -250,7 +250,7 @@ object ErrorAggregator {
       if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
       val dimensions = buildDimensions(ping.meta)
-      val stats = new RowBuilder(statsSchema)
+      val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
       stats("count") = Some(1)
       stats("client_id") = ping.meta.clientId
       stats("usage_hours") = usageHours
