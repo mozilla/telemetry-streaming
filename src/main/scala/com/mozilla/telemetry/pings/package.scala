@@ -32,7 +32,9 @@ package object pings {
       version: String,
       xpcomAbi: String)
 
-  case class SystemOs(name: String, version: String)
+  case class SystemOs(name: String, version: String) {
+    def normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
+  }
 
   case class SystemGfxFeatures(compositor: Option[String])
 
@@ -342,7 +344,18 @@ package object pings {
 
   case class EnvironmentSystem(os: OS)
 
-  case class OS(name: Option[String], version: Option[String])
+  case class OS(name: Option[String], version: Option[String]){
+    val versionRegex = "(\\d+(\\.\\d+)?(\\.\\d+)?)?.*".r
+    def normalizedVersion: String = {
+      version match {
+        case Some(v) =>
+          val versionRegex(normalized, b, c) = v
+          normalized
+        case None =>
+          null
+      }
+    }
+  }
 
   def messageToPing(message: Message, jsonFieldNames: List[String]): JValue = {
     implicit val formats = DefaultFormats

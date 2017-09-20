@@ -168,6 +168,29 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     results("profile_age_days") should be (Set(70))
   }
 
+  it should "normalize os_version" in {
+    import spark.implicits._
+    val fieldsOverride = Some(Map("environment.system" -> """{"os": {"name": "linux", "version": "10.2.42-hello"}}"""))
+    val messages =
+      (TestUtils.generateCrashMessages(k, fieldsOverride=fieldsOverride)
+        ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    println(TestUtils.generateCrashMessages(1, fieldsOverride=fieldsOverride))
+
+    // 1 for each experiment (there are 2), and one for a null experiment
+    df.count() should be (3)
+    val inspectedFields = List(
+      "os_version"
+    )
+
+    val query = df.selectExpr(inspectedFields:_*)
+    val columns = query.columns
+    val results = columns.zip(columns.map(field => query.collect().map(row => row.getAs[Any](field)).toSet) ).toMap
+
+    results("os_version") should be (Set(s"10.2.42"))
+  }
+
   "The aggregator" should "handle new style experiments" in {
     import spark.implicits._
     val crashMessage = TestUtils.generateCrashMessages(

@@ -20,20 +20,24 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.getCountHistogramValue("foo").isEmpty should be (true)
     mainPing.getCountHistogramValue("BROWSER_SHIM_USAGE_BLOCKED").get should be (1)
   }
+
   it should "return the value of a keyed count histogram" in {
     mainPing.getCountKeyedHistogramValue("foo", "bar").isEmpty should be (true)
     mainPing.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "foo").isEmpty should be (true)
     mainPing.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content").get should be (1)
   }
+
   it should "return the value of its usage hours" in {
     mainPing.usageHours.get should be (1.0)
     val messageNoUsageHours = TestUtils.generateMainMessages(1, Some(Map("payload.info" -> "{}"))).head
     val pingNoUsageHours = MainPing(messageNoUsageHours)
     pingNoUsageHours.usageHours.isEmpty should be (true)
   }
+
   it should "return its timestamp" in {
     mainPing.meta.normalizedTimestamp() should be (new Timestamp(ts))
   }
+
   it should "return the right threshold count" in {
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 150, "main") should be (14)
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "main") should be (12)
@@ -43,6 +47,7 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 250, "content") should be (3)
     mainPing.histogramThresholdCount("INPUT_EVENT_RESPONSE_COALESCED_MS", 2500, "content") should be (2)
   }
+
   it should "return its firstPaint value" in {
     mainPing.firstPaint should be (Some(1200))
   }
@@ -147,6 +152,7 @@ class TestPings extends FlatSpec with Matchers{
   "A Meta instance with e10s enabled and quantumReady addons" should "be quantumReady" in {
     MainPing(quantumReadyPing).meta.isQuantumReady should be (Some(true))
   }
+
   "A Meta instance with e10s enabled and unknown quantumReady addons" should "be quantumReady unknown" in {
     MainPing(unknownThemeQuantumReadyPing).meta.isQuantumReady should be (None)
   }
@@ -167,6 +173,18 @@ class TestPings extends FlatSpec with Matchers{
     Profile(Some(todayDays - 364), None).ageDaysBin(today) should be (Some(364))
     Profile(Some(todayDays - 367), None).ageDaysBin(today) should be (Some(365))
     Profile(Some(todayDays - 3000), None).ageDaysBin(today) should be (Some(365))
+  }
 
+  "An OS instance" should "normalize the version" in {
+    OS(Some("linux"), Some("1.1.1-ignore")).normalizedVersion should be ("1.1.1")
+    OS(Some("linux"), Some("1.1.1ignore")).normalizedVersion should be ("1.1.1")
+    OS(Some("linux"), Some("1.1")).normalizedVersion should be ("1.1")
+    OS(Some("linux"), Some("1.1-ignore")).normalizedVersion should be ("1.1")
+    OS(Some("linux"), Some("1.1ignore")).normalizedVersion should be ("1.1")
+    OS(Some("linux"), Some("1")).normalizedVersion should be ("1")
+    OS(Some("linux"), Some("1-ignore")).normalizedVersion should be ("1")
+    OS(Some("linux"), Some("1ignore")).normalizedVersion should be ("1")
+    OS(Some("linux"), Some("non-numeric")).normalizedVersion should be (null)
+    OS(Some("linux"), Some("nonnumeric1.1")).normalizedVersion should be (null)
   }
 }

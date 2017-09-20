@@ -210,7 +210,7 @@ object ErrorAggregator {
       dimensions("build_id") = meta.`environment.build`.flatMap(_.buildId)
       dimensions("application") = Some(meta.appName)
       dimensions("os_name") = meta.`environment.system`.map(_.os.name)
-      dimensions("os_version") = meta.`environment.system`.map(_.os.version)
+      dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
       dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
       dimensions("country") = Some(meta.geoCountry)
       dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
