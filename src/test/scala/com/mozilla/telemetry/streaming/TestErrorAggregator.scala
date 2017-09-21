@@ -176,8 +176,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
-    println(TestUtils.generateCrashMessages(1, fieldsOverride=fieldsOverride))
-
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
     val inspectedFields = List(
@@ -424,5 +422,29 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
     df.schema.fields.map(_.name) should not contain ("client_id")
+  }
+
+  "BuildId" should "not be older than 6 months" in {
+    import spark.implicits._
+    val messages = TestUtils.generateMainMessages(
+      1, Some(Map(
+        "environment.build" -> """{"buildId": "20170102"""",
+        "submissionDate" -> "2017-06-01"
+        )
+      )
+    ).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    df.where("build_id IS NOT NULL").collect().length should be (0)
+
+
+    val messages2 = TestUtils.generateMainMessages(
+      1, Some(Map(
+        "environment.build" -> """{"buildId": "20170101"""",
+        "submissionDate" -> "2017-06-01"
+        )
+      )
+    ).map(_.toByteArray).seq
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    df2.where("build_id IS NULL").collect().length should be (0)
   }
 }

@@ -7,7 +7,8 @@ import scala.util.{Success, Try}
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.Message
-import org.joda.time.{Duration, DateTime}
+import org.joda.time.{DateTime, Duration, Months}
+import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods.parse
 
@@ -33,7 +34,7 @@ package object pings {
       xpcomAbi: String)
 
   case class SystemOs(name: String, version: String) {
-    def normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
+    val normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
   }
 
   case class SystemGfxFeatures(compositor: Option[String])
@@ -159,6 +160,24 @@ package object pings {
       */
     def normalizedTimestamp(): Timestamp = {
       new Timestamp(this.Timestamp / 1000000)
+    }
+
+    val normalizedBuildId: Option[String] = {
+      `environment.build`.flatMap(_.buildId) match {
+        case Some(buildId: String) => {
+          val buildIdDay = buildId.slice(0, 8).toString()
+          val buildDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
+          val buildDateTime = buildDateFormat.parseDateTime(buildIdDay)
+          val submissionDateTime = DateTime.parse(submissionDate)
+          val p = Months.monthsBetween(buildDateTime, submissionDateTime)
+
+          p.getMonths() match {
+            case p if 0 to 6 contains(p) => Some(buildId)
+            case _ => None
+          }
+        }
+        case _ => None
+      }
     }
 
     def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
@@ -346,7 +365,7 @@ package object pings {
 
   case class OS(name: Option[String], version: Option[String]){
     val versionRegex = "(\\d+(\\.\\d+)?(\\.\\d+)?)?.*".r
-    def normalizedVersion: String = {
+    val normalizedVersion: String = {
       version match {
         case Some(v) =>
           val versionRegex(normalized, b, c) = v
