@@ -176,8 +176,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
-    println(TestUtils.generateCrashMessages(1, fieldsOverride=fieldsOverride))
-
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
     val inspectedFields = List(
