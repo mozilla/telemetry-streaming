@@ -31,8 +31,7 @@ object ErrorAggregator {
 
   // This is the number of files output per submission_date
   // in a batch run.
-  // 180GB total per day, so ~300MB per parquet file.
-  private val numPartitions = 600
+  private val defaultNumFiles = 600
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
@@ -51,29 +50,36 @@ object ErrorAggregator {
       "fileLimit",
       descr = "Max number of files to retrieve (batch mode only). Default: All files",
       required = false)
-    val outputPath:ScallopOption[String] = opt[String](
+    val outputPath: ScallopOption[String] = opt[String](
       "outputPath",
       descr = "Output path",
       required = false,
       default = Some("/tmp/parquet"))
-    val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
+    val raiseOnError: ScallopOption[Boolean] = opt[Boolean](
       "raiseOnError",
       descr = "Whether the program should exit on a data processing error or not.")
-    val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
+    val failOnDataLoss: ScallopOption[Boolean] = opt[Boolean](
       "failOnDataLoss",
       descr = "Whether to fail the query when it’s possible that data is lost.")
-    val checkpointPath:ScallopOption[String] = opt[String](
+    val checkpointPath: ScallopOption[String] = opt[String](
       "checkpointPath",
       descr = "Checkpoint path (streaming mode only)",
       required = false,
       default = Some("/tmp/checkpoint"))
-    val startingOffsets:ScallopOption[String] = opt[String](
+    val startingOffsets: ScallopOption[String] = opt[String](
       "startingOffsets",
       descr = "Starting offsets (streaming mode only)",
       required = false,
       default = Some("latest"))
+    val numParquetFiles: ScallopOption[Int] = opt[Int](
+      "numParquetFiles",
+      descr = "Number of parquet files per submission_date",
+      required = false,
+      default = Some(defaultNumFiles)
+      )
+
     requireOne(kafkaBroker, from)
-    conflicts(kafkaBroker, List(from, to, fileLimit))
+    conflicts(kafkaBroker, List(from, to, fileLimit, numParquetFiles))
     verify()
   }
 
@@ -361,11 +367,12 @@ object ErrorAggregator {
     val outputPath = opts.outputPath()
 
     aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false)
-      .repartition(numPartitions)
+      .repartition(opts.numParquetFiles())
       .write
       .mode("overwrite")
       .partitionBy("submission_date")
       .parquet(s"${outputPath}/${outputPrefix}")
+
     spark.stop()
   }
 
