@@ -34,7 +34,7 @@ package object pings {
       xpcomAbi: String)
 
   case class SystemOs(name: String, version: String) {
-    def normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
+    val normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
   }
 
   case class SystemGfxFeatures(compositor: Option[String])
@@ -162,7 +162,7 @@ package object pings {
       new Timestamp(this.Timestamp / 1000000)
     }
 
-    def normalizedBuildId(): Option[String] = {
+    val normalizedBuildId: Option[String] = {
       `environment.build`.flatMap(_.buildId) match {
         case Some(buildId: String) => {
           val buildIdDay = buildId.slice(0, 8).toString()
@@ -365,7 +365,7 @@ package object pings {
 
   case class OS(name: Option[String], version: Option[String]){
     val versionRegex = "(\\d+(\\.\\d+)?(\\.\\d+)?)?.*".r
-    def normalizedVersion: String = {
+    val normalizedVersion: String = {
       version match {
         case Some(v) =>
           val versionRegex(normalized, b, c) = v
