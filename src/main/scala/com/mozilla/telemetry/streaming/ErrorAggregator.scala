@@ -18,8 +18,7 @@ import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
-
-object ErrorAggregator {
+class ErrorAggregator extends java.io.Serializable{
 
   val kafkaTopic = "telemetry"
   val outputPrefix = "error_aggregates/v2"
@@ -31,7 +30,7 @@ object ErrorAggregator {
 
   // This is the number of files output per submission_date
   // in a batch run.
-  private val defaultNumFiles = 600
+  val defaultNumFiles = 60
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
@@ -83,7 +82,7 @@ object ErrorAggregator {
     verify()
   }
 
-  private val countHistogramErrorsSchema = new SchemaBuilder()
+  protected val countHistogramErrorsSchema = new SchemaBuilder()
     .add[Int]("BROWSER_SHIM_USAGE_BLOCKED")
     .add[Int]("PERMISSIONS_SQL_CORRUPTED")
     .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
@@ -91,14 +90,14 @@ object ErrorAggregator {
     .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
-  private val thresholdHistograms = Map(
+  protected val thresholdHistograms = Map(
     "INPUT_EVENT_RESPONSE_COALESCED_MS" -> (List("main", "content"), List(150, 250, 2500)),
     "GHOST_WINDOWS" -> (List("main", "content"), List(1)),
     "GC_MAX_PAUSE_MS_2" -> (List("main", "content"), List(150, 250, 2500)),
     "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
   )
 
-  private val dimensionsSchema = new SchemaBuilder()
+  protected val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
     .add[String]("channel")
@@ -118,7 +117,7 @@ object ErrorAggregator {
     .add[Int]("profile_age_days")
     .build
 
-  private val metricsSchema = new SchemaBuilder()
+  protected val metricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("subsession_count")
@@ -141,7 +140,7 @@ object ErrorAggregator {
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
     s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
 
-  private val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
+  protected val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
     val histogramName = kv._1
     kv._2 match {
       case (processTypes: List[String], thresholds: List[Int]) => {
@@ -155,7 +154,7 @@ object ErrorAggregator {
     }
   }).build
 
-  private val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
+  protected val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
 
   private val HllMerge = new HyperLogLogMerge
 
