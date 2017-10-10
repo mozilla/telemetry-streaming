@@ -4,32 +4,23 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
-import java.util.Properties
-
-import kafka.admin.AdminUtils
-import kafka.utils.ZkUtils
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
 import com.mozilla.telemetry.streaming.TestUtils.todayDays
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{AsyncFlatSpec, Matchers, Tag}
+import org.scalatest.{FlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestErrorAggregator extends AsyncFlatSpec with Matchers {
+class TestErrorAggregator extends FlatSpec with Matchers {
 
-  object DockerComposeTag extends Tag("DockerComposeTag")
-
-  val zkHostInfo = "localhost:2181"
-  val kafkaTopicPartitions = 1
-  val kafkaBrokers = "localhost:9092"
+  object DockerErrorAggregatorTag extends Tag("DockerErrorAggregatorTag")
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
@@ -49,27 +40,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers {
 
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
-
-  def topicExists(zkUtils: ZkUtils, topic: String): Boolean = {
-    // taken from
-    // https://github.com/apache/spark/blob/master/external/kafka-0-10-sql +
-    // src/test/scala/org/apache/spark/sql/kafka010/KafkaTestUtils.scala#L350
-    return zkUtils.getAllTopics().contains(topic)
-  }
-
-  def createTopic(topic: String, numPartitions: Int) = {
-    val timeoutMs = 10000
-    val isSecureKafkaCluster = false
-    val replicationFactor = 1
-    val topicConfig = new Properties
-    val zkUtils = ZkUtils.apply(zkHostInfo, timeoutMs, timeoutMs, isSecureKafkaCluster)
-
-    if(!topicExists(zkUtils, topic)) {
-      AdminUtils.createTopic(zkUtils, topic, numPartitions, replicationFactor, topicConfig)
-    }
-
-    zkUtils.close()
-  }
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
@@ -362,29 +332,20 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers {
     df.where("application <> 'Firefox'").count() should be (0)
   }
 
-  "the aggregator" should "correctly read from kafka" taggedAs(DockerComposeTag) in {
+  "the aggregator" should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
     spark.sparkContext.setLogLevel("WARN")
 
-    val conf = new Properties()
-    conf.put("bootstrap.servers", kafkaBrokers)
-    conf.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-    conf.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer")
-
-    val kafkaProducer = new KafkaProducer[String, Array[Byte]](conf)
-    createTopic(ErrorAggregator.kafkaTopic, kafkaTopicPartitions)
+    Kafka.createTopic(ErrorAggregator.kafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(ErrorAggregator.kafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
-      rs.foreach{ v =>
-        val record = new ProducerRecord[String, Array[Byte]](ErrorAggregator.kafkaTopic, v)
-        kafkaProducer.send(record)
-        kafkaProducer.flush()
-      }
+      rs.foreach{ kafkaProducer.send(_, synchronous = true) }
     }
 
-    val earlier = (TestUtils.generateMainMessages(k, timestamp=Some(earlierTimestamp)) ++
-      TestUtils.generateCrashMessages(k, timestamp=Some(earlierTimestamp))).map(_.toByteArray)
+    val earlier = (TestUtils.generateMainMessages(k, timestamp = Some(earlierTimestamp)) ++
+      TestUtils.generateCrashMessages(k, timestamp = Some(earlierTimestamp))).map(_.toByteArray)
 
-    val later = TestUtils.generateMainMessages(1, timestamp=Some(laterTimestamp)).map(_.toByteArray)
+    val later = TestUtils.generateMainMessages(1, timestamp = Some(laterTimestamp)).map(_.toByteArray)
 
     val expectedTotalMsgs = 2 * k
 
@@ -435,16 +396,17 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers {
     spark.streams.addListener(listener)
 
     val outputPath = "/tmp/parquet"
-    val args = "--kafkaBroker" :: kafkaBrokers ::
+    val args = "--kafkaBroker" :: Kafka.kafkaBrokers ::
       "--outputPath" :: outputPath ::
       "--startingOffsets" :: "latest" ::
       "--raiseOnError" :: Nil
 
-    val mainRes: Future[Unit] = Future {
-      ErrorAggregator.main(args.toArray)
-    }
+    ErrorAggregator.main(args.toArray)
 
-    mainRes map {_ => assert(spark.read.parquet(s"$outputPath/${ErrorAggregator.outputPrefix}").count() == 3)}
+    assert(spark.read.parquet(s"$outputPath/${ErrorAggregator.outputPrefix}").count() == 3)
+
+    kafkaProducer.close
+    spark.streams.removeListener(listener)
   }
 
   "The resulting schema" should "not have fields belonging to the tempSchema" in {

@@ -16,14 +16,14 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{AsyncFlatSpec, Matchers, Tag}
+import org.scalatest.{FlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestExperimentsErrorAggregator extends AsyncFlatSpec with Matchers {
+class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue

@@ -16,6 +16,8 @@ package object timeseries {
   class SchemaBuilder(private val fields: ListBuffer[StructField] = ListBuffer()){
     def add[T: TypeTag](name: String): SchemaBuilder = {
       typeOf[T] match {
+        case t if t =:= typeOf[Map[String, String]] =>
+          fields += StructField (name, MapType(StringType, StringType, true), true)
         case t if t =:= typeOf[String] =>
           fields += StructField (name, StringType, true)
         case t if t =:= typeOf[Boolean] =>

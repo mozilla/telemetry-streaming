@@ -33,7 +33,9 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
     libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.2",
-    libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.0.1"
+    libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.0.1",
+    libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.3.0",
+    libraryDependencies += "com.github.tomakehurst" % "wiremock-standalone" % "2.8.0" % "provided"
   )
 
 // Setup docker task
