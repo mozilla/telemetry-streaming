@@ -195,4 +195,79 @@ object TestUtils {
       )
     }
   }
+
+  def generateFocusEventMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None): Seq[Message] = {
+    val defaultMap = Map(
+      "clientId" -> "client1",
+      "documentId" -> "doc-id",
+      "docType" -> "focus-event",
+      "normalizedChannel" -> "release",
+      "appName" -> "Focus",
+      "appVersion" -> 1.1,
+      "appBuildId" -> "6",
+      "geoCountry" -> "CA",
+      "geoCity" -> "Victoria",
+      "sampleId" -> 73L,
+      "submissionDate" -> "2017-01-01",
+      "submission" -> """
+      |{
+      |  "v":1,
+      |  "clientId":"client1",
+      |  "seq":162,
+      |  "locale":"pt-CA",
+      |  "os":"Android",
+      |  "osversion":"23",
+      |  "created":1506024685632,
+      |  "tz":-180,
+      |  "settings":{
+      |    "pref_privacy_block_ads":"true",
+      |    "pref_locale":"",
+      |    "pref_privacy_block_social":"true",
+      |    "pref_secure":"true",
+      |    "pref_privacy_block_analytics":"true",
+      |    "pref_search_engine":null,
+      |    "pref_privacy_block_other":"false",
+      |    "pref_default_browser":"true",
+      |    "pref_performance_block_webfonts":"false"},
+      |  "events":[
+      |    [
+      |      176078022,
+      |      "action",
+      |      "foreground",
+      |      "app"
+      |    ],[
+      |      176127806,
+      |      "action",
+      |      "type_query",
+      |      "search_bar"
+      |    ],[
+      |      176151285,
+      |      "action",
+      |      "click",
+      |      "back_button",
+      |      "erase_home"
+      |    ],[
+      |      176151591,
+      |      "action",
+      |      "background",
+      |      "app"
+      |    ]
+      |  ]
+      |}
+      """.stripMargin
+    )
+
+    val outputMap = fieldsOverride match {
+      case Some(m) => defaultMap ++ m
+      case _ => defaultMap
+    }
+
+    1.to(size) map { index =>
+      RichMessage(s"focus-event-${index}",
+        outputMap,
+        None,
+        timestamp=timestamp.getOrElse(testTimestampNano)
+      )
+    }
+  }
 }
