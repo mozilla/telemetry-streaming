@@ -18,19 +18,21 @@ import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.DateTime
 
-class ErrorAggregator extends java.io.Serializable{
+object ErrorAggregator {
+
+  private val defaultQueryName = "error_aggregator"
+  private val defaultOutputPrefix = "error_aggregator/v2"
+
+  var queryName = defaultQueryName
+  var outputPrefix = defaultOutputPrefix
 
   val kafkaTopic = "telemetry"
-  val outputPrefix = "error_aggregates/v2"
-  val queryName = "error_aggregates"
+  val defaultNumFiles = 60
 
   private val allowedDocTypes = List("main", "crash")
   private val allowedAppNames = List("Firefox")
   private val kafkaCacheMaxCapacity = 1000
 
-  // This is the number of files output per submission_date
-  // in a batch run.
-  val defaultNumFiles = 60
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
     val kafkaBroker: ScallopOption[String] = opt[String](
@@ -82,7 +84,7 @@ class ErrorAggregator extends java.io.Serializable{
     verify()
   }
 
-  protected val countHistogramErrorsSchema = new SchemaBuilder()
+  private val defaultCountHistogramErrorsSchema: StructType = new SchemaBuilder()
     .add[Int]("BROWSER_SHIM_USAGE_BLOCKED")
     .add[Int]("PERMISSIONS_SQL_CORRUPTED")
     .add[Int]("DEFECTIVE_PERMISSIONS_SQL_REMOVED")
@@ -90,14 +92,14 @@ class ErrorAggregator extends java.io.Serializable{
     .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
-  protected val thresholdHistograms = Map(
+  private val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map(
     "INPUT_EVENT_RESPONSE_COALESCED_MS" -> (List("main", "content"), List(150, 250, 2500)),
     "GHOST_WINDOWS" -> (List("main", "content"), List(1)),
     "GC_MAX_PAUSE_MS_2" -> (List("main", "content"), List(150, 250, 2500)),
     "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
   )
 
-  protected val dimensionsSchema = new SchemaBuilder()
+  private val defaultDimensionsSchema: StructType = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
     .add[String]("channel")
@@ -117,7 +119,7 @@ class ErrorAggregator extends java.io.Serializable{
     .add[Int]("profile_age_days")
     .build
 
-  protected val metricsSchema = new SchemaBuilder()
+  private val defaultMetricsSchema: StructType = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("subsession_count")
@@ -131,6 +133,11 @@ class ErrorAggregator extends java.io.Serializable{
     .add[Int]("first_subsession_count")
     .build
 
+  private var countHistogramErrorsSchema = defaultCountHistogramErrorsSchema
+  private var thresholdHistograms = defaultThresholdHistograms
+  private var dimensionsSchema = defaultDimensionsSchema
+  private var metricsSchema = defaultMetricsSchema
+
   // this part of the schema is used to temporarily hold
   // data that will not be part of the final schema
   private val tempSchema = new SchemaBuilder()
@@ -140,21 +147,22 @@ class ErrorAggregator extends java.io.Serializable{
   private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
     s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
 
-  protected val thresholdHistogramsSchema = thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
-    val histogramName = kv._1
-    kv._2 match {
-      case (processTypes: List[String], thresholds: List[Int]) => {
-        val fields = for {
-          processType <- processTypes
-          threshold <- thresholds
-        } yield thresholdHistogramName(histogramName, processType, threshold)
-        fields.foldLeft(schema)((acc, curr) => {acc.add[Long](curr)})
+  private def thresholdSchema: StructType =
+    thresholdHistograms.foldLeft(new SchemaBuilder())( (schema, kv) => {
+      val histogramName = kv._1
+      kv._2 match {
+        case (processTypes: List[String], thresholds: List[Int]) => {
+          val fields = for {
+            processType <- processTypes
+            threshold <- thresholds
+          } yield thresholdHistogramName(histogramName, processType, threshold)
+          fields.foldLeft(schema)((acc, curr) => {acc.add[Long](curr)})
+        }
+        case _ => schema
       }
-      case _ => schema
-    }
-  }).build
+    }).build
 
-  protected val statsSchema = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdHistogramsSchema)
+  private def statsSchema: StructType = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdSchema)
 
   private val HllMerge = new HyperLogLogMerge
 
@@ -375,7 +383,29 @@ class ErrorAggregator extends java.io.Serializable{
     spark.stop()
   }
 
-  def main(args: Array[String]): Unit = {
+  def setPrefix(prefix: String): Unit = {
+    ErrorAggregator.outputPrefix = prefix
+  }
+
+  def setQueryName(name: String): Unit = {
+    ErrorAggregator.queryName = name
+  }
+
+  def setSchemas(metricsSchema: StructType, dimensionsSchema: StructType, thresholdHistograms: Map[String, (List[String], List[Int])],
+                 countHistogramErrorsSchema: StructType): Unit = {
+    ErrorAggregator.metricsSchema = metricsSchema
+    ErrorAggregator.dimensionsSchema = dimensionsSchema
+    ErrorAggregator.thresholdHistograms = thresholdHistograms
+    ErrorAggregator.countHistogramErrorsSchema = countHistogramErrorsSchema
+  }
+
+  def prepare: Unit = {
+    setPrefix(defaultOutputPrefix)
+    setQueryName(defaultQueryName)
+    setSchemas(defaultMetricsSchema, defaultDimensionsSchema, defaultThresholdHistograms, defaultCountHistogramErrorsSchema)
+  }
+
+  def run(args: Array[String]): Unit = {
     val opts = new Opts(args)
 
     val spark = SparkSession.builder()
@@ -390,4 +420,6 @@ class ErrorAggregator extends java.io.Serializable{
       case None => writeBatchAggregates(spark, opts)
     }
   }
+
+  def main(args: Array[String]): Unit = run(args)
 }
