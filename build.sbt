@@ -1,6 +1,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import sys.process._;
+
 resolvers ++= Seq(
   "Conjars" at "http://conjars.org/repo",
   "Artima Maven Repository" at "http://repo.artima.com/releases",
@@ -51,7 +53,7 @@ dockerfile in docker := {
 }
 
 // make run command include the provided dependencies
-run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run))
+run in Compile := { Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)) }
 
 // exclude Scala library from assembly
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
