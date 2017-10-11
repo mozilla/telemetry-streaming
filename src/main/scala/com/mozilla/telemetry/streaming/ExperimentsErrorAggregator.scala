@@ -6,15 +6,14 @@ package com.mozilla.telemetry.streaming
 import java.sql.{Date, Timestamp}
 import com.mozilla.telemetry.timeseries.SchemaBuilder
 
-class ExperimentErrorAggregator extends ErrorAggregator {
-  override val outputPrefix = "experiment_error_aggregates/v1"
-  override val queryName = "experiment_error_aggregates"
-  override val defaultNumFiles = 20
+object ExperimentsErrorAggregator {
+  val outputPrefix = "experiment_error_aggregates/v1"
+  val queryName = "experiment_error_aggregates"
 
-  override val countHistogramErrorsSchema = (new SchemaBuilder()).build
-  override val thresholdHistogramsSchema = (new SchemaBuilder()).build
+  private val countHistogramErrorsSchema = (new SchemaBuilder()).build
+  private val thresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
 
-  override val dimensionsSchema = new SchemaBuilder()
+  private val dimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
     .add[String]("channel")
@@ -25,7 +24,7 @@ class ExperimentErrorAggregator extends ErrorAggregator {
     .add[String]("experiment_branch")
     .build
 
-  override val metricsSchema = new SchemaBuilder()
+  private val metricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("subsession_count")
@@ -37,5 +36,14 @@ class ExperimentErrorAggregator extends ErrorAggregator {
     .add[Int]("content_shutdown_crashes")
     .build
 
-  override val statsSchema = metricsSchema
+  def prepare: Unit = {
+    ErrorAggregator.setPrefix(outputPrefix)
+    ErrorAggregator.setQueryName(queryName)
+    ErrorAggregator.setSchemas(metricsSchema, dimensionsSchema, thresholdHistograms, countHistogramErrorsSchema)
+  }
+
+  def main(args: Array[String]): Unit = {
+    ExperimentsErrorAggregator.prepare
+    ErrorAggregator.run(args)
+  }
 }

@@ -30,7 +30,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
   val zkHostInfo = "localhost:2181"
   val kafkaTopicPartitions = 1
   val kafkaBrokers = "localhost:9092"
-  val errorAggregator = new ErrorAggregator()
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
@@ -50,6 +49,10 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
+
+  override def beforeAll() {
+    ErrorAggregator.prepare
+  }
 
   def topicExists(zkUtils: ZkUtils, topic: String): Boolean = {
     // taken from
@@ -77,7 +80,8 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val messages =
       (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -171,7 +175,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val messages =
       (TestUtils.generateCrashMessages(k, fieldsOverride=fieldsOverride)
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -221,7 +225,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
             |}""".stripMargin
       )))
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
     // one count for each experiment-branch, and one for null-null
     df.count() should be (3)
@@ -250,7 +254,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       )
 
     val messages = (crashMessages ++ mainMessages).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
     val client_count = df.selectExpr("HllCardinality(client_count) as client_count").collect()(0).getAs[Any]("client_count")
     client_count should be (10)
   }
@@ -263,7 +267,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       )
 
     val messages = mainMessages.map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
     val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
     subsession_count should be (10)
   }
@@ -303,7 +307,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
     val messages =
       (crashMessagesNewProfile ++ crashMessagesYoungProfile ++ crashMessagesOldProfile).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
     // one count for each age, limited to 60
     // multiplied by the number of experiments (chaos, control, null)
@@ -324,7 +328,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
     val messages =
       (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
 
     df.where("application <> 'Firefox'").count() should be (0)
   }
@@ -338,11 +342,11 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     conf.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer")
 
     val kafkaProducer = new KafkaProducer[String, Array[Byte]](conf)
-    createTopic(errorAggregator.kafkaTopic, kafkaTopicPartitions)
+    createTopic(ErrorAggregator.kafkaTopic, kafkaTopicPartitions)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ v =>
-        val record = new ProducerRecord[String, Array[Byte]](errorAggregator.kafkaTopic, v)
+        val record = new ProducerRecord[String, Array[Byte]](ErrorAggregator.kafkaTopic, v)
         kafkaProducer.send(record)
         kafkaProducer.flush()
       }
@@ -408,16 +412,16 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       "--raiseOnError" :: Nil
 
     val mainRes: Future[Unit] = Future {
-      errorAggregator.main(args.toArray)
+      ErrorAggregator.main(args.toArray)
     }
 
-    mainRes map {_ => assert(spark.read.parquet(s"$outputPath/${errorAggregator.outputPrefix}").count() == 3)}
+    mainRes map {_ => assert(spark.read.parquet(s"$outputPath/${ErrorAggregator.outputPrefix}").count() == 3)}
   }
 
   "The resulting schema" should "not have fields belonging to the tempSchema" in {
     import spark.implicits._
     val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
     df.schema.fields.map(_.name) should not contain ("client_id")
   }
 
@@ -430,9 +434,8 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         )
       )
     ).map(_.toByteArray).seq
-    val df = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
     df.where("build_id IS NOT NULL").collect().length should be (0)
-
 
     val messages2 = TestUtils.generateMainMessages(
       1, Some(Map(
@@ -441,7 +444,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         )
       )
     ).map(_.toByteArray).seq
-    val df2 = errorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
     df2.where("build_id IS NULL").collect().length should be (0)
   }
 }

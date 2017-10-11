@@ -23,12 +23,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestExperimentErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
+class TestExperimentsErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
-  val experimentErrorAggregator = new ExperimentErrorAggregator()
 
   val spark = SparkSession.builder()
     .appName("Error Aggregates")
@@ -39,12 +38,16 @@ class TestExperimentErrorAggregator extends AsyncFlatSpec with Matchers with Bef
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
 
+  override def beforeAll() {
+    ExperimentsErrorAggregator.prepare
+  }
+
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
     val messages =
       (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
-    val df = experimentErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
