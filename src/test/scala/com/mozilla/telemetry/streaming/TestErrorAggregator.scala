@@ -51,10 +51,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
 
-  override def afterAll() {
-    spark.stop()
-  }
-
   def topicExists(zkUtils: ZkUtils, topic: String): Boolean = {
     // taken from
     // https://github.com/apache/spark/blob/master/external/kafka-0-10-sql +
