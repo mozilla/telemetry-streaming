@@ -10,7 +10,6 @@ import org.apache.spark.sql.types.{StructField, _}
 
 import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
-import scala.util.{Failure, Success, Try}
 
 package object timeseries {
   class SchemaBuilder(private val fields: ListBuffer[StructField] = ListBuffer()){
@@ -43,26 +42,20 @@ package object timeseries {
   }
 
   object SchemaBuilder {
-    def merge(y: StructType*): StructType =
-      y.filter(_ != null).foldLeft((new SchemaBuilder()).build)((acc, curr) => {StructType(acc.fields ++ curr.fields)})
+    def merge(x: StructType, y: StructType*): StructType =
+      y.foldLeft(x)((acc, curr) => {StructType(acc.fields ++ curr.fields)})
   }
 
-  class RowBuilder(schema: StructType, failOnMissingField: Boolean = false) extends Serializable {
+  class RowBuilder(schema: StructType) extends Serializable {
     val container = Array.fill[Any](schema.length)(null)
 
     def update(name: String, value: Option[Any]): Unit = {
-      Try(schema.fieldIndex(name)) match {
-        case Success(i) =>
-          value match {
-            case Some(v: Any) =>
-              container(i) = v
-            case _ =>
-          }
-        case Failure(e) =>
-          failOnMissingField match {
-            case true => throw e
-            case false =>
-          }
+      val idx = schema.fieldIndex(name)
+      value match {
+        case Some(v: Any) =>
+          container(idx) = v
+
+        case _ =>
       }
     }
 
