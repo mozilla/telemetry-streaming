@@ -89,6 +89,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       "submission_date",
       "channel",
       "version",
+      "display_version",
       "build_id",
       "application",
       "os_name",
@@ -133,6 +134,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     results("submission_date").map(_.toString) should be (Set("2016-04-07"))
     results("channel") should be (Set(app.channel))
     results("version") should be (Set(app.version))
+    results("display_version") should be (Set(app.displayVersion))
     results("build_id") should be (Set(app.buildId))
     results("application") should be (Set(app.name))
     results("os_name") should be (Set("Linux"))
