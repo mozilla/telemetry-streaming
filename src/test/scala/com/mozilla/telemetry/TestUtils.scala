@@ -13,7 +13,7 @@ import org.json4s.jackson.JsonMethods.{compact, render}
 object TestUtils {
   implicit val formats = DefaultFormats
   val application = pings.Application(
-    "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", "x86-msvc"
+    "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", "42.0b1", "x86-msvc"
   )
   private val applicationJson = compact(render(Extraction.decompose(application)))
   val scalarValue = 42
@@ -29,6 +29,7 @@ object TestUtils {
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
       "appVersion" -> application.version.toDouble,
+      "displayVersion" -> application.displayVersion,
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
@@ -92,6 +93,7 @@ object TestUtils {
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
       "appVersion" -> application.version.toDouble,
+      "displayVersion" -> application.displayVersion,
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",

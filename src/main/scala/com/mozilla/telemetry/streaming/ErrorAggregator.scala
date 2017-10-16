@@ -104,6 +104,7 @@ object ErrorAggregator {
     .add[Date]("submission_date")
     .add[String]("channel")
     .add[String]("version")
+    .add[String]("display_version")
     .add[String]("build_id")
     .add[String]("application")
     .add[String]("os_name")
@@ -209,7 +210,7 @@ object ErrorAggregator {
       .coalesce(1)
   }
 
-  private def buildDimensions(meta: Meta): Array[Row] = {
+  private def buildDimensions(meta: Meta, application: Application): Array[Row] = {
 
     // add a null experiment_id and experiment_branch for each ping
     val experiments = (meta.experiments :+ (None, None)).toSet.toArray
@@ -220,6 +221,7 @@ object ErrorAggregator {
       dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
       dimensions("channel") = Some(meta.normalizedChannel)
       dimensions("version") = meta.`environment.build`.flatMap(_.version)
+      dimensions("display_version") = Some(application.displayVersion)
       dimensions("build_id") = meta.normalizedBuildId
       dimensions("application") = Some(meta.appName)
       dimensions("os_name") = meta.`environment.system`.map(_.os.name)
@@ -248,7 +250,7 @@ object ErrorAggregator {
     def parse(): Array[Row] = {
       // Non-main crashes are already retrieved from main pings
       if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
-      val dimensions = buildDimensions(ping.meta)
+      val dimensions = buildDimensions(ping.meta, ping.application)
       val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
       stats("count") = Some(1)
       stats("client_id") = ping.meta.clientId
@@ -264,7 +266,7 @@ object ErrorAggregator {
       val usageHours = ping.usageHours
       if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
-      val dimensions = buildDimensions(ping.meta)
+      val dimensions = buildDimensions(ping.meta, ping.application)
       val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
       stats("count") = Some(1)
       stats("subsession_count") = Some(1)
