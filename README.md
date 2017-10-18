@@ -7,3 +7,4 @@ Spark Streaming ETL jobs for Mozilla Telemetry
 
 ---
 
+<img src="https://avatars2.githubusercontent.com/u/131524?s=200&v=4"></img>
