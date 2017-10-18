@@ -117,7 +117,7 @@ object ErrorAggregator {
     .add[String]("e10s_cohort")
     .add[String]("gfx_compositor")
     .add[Boolean]("quantum_ready")
-    .add[Int]("profile_age_days")
+    // .add[Int]("profile_age_days")
     .build
 
   private val defaultMetricsSchema: StructType = new SchemaBuilder()
@@ -239,9 +239,9 @@ object ErrorAggregator {
       dimensions("quantum_ready") = meta.isQuantumReady
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
-      dimensions("profile_age_days") = meta.`environment.profile`.flatMap(
-        _.ageDaysBin(new DateTime(meta.normalizedTimestamp().getTime))
-      )
+      // dimensions("profile_age_days") = meta.`environment.profile`.flatMap(
+      //   _.ageDaysBin(new DateTime(meta.normalizedTimestamp().getTime))
+      // )
       dimensions.build
     }
   }
