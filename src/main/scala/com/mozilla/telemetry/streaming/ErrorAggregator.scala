@@ -165,7 +165,7 @@ object ErrorAggregator {
 
   private def statsSchema: StructType = SchemaBuilder.merge(metricsSchema, countHistogramErrorsSchema, thresholdSchema)
 
-  private val HllMerge = new HyperLogLogMerge
+  // private val HllMerge = new HyperLogLogMerge
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true): DataFrame = {
     import pings.sparkSession.implicits._
@@ -196,14 +196,15 @@ object ErrorAggregator {
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
     val sumCols = stats.map(s => sum(s).as(s))
-    val aggCols = HllMerge($"client_hll").as("client_count") :: Nil ++ sumCols
+    // val aggCols = HllMerge($"client_hll").as("client_count") :: Nil ++ sumCols
+    val aggCols = sumCols
 
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
     * Everything else gets dropped by .agg()
     * */
     parsedPings
-      .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
+      // .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
@@ -415,7 +416,7 @@ object ErrorAggregator {
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .getOrCreate()
 
-    spark.udf.register("HllCreate", hllCreate _)
+    // spark.udf.register("HllCreate", hllCreate _)
 
     opts.kafkaBroker.get match {
       case Some(_) => writeStreamingAggregates(spark, opts)
