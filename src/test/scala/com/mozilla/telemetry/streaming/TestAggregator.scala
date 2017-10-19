@@ -82,9 +82,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-
-    // 1 for each experiment (there are 2), and one for a null experiment
-    df.count() should be (3)
+    df.count() should be (1)
     val inspectedFields = List(
       "submission_date",
       "channel",
@@ -125,6 +123,40 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       "HllCardinality(client_count) as client_count",
       "profile_age_days"
     )
+    val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
+    val results = inspectedFields.zip(row.toSeq).toMap
+    results("submission_date").toString should be ("2016-04-07")
+    results("channel") should be (app.channel)
+    results("version") should be (app.version)
+    results("build_id") should be (app.buildId)
+    results("application") should be (app.name)
+    results("os_name") should be ("Linux")
+    results("os_version") should be (s"${k}")
+    results("architecture") should be (app.architecture)
+    results("country") should be ("IT")
+    results("quantum_ready") should equal (true)
+    results("main_crashes") should be (k)
+    results("content_crashes") should be (k)
+    results("gpu_crashes") should be (k)
+    results("plugin_crashes") should be (k)
+    results("gmplugin_crashes") should be (k)
+    results("content_shutdown_crashes") should be (k)
+    results("count") should be (k * 2)
+    results("usage_hours") should be (k.toFloat)
+    results("browser_shim_usage_blocked") should be (k)
+    results("experiment_id") should be ("experiment1")
+    results("experiment_branch") should be ("control")
+    results("e10s_enabled") should equal (true)
+    results("e10s_cohort") should be ("test")
+    results("gfx_compositor") should be ("opengl")
+    results("input_event_response_coalesced_ms_main_above_150") should be (42 * 14)
+    results("input_event_response_coalesced_ms_main_above_250") should be (42 * 12)
+    results("input_event_response_coalesced_ms_main_above_2500") should be (42 * 9)
+    results("input_event_response_coalesced_ms_content_above_150") should be (42 * 4)
+    results("input_event_response_coalesced_ms_content_above_250") should be (42 * 3)
+    results("input_event_response_coalesced_ms_content_above_2500") should be (42 * 2)
+    results("first_paint") should be (42 * 1200)
+    results("first_subsession_count") should be (42)
 
     val query = df.selectExpr(inspectedFields:_*)
     val columns = query.columns
@@ -228,19 +260,15 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       )))
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
-
-    // one count for each experiment-branch, and one for null-null
-    df.count() should be (3)
-
+    df.count() should be (1)
     val inspectedFields = List(
       "experiment_id",
       "experiment_branch"
     )
-    val rows = df.select(inspectedFields(0), inspectedFields.drop(1):_*).collect()
-    val results = inspectedFields.zip( inspectedFields.map(field => rows.map(row => row.getAs[Any](field))) ).toMap
-
-    results("experiment_id").toSet should be (Set("new-experiment-1", "new-experiment-2", null))
-    results("experiment_branch").toSet should be (Set("control", "chaos", null))
+    val row = df.select(inspectedFields(0), inspectedFields.drop(1):_*).first()
+    val results = inspectedFields.zip(row.toSeq).toMap
+    results("experiment_id") should be ("new-experiment-1")
+    results("experiment_branch") should be ("control")
   }
 
   "The aggregator" should "correctly compute client counts" in {
