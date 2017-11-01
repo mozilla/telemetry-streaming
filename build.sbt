@@ -3,10 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import sys.process._;
 
+val localMavenHttps = "https://s3-us-west-2.amazonaws.com/net-mozaws-data-us-west-2-ops-mavenrepo/"
+
 resolvers ++= Seq(
   "Conjars" at "http://conjars.org/repo",
   "Artima Maven Repository" at "http://repo.artima.com/releases",
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  "S3 local maven snapshots" at localMavenHttps + "snapshots"
 )
 
 name := "telemetry-streaming"
