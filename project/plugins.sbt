@@ -11,3 +11,5 @@ addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.2")
 addSbtPlugin("com.tapad" % "sbt-docker-compose" % "1.0.27")
 
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.1")
+
+addSbtPlugin("com.frugalmechanic" % "fm-sbt-s3-resolver" % "0.12.0")
