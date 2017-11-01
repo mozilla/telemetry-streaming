@@ -134,7 +134,7 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     results("submission_date").map(_.toString) should be (Set("2016-04-07"))
     results("channel") should be (Set(app.channel))
     results("version") should be (Set(app.version))
-    results("display_version") should be (Set(app.displayVersion))
+    results("display_version") should be (Set(app.displayVersion.getOrElse(null)))
     results("build_id") should be (Set(app.buildId))
     results("application") should be (Set(app.name))
     results("os_name") should be (Set("Linux"))
@@ -449,4 +449,18 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
     df2.where("build_id IS NULL").collect().length should be (0)
   }
+
+  "display version" can "be undefined" in {
+    import spark.implicits._
+    val messages = TestUtils.generateMainMessages(
+      1, None, None, "displayVersion" :: Nil
+    ).map(_.toByteArray).seq
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+    // 1 for each experiment (there are 2), and one for a null experiment
+    df.where("display_version IS NULL").collect().length should be (3)
+    // should be no cases where displayVersion is null for this test case
+    df.where("display_version <> NULL").collect().length should be (0)
+
+  }
 }
+

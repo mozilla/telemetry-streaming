@@ -221,7 +221,7 @@ object ErrorAggregator {
       dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
       dimensions("channel") = Some(meta.normalizedChannel)
       dimensions("version") = meta.`environment.build`.flatMap(_.version)
-      dimensions("display_version") = Some(application.displayVersion)
+      dimensions("display_version") = application.displayVersion
       dimensions("build_id") = meta.normalizedBuildId
       dimensions("application") = Some(meta.appName)
       dimensions("os_name") = meta.`environment.system`.map(_.os.name)
