@@ -16,14 +16,14 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, AsyncFlatSpec, Matchers, Tag}
+import org.scalatest.{AsyncFlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestExperimentsErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
+class TestExperimentsErrorAggregator extends AsyncFlatSpec with Matchers {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
@@ -38,16 +38,15 @@ class TestExperimentsErrorAggregator extends AsyncFlatSpec with Matchers with Be
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
 
-  override def beforeAll() {
-    ExperimentsErrorAggregator.prepare
-  }
-
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
-    val messages =
-      (TestUtils.generateCrashMessages(k)
+    val messages = (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ExperimentsErrorAggregator.defaultDimensionsSchema, ExperimentsErrorAggregator.defaultMetricsSchema,
+      ExperimentsErrorAggregator.defaultCountHistogramErrorsSchema,
+      ExperimentsErrorAggregator.defaultThresholdHistograms)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)

@@ -16,14 +16,14 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, AsyncFlatSpec, Matchers, Tag}
+import org.scalatest.{AsyncFlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
+class TestErrorAggregator extends AsyncFlatSpec with Matchers {
 
   object DockerComposeTag extends Tag("DockerComposeTag")
 
@@ -49,10 +49,6 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
-
-  override def beforeAll() {
-    ErrorAggregator.prepare
-  }
 
   def topicExists(zkUtils: ZkUtils, topic: String): Boolean = {
     // taken from
@@ -81,7 +77,11 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -177,7 +177,11 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val messages =
       (TestUtils.generateCrashMessages(k, fieldsOverride=fieldsOverride)
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -227,7 +231,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
             |}""".stripMargin
       )))
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
 
     // one count for each experiment-branch, and one for null-null
     df.count() should be (3)
@@ -256,7 +265,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       )
 
     val messages = (crashMessages ++ mainMessages).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     val client_count = df.selectExpr("HllCardinality(client_count) as client_count").collect()(0).getAs[Any]("client_count")
     client_count should be (10)
   }
@@ -269,7 +283,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
       )
 
     val messages = mainMessages.map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
     subsession_count should be (10)
   }
@@ -309,7 +328,11 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
     val messages =
       (crashMessagesNewProfile ++ crashMessagesYoungProfile ++ crashMessagesOldProfile).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
 
     // one count for each age, limited to 60
     // multiplied by the number of experiments (chaos, control, null)
@@ -330,7 +353,11 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
 
     val messages =
       (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
 
     df.where("application <> 'Firefox'").count() should be (0)
   }
@@ -423,7 +450,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
   "The resulting schema" should "not have fields belonging to the tempSchema" in {
     import spark.implicits._
     val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     df.schema.fields.map(_.name) should not contain ("client_id")
   }
 
@@ -436,7 +468,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         )
       )
     ).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     df.where("build_id IS NOT NULL").collect().length should be (0)
 
     val messages2 = TestUtils.generateMainMessages(
@@ -446,7 +483,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
         )
       )
     ).map(_.toByteArray).seq
-    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     df2.where("build_id IS NULL").collect().length should be (0)
   }
 
@@ -455,7 +497,12 @@ class TestErrorAggregator extends AsyncFlatSpec with Matchers with BeforeAndAfte
     val messages = TestUtils.generateMainMessages(
       1, None, None, "displayVersion" :: Nil
     ).map(_.toByteArray).seq
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false)
+
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false, 
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
     // 1 for each experiment (there are 2), and one for a null experiment
     df.where("display_version IS NULL").collect().length should be (3)
     // should be no cases where displayVersion is null for this test case
