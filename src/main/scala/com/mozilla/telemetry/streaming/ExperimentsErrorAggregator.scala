@@ -10,10 +10,10 @@ object ExperimentsErrorAggregator {
   val outputPrefix = "experiment_error_aggregates/v1"
   val queryName = "experiment_error_aggregates"
 
-  private val countHistogramErrorsSchema = (new SchemaBuilder()).build
-  private val thresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
+  val defaultCountHistogramErrorsSchema = (new SchemaBuilder()).build
+  val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
 
-  private val dimensionsSchema = new SchemaBuilder()
+  val defaultDimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[Date]("submission_date")
     .add[String]("channel")
@@ -24,7 +24,7 @@ object ExperimentsErrorAggregator {
     .add[String]("experiment_branch")
     .build
 
-  private val metricsSchema = new SchemaBuilder()
+  val defaultMetricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("subsession_count")
@@ -36,14 +36,14 @@ object ExperimentsErrorAggregator {
     .add[Int]("content_shutdown_crashes")
     .build
 
-  def prepare: Unit = {
+  def main(args: Array[String]): Unit = {
     ErrorAggregator.setPrefix(outputPrefix)
     ErrorAggregator.setQueryName(queryName)
-    ErrorAggregator.setSchemas(metricsSchema, dimensionsSchema, thresholdHistograms, countHistogramErrorsSchema)
-  }
 
-  def main(args: Array[String]): Unit = {
-    ExperimentsErrorAggregator.prepare
-    ErrorAggregator.run(args)
+    ErrorAggregator.run(args,
+      defaultDimensionsSchema,
+      defaultMetricsSchema,
+      defaultCountHistogramErrorsSchema,
+      defaultThresholdHistograms)
   }
 }
