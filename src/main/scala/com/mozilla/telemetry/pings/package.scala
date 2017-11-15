@@ -99,7 +99,6 @@ package object pings {
       blocklistEnabled: Option[Boolean],
       isDefaultBrowser: Option[Boolean],
       e10sEnabled: Option[Boolean],
-      e10sCohort: Option[String],
       locale: Option[String],
       telemetryEnabled: Option[Boolean])
 
