@@ -10,24 +10,34 @@ import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
-import com.mozilla.telemetry.streaming.TestUtils.todayDays
+import com.mozilla.telemetry.streaming.TestUtils.{deleteRecursively, todayDays}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{FlatSpec, Matchers, Tag}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
+import java.io.File
+
+class TestExperimentsErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
+
+  object DockerExperimentsErrorAggregatorTag extends Tag("DockerExperimentsErrorAggregatorTag")
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
+
+  // 2016-04-07T02:01:56.000Z
+  val earlierTimestamp = 1459994516000000000L
+
+  // 2016-04-07T02:35:16.000Z
+  val laterTimestamp = 1459996516000000000L
 
   val spark = SparkSession.builder()
     .appName("Error Aggregates")
@@ -38,8 +48,13 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
 
+  override def beforeAll() = {
+    ExperimentsErrorAggregator.prepare
+  }
+
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
+
     val messages = (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
@@ -94,5 +109,86 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
     results("client_count") should be (Set(1))
+  }
+
+  "the aggregator" should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerExperimentsErrorAggregatorTag) in {
+    spark.sparkContext.setLogLevel("WARN")
+
+    Kafka.createTopic(ExperimentsErrorAggregator.experimentTopic)
+    val kafkaProducer = Kafka.makeProducer(ExperimentsErrorAggregator.experimentTopic)
+
+    def send(rs: Seq[Array[Byte]]): Unit = {
+      rs.foreach{ kafkaProducer.send(_, synchronous = true) }
+    }
+
+    val earlier = (TestUtils.generateMainMessages(k, timestamp = Some(earlierTimestamp)) ++
+      TestUtils.generateCrashMessages(k, timestamp = Some(earlierTimestamp))).map(_.toByteArray)
+
+    val later = TestUtils.generateMainMessages(1, timestamp = Some(laterTimestamp)).map(_.toByteArray)
+
+    val expectedTotalMsgs = 2 * k
+
+    val listener = new StreamingQueryListener {
+      val DefaultWatermark = "1970-01-01T00:00:00.000Z"
+
+      var messagesSeen = 0L
+      var sentMessages = false
+      var watermarks: Set[String] = Set(DefaultWatermark)
+
+      override def onQueryStarted(event: StreamingQueryListener.QueryStartedEvent): Unit = {}
+
+      override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {
+        messagesSeen += event.progress.numInputRows
+
+        if(!sentMessages){
+          send(earlier)
+          sentMessages = true
+        }
+
+        // If we only send this message once (i.e. set a flag that we've sent it), Spark will recieve
+        // it and process the new rows (should be 3: 1 per experiment), and will update the eventTime["max"]
+        // to be this message's time -- but it will not update the watermark, and thus will not write
+        // the old rows (from earlier) to disk. You can follow this by reading the QueryProgress log events.
+        // If we send more than one, however, it eventually updates the value.
+        if(messagesSeen >= expectedTotalMsgs){
+          send(later)
+        }
+
+        val watermark = event.progress.eventTime.getOrDefault("watermark", DefaultWatermark)
+        watermarks = watermarks | Set(watermark)
+
+        // We're done when we've gone through 3 watermarks -- the default, the earlier, and the later
+        // when we're on the later watermark, the data from the earlier window is written to disk
+        if(watermarks.size == 3){
+          spark.streams.active.foreach(_.processAllAvailable)
+          spark.streams.active.foreach(_.stop)
+        }
+      }
+
+      override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {
+        if(messagesSeen < expectedTotalMsgs){
+          println(s"Terminated Early: Expected $expectedTotalMsgs messages, saw $messagesSeen")
+        }
+      }
+    }
+
+    spark.streams.addListener(listener)
+
+    val outputPath = "/tmp/parquet"
+    val checkpointPath = "/tmp/experiment_error_aggregates_checkpoint"
+    deleteRecursively(new File(checkpointPath))
+
+    val args = "--kafkaBroker" :: Kafka.kafkaBrokers ::
+      "--outputPath" :: outputPath ::
+      "--startingOffsets" :: "latest" ::
+      "--checkpointPath" :: checkpointPath ::
+      "--raiseOnError" :: Nil
+
+    ExperimentsErrorAggregator.main(args.toArray)
+
+    assert(spark.read.parquet(s"$outputPath/${ExperimentsErrorAggregator.outputPrefix}").count() == 3)
+
+    kafkaProducer.close
+    spark.streams.removeListener(listener)
   }
 }
