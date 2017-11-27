@@ -80,6 +80,7 @@ class TestErrorAggregator extends FlatSpec with Matchers {
       "experiment_id",
       "experiment_branch",
       "e10s_enabled",
+      "e10s_cohort",
       "gfx_compositor",
       "input_event_response_coalesced_ms_main_above_150",
       "input_event_response_coalesced_ms_main_above_250",
@@ -124,6 +125,7 @@ class TestErrorAggregator extends FlatSpec with Matchers {
     results("experiment_id") should be (Set("experiment1", "experiment2", null))
     results("experiment_branch") should be (Set("control", "chaos", null))
     results("e10s_enabled") should equal (Set(true))
+    results("e10s_cohort") should be (Set("test"))
     results("gfx_compositor") should be (Set("opengl"))
     results("input_event_response_coalesced_ms_main_above_150") should be (Set(42 * 14))
     results("input_event_response_coalesced_ms_main_above_250") should be (Set(42 * 12))
