@@ -13,7 +13,7 @@ import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.functions.{sum, window, col, expr}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.{DateTime, Days, format}
@@ -171,7 +171,6 @@ object ErrorAggregator {
     val statsSchema = buildStatsSchema(metrics, countHistograms, thresholds)
     val mergedSchema = SchemaBuilder.merge(dimensions, statsSchema, tempSchema)
     implicit val rowEncoder = RowEncoder(mergedSchema).resolveAndBind()
-    implicit val optEncoder = ExpressionEncoder.tuple(rowEncoder)
 
     val parseMessage = parsePing(dimensions, statsSchema, countHistograms, thresholds) _
     var parsedPings = pings
