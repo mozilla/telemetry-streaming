@@ -4,7 +4,7 @@
 # telemetry-streaming
 Spark Streaming ETL jobs for Mozilla Telemetry
 
-This service currently contains jobs that aggregate error aggregate data
+This service currently contains jobs that aggregate error data
 on 5 minute intervals. It is responsible for generating the (internal only)
 `error_aggregates` and `experiment_error_aggregates` parquet tables at
 Mozilla.
