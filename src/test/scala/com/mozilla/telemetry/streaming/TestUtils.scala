@@ -5,14 +5,14 @@ package com.mozilla.telemetry.streaming
 
 import com.mozilla.telemetry.heka.{Message, RichMessage}
 import com.mozilla.telemetry.pings
-import org.json4s.{DefaultFormats, Extraction}
+import org.json4s.{DefaultFormats, Extraction, JField}
 import org.json4s.jackson.JsonMethods.{compact, render}
 
 
 object TestUtils {
   implicit val formats = DefaultFormats
   val application = pings.Application(
-    "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", "x86-msvc"
+    "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", Some("42.0b1"), "x86-msvc"
   )
   private val applicationJson = compact(render(Extraction.decompose(application)))
   val scalarValue = 42
@@ -25,6 +25,7 @@ object TestUtils {
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
       "appVersion" -> application.version.toDouble,
+      "displayVersion" -> application.displayVersion.getOrElse(null),
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
@@ -51,6 +52,7 @@ object TestUtils {
           | "theme": {"id": "firefox-compact-dark@mozilla.org"}
           |}""".stripMargin
     )
+    val applicationJson = compact(render(Extraction.decompose(application)))
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m
       case _ => defaultMap
@@ -70,12 +72,14 @@ object TestUtils {
       )
     }
   }
-  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None): Seq[Message] = {
+  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None,
+                           fieldsToRemove: List[String] = List[String]()): Seq[Message] = {
     val defaultMap = Map(
       "docType" -> "main",
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
       "appVersion" -> application.version.toDouble,
+      "displayVersion" -> application.displayVersion.getOrElse(null),
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
@@ -134,6 +138,12 @@ object TestUtils {
       case Some(m) => defaultMap ++ m
       case _ => defaultMap
     }
+
+    val applicationData = Extraction.decompose(application) removeField {
+      case JField(x, _) if fieldsToRemove.contains(x) => true
+      case _ => false
+    }
+    val applicationJson = compact(render(applicationData))
     1.to(size) map { index =>
       RichMessage(s"main-${index}",
         outputMap,
