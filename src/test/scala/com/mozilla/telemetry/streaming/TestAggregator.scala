@@ -14,12 +14,13 @@ class TestAggregator extends FlatSpec with Matchers{
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.application
+  val spark = SparkSession.builder()
+    .appName("Error Aggregates")
+    .config("spark.streaming.stopGracefullyOnShutdown", "true")
+    .master("local[1]")
+    .getOrCreate()
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
-    val spark = SparkSession.builder()
-      .appName("Error Aggregates")
-      .master("local[1]")
-      .getOrCreate()
     import spark.implicits._
     val messages =
       (TestUtils.generateCrashMessages(k)
@@ -30,6 +31,7 @@ class TestAggregator extends FlatSpec with Matchers{
       "submission_date",
       "channel",
       "version",
+      "display_version",
       "build_id",
       "application",
       "os_name",
@@ -67,6 +69,7 @@ class TestAggregator extends FlatSpec with Matchers{
     results("submission_date").toString should be ("2016-04-07")
     results("channel") should be (app.channel)
     results("version") should be (app.version)
+    results("display_version") should be (app.displayVersion.getOrElse(null))
     results("build_id") should be (app.buildId)
     results("application") should be (app.name)
     results("os_name") should be ("Linux")
@@ -99,5 +102,19 @@ class TestAggregator extends FlatSpec with Matchers{
 
     results("window_start").asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
+  }
+
+  "display version" can "be undefined" in {
+
+    import spark.implicits._
+
+    val messages = TestUtils.generateMainMessages (
+      1, None, "displayVersion" :: Nil
+    ).map (_.toByteArray).seq
+    val df = ErrorAggregator.aggregate (spark.sqlContext.createDataset (messages).toDF, raiseOnError = false, online = false)
+    // since our main message has a null displayVersion, we should have exactly one value with this type
+    df.where ("display_version IS NULL").collect ().length should be (1)
+    // should be no cases where displayVersion is null for this test case
+    df.where ("display_version <> NULL").collect ().length should be (0)
   }
 }
