@@ -9,8 +9,12 @@ import java.sql.Timestamp
 import com.mozilla.telemetry.heka.Message
 import org.joda.time.{DateTime, Duration, Months}
 import org.joda.time.format.DateTimeFormat
+
+
 import org.json4s._
-import org.json4s.jackson.JsonMethods.parse
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization.write
 
 package object pings {
   case class Event(
@@ -21,9 +25,21 @@ package object pings {
       value: Option[String],
       extra: Option[Map[String, String]]){
 
-    def getType: String = {
-      List(category, method).mkString("-")
+    def getProperties(properties: Option[Map[String, String]]): JObject = {
+      properties.getOrElse(Map.empty).map{ case(k, v) =>
+        k -> (v match {
+          case "timestamp" => timestamp.toString
+          case "category" => category
+          case "method" => method
+          case "object" => `object`
+          case "value" => value.getOrElse("") // TODO - log if empty
+          case e if e.startsWith("extra") => extra.getOrElse(Map.empty).getOrElse(e.stripPrefix("extra."), "")
+          case _ => ""
+        })
+      }.foldLeft(JObject())(_ ~ _)
     }
+
+    def getId: String = timestamp.toString + category + method + `object`
   }
 
   case class Application(

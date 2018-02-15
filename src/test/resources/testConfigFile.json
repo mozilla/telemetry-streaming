@@ -1,0 +1,113 @@
+{
+  "eventGroupName": "m_foc",
+  "filters": {
+    "docType": [
+      "focus-event"
+    ],
+    "appName": [
+      "Focus"
+    ]
+  },
+  "events": [
+    {
+      "name": "AppOpen",
+      "description": "User opening the app",
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "foreground" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "app" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "Erase",
+      "description": "",
+      "amplitudeProperties": { "erase_object": "value" },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^erase"
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object",
+          "value"
+        ]
+      }
+    },
+    {
+      "name": "AppClose",
+      "description": "User closing the app",
+      "amplitudeProperties": { "session_length": "extra.sessionLength" },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "background" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "app" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    }
+  ]
+}

@@ -250,7 +250,9 @@ object TestUtils {
       |      176151591,
       |      "action",
       |      "background",
-      |      "app"
+      |      "app",
+      |      "",
+      |      { "sessionLength": "1000" }
       |    ]
       |  ]
       |}

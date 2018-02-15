@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "amplitude_configuration",
+  "description": "Configuration file schema for Amplitude event integration",
+  "type": "object",
+  "definitions": {
+    "schemaArray": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "$ref": "#" }
+    },
+    "nonNegativeInteger": {
+        "type": "integer",
+        "minimum": 0
+    },
+    "nonNegativeIntegerDefault0": {
+        "allOf": [
+            { "$ref": "#/definitions/nonNegativeInteger" },
+            { "default": 0 }
+        ]
+    },
+    "simpleTypes": {
+        "enum": [
+            "array",
+            "boolean",
+            "integer",
+            "null",
+            "number",
+            "object",
+            "string"
+        ]
+    },
+    "stringArray": {
+        "type": "array",
+        "items": { "type": "string" },
+        "uniqueItems": true,
+        "default": []
+    }
+  },
+  "properties": {
+    "eventGroupName": {
+      "type": "string"
+    },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "sourceName": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "sourceVersion": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "docType": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "appName": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "appUpdateChannel": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "appVersion": {
+          "$ref": "#/definitions/stringArray"
+        },
+        "appBuildId": {
+          "$ref": "#/definitions/stringArray"
+        }
+      },
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [ "name", "schema" ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amplitudeProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "timestamp",
+                    "category",
+                    "object",
+                    "method",
+                    "value"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "pattern": "^extra"
+                }
+              ]
+            },
+            "uniqueItems": true
+          },
+          "schema": {
+            "type": "object"
+          }
+        }
+      },
+      "uniqueItems": true
+    }
+  }
+}
