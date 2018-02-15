@@ -1,0 +1,258 @@
+{
+  "eventGroupName": "Focus",
+  "filters": {
+    "docType": [
+      "focus-event"
+    ],
+    "appName": [
+      "Focus"
+    ],
+    "os": [
+      "Android"
+    ]
+  },
+  "events": [
+    {
+      "name": "App Open",
+      "description": "User opening the app",
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "foreground" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "app" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "Intent Action",
+      "description": "User searches or opens a URL from a third-party App",
+      "amplitudeProperties": { "intent_type": "method" },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "intent_url",
+              "text_selection_intent"
+            ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "app" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "URL Entered",
+      "description": "User browses a URL",
+      "amplitudeProperties": { "autocomplete": "extra.autocomplete" },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "type_url" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "search_bar" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "Search Entered",
+      "description": "User searches",
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "type_query" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "search_bar" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "Back Button Clicked",
+      "description": "User presses back button",
+      "amplitudeProperties": {
+        "tabs": "extra.total",
+        "erase_type": "value"
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "click" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "back_button" ]
+          },
+          "value": {
+            "type": "string",
+            "enum": [
+              "erase_home",
+              "erase_app"
+            ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object",
+          "value"
+        ]
+      }
+    },
+    {
+      "name": "Erase Button Clicked",
+      "description": "User presses floating erase history button",
+      "amplitudeProperties": { "tabs": "extra.total" },
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "click" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "erase_button" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    },
+    {
+      "name": "App Close",
+      "description": "User closing the app",
+      "schema": {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [ "action" ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [ "background" ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [ "app" ]
+          }
+        },
+        "required": [
+          "timestamp",
+          "category",
+          "method",
+          "object"
+        ]
+      }
+    }
+  ]
+}

@@ -13,10 +13,21 @@ import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.joda.time.{DateTime, Days, format}
 
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
+
 import java.net.URLEncoder
+
+import scala.io.Source
+
+import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 
 // TODO:
 // - incorporate event schema - DEPENDS ON EVENT SCHEMA
+// - Profile json4s/JValue/JsonNode schema validation
+// - Include per-doctype events
+// - Include per-doctype user properties
 
 /**
  * Stream events to amplitude. More generally, stream
@@ -35,6 +46,20 @@ import java.net.URLEncoder
 object EventsToAmplitude {
 
   val AMPLITUDE_API_KEY_KEY = "AMPLITUDE_API_KEY"
+  val TOP_LEVEL_PING_FIELDS =
+    "appBuildId" ::
+    "appName" ::
+    "appUpdateChannel" ::
+    "appVersion" ::
+    "clientId" ::
+    "docType" ::
+    "geoCity" ::
+    "geoCountry" ::
+    "normalizedChannel" ::
+    "submissionDate" ::
+    Nil
+
+  val MetaJsonFile = "schemaFileSchema.json"
 
   val allowedDocTypes = List("focus-event")
   val allowedAppNames = List("Focus")
@@ -44,57 +69,49 @@ object EventsToAmplitude {
   val writeMode = "error"
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
+    val configFilePath: ScallopOption[String] = opt[String](
+      descr = "JSON file with the configuration",
+      required = true)
     val kafkaBroker: ScallopOption[String] = opt[String](
-      "kafkaBroker",
       descr = "Kafka broker (streaming mode only)",
       required = false)
     val from: ScallopOption[String] = opt[String](
-      "from",
       descr = "Start submission date (batch mode only). Format: YYYYMMDD",
       required = false)
     val to: ScallopOption[String] = opt[String](
-      "to",
       descr = "End submission date (batch mode only). Default: yesterday. Format: YYYYMMDD",
       required = false)
     val fileLimit: ScallopOption[Int] = opt[Int](
-      "fileLimit",
       descr = "Max number of files to retrieve (batch mode only). Default: All files",
       required = false)
     val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
-      "raiseOnError",
       descr = "Whether the program should exit on a data processing error or not.")
     val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
-      "failOnDataLoss",
       descr = "Whether to fail the query when it’s possible that data is lost.")
     val checkpointPath:ScallopOption[String] = opt[String](
-      "checkpointPath",
       descr = "Checkpoint path (streaming mode only)",
       required = false,
       default = Some("/tmp/checkpoint"))
     val startingOffsets:ScallopOption[String] = opt[String](
-      "startingOffsets",
       descr = "Starting offsets (streaming mode only)",
       required = false,
       default = Some("latest"))
     val url: ScallopOption[String] = opt[String](
-      "url",
       descr = "Endpoint to send data to",
       required = true)
     val sample: ScallopOption[Double] = opt[Double](
-      "sample",
       descr = "Fraction of clients to use",
       required = false,
       default = Some(1.0))
     val minDelay: ScallopOption[Long] = opt[Long](
-      "minDelay",
       descr = "Amount of delay between requesets in batch mode, in ms",
       required = false,
       default = Some(0))
     val maxParallelRequests: ScallopOption[Int] = opt[Int](
-      "maxParallelRequests",
       descr = "Max number of parallel requests in batch mode",
       required = false,
       default = Some(100))
+
     requireOne(kafkaBroker, from)
     conflicts(kafkaBroker, List(from, to, fileLimit, minDelay, maxParallelRequests))
     validateOpt (sample) {
@@ -105,40 +122,86 @@ object EventsToAmplitude {
     verify()
   }
 
-  def parsePing(message: Message, sample: Double): Array[String] = {
+  case class AmplitudeEvent(
+    name: String,
+    description: String,
+    amplitudeProperties: Option[Map[String, String]],
+    schema: JValue)
+
+  case class Config(
+    eventGroupName: String,
+    filters: Map[String, List[String]],
+    events: List[AmplitudeEvent]){
+
+    def getBatchFilters: Map[String, List[String]] = {
+      filters.map{ case(k, v) => k ->
+        (k match {
+          case "docType" => v.map(_.replace("-", "_"))
+          case _ => v
+        })
+      }
+    }
+  }
+
+  def parsePing(message: Message, sample: Double, config: Config): Array[String] = {
     implicit val formats = DefaultFormats
 
+    val emptyReturn = Array[String]()
     val fields = message.fieldsAsMap
-    val docType = fields.getOrElse("docType", "").asInstanceOf[String]
-    val appName = fields.getOrElse("appName", "").asInstanceOf[String]
 
-    (allowedDocTypes.contains(docType) && allowedAppNames.contains(appName)) match {
-      case false => Array[String]()
+    config.filters.filter{
+      case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
+    }.map{ case(name, allowedVals) =>
+      allowedVals.contains(fields.getOrElse(name, "").asInstanceOf[String])
+    }.reduce(_ & _) match {
+      case false => emptyReturn
       case true =>
-        val ping = FocusEventPing(message)
-        ping.includeClient(sample) match {
-          case false => Array[String]()
-          case true =>
-            (ping.getEvents :: Nil)
+        FocusEventPing(message) match {
+          case p if !p.includePing(sample, config) => emptyReturn
+          case p =>
+            (p.getEvents(config) :: Nil)
               .map{ URLEncoder.encode(_, "UTF-8") }
               .toArray
         }
     }
   }
 
-  def getEvents(pings: DataFrame, sample: Double, raiseOnError: Boolean): Dataset[String] = {
+  def getEvents(config: Config, pings: DataFrame, sample: Double, raiseOnError: Boolean): Dataset[String] = {
     import pings.sparkSession.implicits._
 
     pings.flatMap( v => {
         try {
-          parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]), sample)
+          parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]), sample, config)
         } catch {
           case _: Throwable if !raiseOnError => Array[String]()
         }
       }).as[String]
   }
 
+  private def getMetaSchema: JValue = {
+    parse(
+      Source.fromURL(
+        getClass.getResource(s"/schemas/$MetaJsonFile")
+      ).reader()
+    )
+  }
+
+  def readConfigFile(filePath: String): Config = {
+    val source = Source.fromFile(filePath)
+    val json = parse(source.reader())
+
+    // validate config json
+    val factory = JsonSchemaFactory.byDefault
+    val schema = factory.getJsonSchema(asJsonNode(getMetaSchema))
+    schema.validate(asJsonNode(json))
+
+    // get pieces of config
+    implicit val formats = DefaultFormats
+    json.extract[Config]
+  }
+
   def sendStreamingEvents(spark: SparkSession, opts: Opts): Unit = {
+    val config = readConfigFile(opts.configFilePath())
     val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
     val httpSink = new HttpSink(opts.url(), Map("api_key" -> apiKey))
 
@@ -153,7 +216,7 @@ object EventsToAmplitude {
       .option("startingOffsets", opts.startingOffsets())
       .load()
 
-    getEvents(pings.select("value"), opts.sample(), opts.raiseOnError())
+    getEvents(config, pings.select("value"), opts.sample(), opts.raiseOnError())
       .writeStream
       .queryName(queryName)
       .foreach(httpSink)
@@ -162,6 +225,7 @@ object EventsToAmplitude {
   }
 
   def sendBatchEvents(spark: SparkSession, opts: Opts): Unit = {
+    val config = readConfigFile(opts.configFilePath())
     val fmt = format.DateTimeFormat.forPattern("yyyyMMdd")
 
     val from = fmt.parseDateTime(opts.from())
@@ -170,22 +234,24 @@ object EventsToAmplitude {
       case _ => DateTime.now.minusDays(1)
     }
 
+    val filters = config.getBatchFilters
+
     implicit val sc = spark.sparkContext
-    val underscoreDocTypes = allowedDocTypes.map(_.replace("-", "_"))
 
     for (offset <- 0 to Days.daysBetween(from, to).getDays) {
       val currentDate = from.plusDays(offset).toString("yyyyMMdd")
-      val pings = com.mozilla.telemetry.heka.Dataset("telemetry")
-        .where("sourceName") {
-          case "telemetry" => true
-        }.where("docType") {
-          case docType if underscoreDocTypes.contains(docType) => true
-        }.where("appName") {
-          case appName if allowedAppNames.contains(appName) | appName == "OTHER" => true
+      val dataset = com.mozilla.telemetry.heka.Dataset("telemetry")
+
+      val pings = config.getBatchFilters.filter{
+          case(name, av) => TOP_LEVEL_PING_FIELDS.contains(name)
+        }.foldLeft(dataset){
+          case(d, (key, values)) => d.where(key) {
+            case v if values.contains(v) => true
+          }
         }.where("submissionDate") {
           case date if date == currentDate => true
         }.records(opts.fileLimit.get)
-        .map(m => Row(m.toByteArray))
+         .map(m => Row(m.toByteArray))
 
       val schema = StructType(List(
           StructField("value", BinaryType, true)
@@ -196,7 +262,7 @@ object EventsToAmplitude {
       val minDelay = opts.minDelay()
       val url = opts.url()
 
-      getEvents(pingsDataFrame, opts.sample(), opts.raiseOnError())
+      getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
         .repartition(opts.maxParallelRequests())
         .foreachPartition{ it: Iterator[String] =>
           val httpSink = new HttpSink(url, Map("api_key" -> apiKey))

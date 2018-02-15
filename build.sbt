@@ -35,7 +35,8 @@ lazy val root = (project in file(".")).
     libraryDependencies += "joda-time" % "joda-time" % "2.9.2",
     libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.0.1",
     libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.3.0",
-    libraryDependencies += "com.github.tomakehurst" % "wiremock-standalone" % "2.8.0" % "provided"
+    libraryDependencies += "com.github.tomakehurst" % "wiremock-standalone" % "2.14.0" % "provided",
+    libraryDependencies += "com.github.java-json-tools" % "json-schema-validator" % "2.2.8"
   )
 
 // Setup docker task
