@@ -1,6 +1,10 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
 import java.util.Properties
+
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
@@ -18,10 +22,10 @@ object Kafka {
     // taken from
     // https://github.com/apache/spark/blob/master/external/kafka-0-10-sql +
     // src/test/scala/org/apache/spark/sql/kafka010/KafkaTestUtils.scala#L350
-    return zkUtils.getAllTopics().contains(topic)
+    zkUtils.getAllTopics().contains(topic)
   }
 
-  def createTopic(topic: String, numPartitions: Int = kafkaTopicPartitions) = {
+  def createTopic(topic: String, numPartitions: Int = kafkaTopicPartitions): Unit = {
     val timeoutMs = 10000
     val isSecureKafkaCluster = false
     val replicationFactor = 1
@@ -46,7 +50,7 @@ object Kafka {
     def send(message: Array[Byte], synchronous: Boolean = false): Unit = {
       val record = new ProducerRecord[String, Array[Byte]](topic, message)
       kafkaProducer.send(record)
-      if(synchronous) { 
+      if (synchronous) {
         kafkaProducer.flush()
       }
     }

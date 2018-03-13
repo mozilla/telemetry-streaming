@@ -86,6 +86,7 @@ object TestUtils {
     }
   }
 
+  // scalastyle:off methodLength
   def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None,
                            fieldsToRemove: List[String] = List[String]()): Seq[Message] = {
     val defaultMap = Map(
@@ -195,6 +196,7 @@ object TestUtils {
       )
     }
   }
+  // scalastyle:on methodLength
 
   def generateFocusEventMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None): Seq[Message] = {
     val defaultMap = Map(

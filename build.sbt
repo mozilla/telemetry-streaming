@@ -78,4 +78,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-addCommandAlias("ci", ";clean ;compile ;scalastyle ;coverage ;dockerComposeTest ;coverageReport")
+addCommandAlias("ci", ";clean ;compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")

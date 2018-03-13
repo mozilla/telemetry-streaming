@@ -92,6 +92,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   override def afterEach {
     verify(expectedTotalMsgs,
       requestMadeFor(new ValueMatcher[Request] {
+        // scalastyle:off methodName
         def `match`(request: Request): MatchResult = {
           val events = URLDecoder.decode(request.queryParameter("event").values.head, "UTF-8")
           MatchResult.of(
@@ -103,20 +104,21 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
               .isExactMatch()
           )
         }
+        // scalastyle:on methodName
       })
     )
 
     wireMockServer.stop()
   }
 
-  def ConfigFilePath: String = {
+  private def configFilePath: String = {
     getClass.getResource(ConfigFileName).getPath
   }
 
   def encode(in: String): String = URLEncoder.encode(in, "UTF-8")
 
   "HTTPSink" should "send events correctly" in {
-    val config = EventsToAmplitude.readConfigFile(ConfigFilePath)
+    val config = EventsToAmplitude.readConfigFile(configFilePath)
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
@@ -163,11 +165,11 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
     spark.streams.addListener(listener)
 
-    val args = 
+    val args =
       "--kafka-broker"     :: Kafka.kafkaBrokers            ::
       "--starting-offsets" :: "latest"                      ::
       "--url"              :: s"http://$Host:$Port$path"    ::
-      "--config-file-path" :: ConfigFilePath                ::
+      "--config-file-path" :: configFilePath                ::
       "--raise-on-error"   :: Nil
 
     EventsToAmplitude.main(args.toArray)
