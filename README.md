@@ -24,3 +24,17 @@ the source code and running the tests via sbt. Some common invocations for sbt:
 * `sbt dockerComposeTest  # run the docker compose tests (slow)`
 * `sbt "dockerComposeTest -tags:DockerComposeTag" # run only tests with DockerComposeTag (while using docker)`
 * `sbt ci  # run all tests`
+
+Some tests need Kafka to run. If one prefers to run them via IDE, it's required to run the test cluster:
+```bash
+sbt dockerComposeUp
+```
+or via plain docker-compose:
+```bash
+export DOCKER_KAFKA_HOST=$(./docker_setup.sh)
+docker-compose -f docker/docker-compose.yml up
+```
+It's also good to shut down the cluster afterwards:
+```bash
+sbt dockerComposeStop
+```

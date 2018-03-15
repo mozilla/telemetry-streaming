@@ -3,22 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
+import java.io.File
 import java.sql.Timestamp
 
-import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
+import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
 import com.mozilla.telemetry.streaming.TestUtils.todayDays
+import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
-import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{FlatSpec, Matchers, Tag}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers, Tag}
 
-import scala.collection.JavaConversions._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.sys.process._
-
-class TestErrorAggregator extends FlatSpec with Matchers {
+class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   object DockerErrorAggregatorTag extends Tag("DockerErrorAggregatorTag")
 
@@ -40,6 +36,15 @@ class TestErrorAggregator extends FlatSpec with Matchers {
 
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
+
+
+  val streamingOutputPath = "/tmp/parquet"
+  val streamingCheckpointPath = "/tmp/checkpoint"
+
+  override protected def afterAll(): Unit = {
+    FileUtils.deleteDirectory(new File(streamingOutputPath))
+    FileUtils.deleteDirectory(new File(streamingCheckpointPath))
+  }
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
@@ -389,15 +394,15 @@ class TestErrorAggregator extends FlatSpec with Matchers {
 
     spark.streams.addListener(listener)
 
-    val outputPath = "/tmp/parquet"
     val args = "--kafkaBroker" :: Kafka.kafkaBrokers ::
-      "--outputPath" :: outputPath ::
+      "--outputPath" :: streamingOutputPath ::
+      "--checkpointPath" :: streamingCheckpointPath ::
       "--startingOffsets" :: "latest" ::
       "--raiseOnError" :: Nil
 
     ErrorAggregator.main(args.toArray)
 
-    assert(spark.read.parquet(s"$outputPath/${ErrorAggregator.outputPrefix}").count() == 3)
+    assert(spark.read.parquet(s"$streamingOutputPath/${ErrorAggregator.outputPrefix}").count() == 3)
 
     kafkaProducer.close
     spark.streams.removeListener(listener)

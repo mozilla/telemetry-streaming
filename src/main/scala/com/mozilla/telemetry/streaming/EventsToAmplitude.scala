@@ -3,25 +3,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
-import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings._
-import com.mozilla.telemetry.timeseries._
-import com.mozilla.telemetry.streaming.sinks.HttpSink
-import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Dataset, ForeachWriter, Row, SparkSession}
-import org.json4s._
-import org.rogach.scallop.{ScallopConf, ScallopOption}
-import org.joda.time.{DateTime, Days, format}
-
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-
 import java.net.URLEncoder
 
-import scala.io.Source
+import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.mozilla.telemetry.heka.Message
+import com.mozilla.telemetry.pings._
+import com.mozilla.telemetry.streaming.sinks.HttpSink
+import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.joda.time.{DateTime, Days, format}
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
+import org.rogach.scallop.{ScallopConf, ScallopOption}
 
-import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
+import scala.io.Source
 
 // TODO:
 // - incorporate event schema - DEPENDS ON EVENT SCHEMA
@@ -68,7 +63,7 @@ object EventsToAmplitude {
   val queryName = "EventsToAmplitude"
   val writeMode = "error"
 
-  private class Opts(args: Array[String]) extends ScallopConf(args) {
+  private[streaming] class Opts(args: Array[String]) extends ScallopConf(args) {
     val configFilePath: ScallopOption[String] = opt[String](
       descr = "JSON file with the configuration",
       required = true)
@@ -200,9 +195,8 @@ object EventsToAmplitude {
     json.extract[Config]
   }
 
-  def sendStreamingEvents(spark: SparkSession, opts: Opts): Unit = {
+  def sendStreamingEvents(spark: SparkSession, opts: Opts, apiKey: String): Unit = {
     val config = readConfigFile(opts.configFilePath())
-    val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
     val httpSink = new HttpSink(opts.url(), Map("api_key" -> apiKey))
 
     val pings = spark
@@ -276,16 +270,21 @@ object EventsToAmplitude {
     spark.stop()
   }
 
-  def main(args: Array[String]): Unit = {
-    val opts = new Opts(args)
-
+  def process(opts: Opts, apiKey: String): Unit = {
     val spark = SparkSession.builder()
       .appName(queryName)
       .getOrCreate()
 
     opts.kafkaBroker.get match {
-      case Some(_) => sendStreamingEvents(spark, opts)
+      case Some(_) => sendStreamingEvents(spark, opts, apiKey)
       case None => sendBatchEvents(spark, opts)
     }
+  }
+
+  def main(args: Array[String]): Unit = {
+    val opts = new Opts(args)
+    val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
+
+    process(opts, apiKey)
   }
 }
