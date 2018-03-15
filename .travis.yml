@@ -22,6 +22,6 @@ scala:
 env:
   - DOCKER_DIR="../docker/"
 script:
-  - ./runtests.sh ci
+  - sbt ci
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -3,35 +3,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
-import com.mozilla.telemetry.pings.FocusEventPing
-import org.apache.spark.sql.SparkSession
-import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers, Tag}
+import java.net.{URLDecoder, URLEncoder}
 
-import org.apache.spark.sql.streaming.StreamingQueryListener
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
 import com.github.tomakehurst.wiremock.http.Request
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
-import scalaj.http.Http
+import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
+import com.mozilla.telemetry.pings.FocusEventPing
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.streaming.StreamingQueryListener
+import org.json4s.jackson.JsonMethods._
+import org.json4s.{DefaultFormats, _}
+import org.scalatest._
 
 import scala.collection.JavaConversions._
-
-import scala.io.Source
-
-import java.util.function.Consumer
-
-import java.net.{URLDecoder, URLEncoder}
-
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
 
 class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
 
@@ -128,7 +115,6 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   "Events to Amplitude" should "send events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
-    import spark.implicits._
 
     Kafka.createTopic(EventsToAmplitude.kafkaTopic)
     val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
@@ -165,14 +151,15 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
     spark.streams.addListener(listener)
 
-    val args =
-      "--kafka-broker"     :: Kafka.kafkaBrokers            ::
-      "--starting-offsets" :: "latest"                      ::
-      "--url"              :: s"http://$Host:$Port$path"    ::
-      "--config-file-path" :: configFilePath                ::
-      "--raise-on-error"   :: Nil
+    val args = Array(
+      "--kafka-broker", Kafka.kafkaBrokers,
+      "--starting-offsets", "latest",
+      "--url", s"http://$Host:$Port$path",
+      "--config-file-path", configFilePath,
+      "--raise-on-error")
+    val opts = new EventsToAmplitude.Opts(args)
 
-    EventsToAmplitude.main(args.toArray)
+    EventsToAmplitude.process(opts, apiKey)
 
     kafkaProducer.close
     spark.streams.removeListener(listener)
