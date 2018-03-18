@@ -202,7 +202,6 @@ object ErrorAggregator {
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
-      .coalesce(1)
   }
 
   private def buildDimensions(dimensionsSchema: StructType, meta: Meta, application: Application): Array[Row] = {
