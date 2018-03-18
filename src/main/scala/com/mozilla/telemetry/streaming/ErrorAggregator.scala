@@ -10,13 +10,13 @@ import com.mozilla.spark.sql.hyperloglog.functions._
 import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.functions.{sum, window, col, expr}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.functions.{col, expr, sum, window}
+import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.joda.time.{DateTime, Days, format}
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
-import org.joda.time.{DateTime, Days, format}
 
 object ErrorAggregator {
   private val dateFormat = "yyyyMMdd"
@@ -75,7 +75,7 @@ object ErrorAggregator {
       default = Some("latest"))
     val numParquetFiles: ScallopOption[Int] = opt[Int](
       "numParquetFiles",
-      descr = "Number of parquet files per submission_date",
+      descr = "Number of parquet files per submission_date (batch mode only)",
       required = false,
       default = Some(defaultNumFiles)
       )
@@ -164,7 +164,7 @@ object ErrorAggregator {
   private val HllMerge = new HyperLogLogMerge
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true, dimensions: StructType,
-    metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
+                                   metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
     import pings.sparkSession.implicits._
 
     // A custom row encoder is needed to use Rows within a Spark Dataset
@@ -205,7 +205,6 @@ object ErrorAggregator {
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
-      .coalesce(1)
   }
 
   private def buildDimensions(dimensionsSchema: StructType, meta: Meta, application: Application): Array[Row] = {
@@ -334,6 +333,7 @@ object ErrorAggregator {
     val outputPath = opts.outputPath()
 
     aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), online = true, dimensions, metrics, countHistograms, thresholds)
+      .repartition(1)
       .writeStream
       .queryName(queryName)
       .format("parquet")
