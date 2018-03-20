@@ -78,4 +78,10 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
+// Shade PB classes - required for running on Databricks
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("com.google.protobuf.**" -> "shadeproto.@1").inAll,
+  ShadeRule.rename("com.trueaccord.scalapb.**" -> "shadescalapb.@1").inAll
+)
+
 addCommandAlias("ci", ";clean ;compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")
