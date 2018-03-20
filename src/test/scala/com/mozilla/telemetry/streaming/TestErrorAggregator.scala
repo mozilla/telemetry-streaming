@@ -6,19 +6,21 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
-import com.mozilla.telemetry.streaming.TestUtils.todayDays
+import com.mozilla.telemetry.streaming.TestUtils.{deleteRecursively, todayDays}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{FlatSpec, Matchers, Tag}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers, Tag}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.sys.process._
 
-class TestErrorAggregator extends FlatSpec with Matchers {
+import java.io.File
+
+class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   object DockerErrorAggregatorTag extends Tag("DockerErrorAggregatorTag")
 
@@ -40,6 +42,10 @@ class TestErrorAggregator extends FlatSpec with Matchers {
 
   spark.udf.register("HllCreate", hllCreate _)
   spark.udf.register("HllCardinality", hllCardinality _)
+
+  override def beforeAll() = {
+    ErrorAggregator.prepare
+  }
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
@@ -333,8 +339,8 @@ class TestErrorAggregator extends FlatSpec with Matchers {
   "the aggregator" should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
     spark.sparkContext.setLogLevel("WARN")
 
-    Kafka.createTopic(ErrorAggregator.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(ErrorAggregator.kafkaTopic)
+    Kafka.createTopic(ErrorAggregator.defaultKafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(ErrorAggregator.defaultKafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
@@ -390,9 +396,13 @@ class TestErrorAggregator extends FlatSpec with Matchers {
     spark.streams.addListener(listener)
 
     val outputPath = "/tmp/parquet"
+    val checkpointPath = "/tmp/error_aggregates_checkpoint"
+    deleteRecursively(new File(checkpointPath))
+
     val args = "--kafkaBroker" :: Kafka.kafkaBrokers ::
       "--outputPath" :: outputPath ::
       "--startingOffsets" :: "latest" ::
+      "--checkpointPath" :: checkpointPath ::
       "--raiseOnError" :: Nil
 
     ErrorAggregator.main(args.toArray)
@@ -463,7 +473,6 @@ class TestErrorAggregator extends FlatSpec with Matchers {
     df.where("display_version IS NULL").collect().length should be (3)
     // should be no cases where displayVersion is null for this test case
     df.where("display_version <> NULL").collect().length should be (0)
-
   }
 }
 

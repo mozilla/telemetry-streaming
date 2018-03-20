@@ -22,13 +22,14 @@ object ErrorAggregator {
   private val dateFormat = "yyyyMMdd"
   private val dateFormatter = format.DateTimeFormat.forPattern(dateFormat)
 
-  private val defaultQueryName = "error_aggregator"
-  private val defaultOutputPrefix = "error_aggregator/v2"
+  val defaultQueryName = "error_aggregator"
+  val defaultOutputPrefix = "error_aggregator/v2"
+  val defaultKafkaTopic = "telemetry"
 
   var queryName = defaultQueryName
   var outputPrefix = defaultOutputPrefix
+  var kafkaTopic = defaultKafkaTopic
 
-  val kafkaTopic = "telemetry"
   val defaultNumFiles = 60
 
   private val allowedDocTypes = List("main", "crash")
@@ -389,12 +390,22 @@ object ErrorAggregator {
     spark.stop()
   }
 
+  def setKafkaTopic(topic: String): Unit = {
+    ErrorAggregator.kafkaTopic = topic
+  }
+
   def setPrefix(prefix: String): Unit = {
     ErrorAggregator.outputPrefix = prefix
   }
 
   def setQueryName(name: String): Unit = {
     ErrorAggregator.queryName = name
+  }
+
+  def prepare: Unit = {
+    setKafkaTopic(defaultKafkaTopic)
+    setPrefix(defaultOutputPrefix)
+    setQueryName(defaultQueryName)
   }
 
   def run(args: Array[String], dimensions: StructType, metrics: StructType, countHistograms: StructType,
@@ -414,5 +425,8 @@ object ErrorAggregator {
     }
   }
 
-  def main(args: Array[String]): Unit = run(args, defaultDimensionsSchema, defaultMetricsSchema, defaultCountHistogramErrorsSchema, defaultThresholdHistograms)
+  def main(args: Array[String]): Unit = {
+    prepare
+    run(args, defaultDimensionsSchema, defaultMetricsSchema, defaultCountHistogramErrorsSchema, defaultThresholdHistograms)
+  }
 }

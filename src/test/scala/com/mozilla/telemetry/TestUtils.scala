@@ -9,6 +9,7 @@ import org.joda.time.{DateTime, Duration}
 import org.json4s.{DefaultFormats, Extraction, JField}
 import org.json4s.jackson.JsonMethods.{compact, render}
 
+import java.io.File
 
 object TestUtils {
   implicit val formats = DefaultFormats
@@ -273,5 +274,12 @@ object TestUtils {
         timestamp=timestamp.getOrElse(testTimestampNano)
       )
     }
+  }
+
+  def deleteRecursively(file: File): Unit = {
+    if (file.isDirectory)
+      file.listFiles.foreach(deleteRecursively)
+    if (file.exists && !file.delete)
+      throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
   }
 }

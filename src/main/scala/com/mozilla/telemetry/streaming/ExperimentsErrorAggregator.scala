@@ -7,6 +7,7 @@ import java.sql.{Date, Timestamp}
 import com.mozilla.telemetry.timeseries.SchemaBuilder
 
 object ExperimentsErrorAggregator {
+  val experimentTopic = "telemetry.experiments"
   val outputPrefix = "experiment_error_aggregates/v1"
   val queryName = "experiment_error_aggregates"
 
@@ -36,9 +37,14 @@ object ExperimentsErrorAggregator {
     .add[Int]("content_shutdown_crashes")
     .build
 
-  def main(args: Array[String]): Unit = {
+  def prepare: Unit = {
     ErrorAggregator.setPrefix(outputPrefix)
     ErrorAggregator.setQueryName(queryName)
+    ErrorAggregator.setKafkaTopic(experimentTopic)
+  }
+
+  def main(args: Array[String]): Unit = {
+    prepare
 
     ErrorAggregator.run(args,
       defaultDimensionsSchema,
