@@ -1,6 +1,6 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import sys.process._;
 
 val localMavenHttps = "https://s3-us-west-2.amazonaws.com/net-mozaws-data-us-west-2-ops-mavenrepo/"
@@ -85,3 +85,7 @@ assemblyShadeRules in assembly := Seq(
 )
 
 addCommandAlias("ci", ";clean ;compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")
+
+val scalaStyleConfigUrl = Some(url("https://raw.githubusercontent.com/mozilla/moztelemetry/master/scalastyle-config.xml"))
+(scalastyleConfigUrl in Compile) := scalaStyleConfigUrl
+(scalastyleConfigUrl in Test) := scalaStyleConfigUrl
