@@ -41,7 +41,15 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
   val streamingOutputPath = "/tmp/parquet"
   val streamingCheckpointPath = "/tmp/checkpoint"
 
+  override protected def beforeAll(): Unit = {
+    cleanupTestDirectories()
+  }
+
   override protected def afterAll(): Unit = {
+    cleanupTestDirectories()
+  }
+
+  private def cleanupTestDirectories() = {
     FileUtils.deleteDirectory(new File(streamingOutputPath))
     FileUtils.deleteDirectory(new File(streamingCheckpointPath))
   }
