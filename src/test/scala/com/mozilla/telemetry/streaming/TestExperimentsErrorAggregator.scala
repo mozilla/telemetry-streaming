@@ -43,7 +43,7 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
     val messages = (TestUtils.generateCrashMessages(k)
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ExperimentsErrorAggregator.defaultDimensionsSchema, ExperimentsErrorAggregator.defaultMetricsSchema,
       ExperimentsErrorAggregator.defaultCountHistogramErrorsSchema,
       ExperimentsErrorAggregator.defaultThresholdHistograms)
