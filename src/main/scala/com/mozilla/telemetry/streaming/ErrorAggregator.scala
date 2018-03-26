@@ -163,7 +163,7 @@ object ErrorAggregator {
 
   private val HllMerge = new HyperLogLogMerge
 
-  private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true, dimensions: StructType,
+  private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, dimensions: StructType,
                                    metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
     import pings.sparkSession.implicits._
 
@@ -182,10 +182,6 @@ object ErrorAggregator {
         }
       })
 
-    if (online) {
-      parsedPings = parsedPings.withWatermark("timestamp", "1 minute")
-    }
-
     val dimensionsCols = List(
       window($"timestamp", "5 minute").as("window"),
       col("window.start").as("window_start"),
@@ -201,6 +197,7 @@ object ErrorAggregator {
     * Everything else gets dropped by .agg()
     * */
     parsedPings
+      .withWatermark("timestamp", "1 minute")
       .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
@@ -332,7 +329,7 @@ object ErrorAggregator {
 
     val outputPath = opts.outputPath()
 
-    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), online = true, dimensions, metrics, countHistograms, thresholds)
+    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
       .repartition(1)
       .writeStream
       .queryName(queryName)
@@ -379,7 +376,7 @@ object ErrorAggregator {
       val pingsDataframe = spark.createDataFrame(pings, schema)
       val outputPath = opts.outputPath()
 
-      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false, dimensions, metrics, countHistograms, thresholds)
+      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
         .repartition(opts.numParquetFiles())
         .write
         .mode("overwrite")
