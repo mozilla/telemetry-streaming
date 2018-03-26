@@ -163,8 +163,8 @@ object ErrorAggregator {
 
   private val HllMerge = new HyperLogLogMerge
 
-  private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, online: Boolean = true, dimensions: StructType,
-    metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
+  private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, dimensions: StructType,
+                                   metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
     import pings.sparkSession.implicits._
 
     // A custom row encoder is needed to use Rows within a Spark Dataset
@@ -173,7 +173,7 @@ object ErrorAggregator {
     implicit val rowEncoder = RowEncoder(mergedSchema).resolveAndBind()
 
     val parseMessage = parsePing(dimensions, statsSchema, countHistograms, thresholds) _
-    var parsedPings = pings
+    val parsedPings = pings
       .flatMap( v => {
         try {
           parseMessage(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]))
@@ -181,10 +181,6 @@ object ErrorAggregator {
           case _: Throwable if !raiseOnError => Array[Row]()
         }
       })
-
-    if (online) {
-      parsedPings = parsedPings.withWatermark("timestamp", "1 minute")
-    }
 
     val dimensionsCols = List(
       window($"timestamp", "5 minute").as("window"),
@@ -201,6 +197,7 @@ object ErrorAggregator {
     * Everything else gets dropped by .agg()
     * */
     parsedPings
+      .withWatermark("timestamp", "1 minute")
       .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
@@ -333,7 +330,8 @@ object ErrorAggregator {
 
     val outputPath = opts.outputPath()
 
-    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), online = true, dimensions, metrics, countHistograms, thresholds)
+    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
+      .repartition(1)
       .writeStream
       .queryName(queryName)
       .format("parquet")
@@ -379,7 +377,7 @@ object ErrorAggregator {
       val pingsDataframe = spark.createDataFrame(pings, schema)
       val outputPath = opts.outputPath()
 
-      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), online = false, dimensions, metrics, countHistograms, thresholds)
+      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
         .repartition(opts.numParquetFiles())
         .write
         .mode("overwrite")

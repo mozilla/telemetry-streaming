@@ -61,7 +61,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -159,7 +159,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       (TestUtils.generateCrashMessages(k, fieldsOverride=fieldsOverride)
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -213,7 +213,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       )))
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -247,7 +247,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val messages = (crashMessages ++ mainMessages).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -265,7 +265,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val messages = mainMessages.map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -310,7 +310,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val messages =
       (crashMessagesNewProfile ++ crashMessagesYoungProfile ++ crashMessagesOldProfile).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -335,7 +335,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val messages =
       (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -420,7 +420,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     import spark.implicits._
     val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -438,7 +438,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       )
     ).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -453,7 +453,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       )
     ).map(_.toByteArray).seq
 
-    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false,
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
@@ -467,7 +467,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       1, None, None, "displayVersion" :: Nil
     ).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false, online = false,
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
