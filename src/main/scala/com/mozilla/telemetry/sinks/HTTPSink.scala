@@ -65,7 +65,7 @@ class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts
       }
     }
 
-    (code, tries == maxAttempts) match {
+    (code, tries + 1 == maxAttempts) match {
       case (OK, _) =>
       case (ErrorPseudoCode, _) =>
       case (c, false) if RetryCodes.contains(c) => attempt(request, tries + 1)

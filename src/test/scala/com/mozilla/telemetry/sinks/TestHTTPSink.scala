@@ -86,7 +86,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
 
     multiStub(responseCodes)
     httpSink.process(event)
-    verifyCount(responseCodes.size)
+    verifyCount(maxAttempts)
   }
 
   it should "retry after timeout" in {
