@@ -7,6 +7,7 @@ import scalaj.http.{Http, HttpRequest}
 import org.apache.spark.sql.ForeachWriter
 import scala.annotation.tailrec
 import scala.util.{Try, Success, Failure}
+import scala.util.control.NonFatal
 
 class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
   extends ForeachWriter[String] {
@@ -15,6 +16,8 @@ class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts
   // docs: https://amplitude.zendesk.com/hc/en-us/articles/204771828#http-status-codes-retrying-failed-requests
 
   val TimeoutPseudoCode = -1
+  val ErrorPseudoCode = -2
+
   val RetryCodes = TimeoutPseudoCode :: 429 :: 500 :: 502 :: 503 :: 504 :: Nil
   val OK = 200
 
@@ -23,8 +26,14 @@ class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts
 
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("HttpSinkLogger")
 
-  def close(errorOrNull: Throwable): Unit = {}
-  def open(partitionId: Long,version: Long): Boolean = true
+  def close(errorOrNull: Throwable): Unit = {
+    errorOrNull match {
+      case null =>
+      case e => log.error(e.getStackTrace.mkString("\n"))
+    }
+  }
+
+  def open(partitionId: Long, version: Long): Boolean = true
 
   def getRequest: HttpRequest = {
     parameters.foldLeft(Http(url.toString)){
@@ -50,14 +59,19 @@ class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts
     val code = Try(request.asString.code) match {
       case Success(c) => c
       case Failure(e: java.net.SocketTimeoutException) => TimeoutPseudoCode
+      case Failure(e) if NonFatal(e) => {
+        log.error(e.getStackTrace.mkString("\n"))
+        ErrorPseudoCode
+      }
     }
 
     (code, tries == maxAttempts) match {
       case (OK, _) =>
-      case (c, false) if RetryCodes.contains(c)=> attempt(request, tries + 1)
+      case (ErrorPseudoCode, _) =>
+      case (c, false) if RetryCodes.contains(c) => attempt(request, tries + 1)
       case (c, _) => {
         val url = request.url + "?" + request.params.map{ case(k, v) => s"k=v" }.mkString("&")
-        log.warn(s"Failed request $url, last status code: $c")
+        log.warn(s"Failed request: $url, last status code: $c")
       }
     }
   }
