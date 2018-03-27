@@ -3,8 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry.streaming
 
-import java.net.{URLDecoder, URLEncoder}
-
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -81,7 +79,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       requestMadeFor(new ValueMatcher[Request] {
         // scalastyle:off methodName
         def `match`(request: Request): MatchResult = {
-          val events = URLDecoder.decode(request.queryParameter("event").values.head, "UTF-8")
+          val events = request.queryParameter("event").values.head
           MatchResult.of(
             request.getUrl.startsWith(path) &&
             request.queryParameter("api_key").values.head == apiKey &&
@@ -102,14 +100,12 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     getClass.getResource(ConfigFileName).getPath
   }
 
-  def encode(in: String): String = URLEncoder.encode(in, "UTF-8")
-
   "HTTPSink" should "send events correctly" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath)
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
-    msgs.foreach(m => sink.process(encode(FocusEventPing(m).getEvents(config))))
+    msgs.foreach(m => sink.process(FocusEventPing(m).getEvents(config)))
 
     verify(expectedTotalMsgs, getRequestedFor(urlMatching(path + "\\?.*")))
   }

@@ -153,10 +153,7 @@ object EventsToAmplitude {
       case true =>
         FocusEventPing(message) match {
           case p if !p.includePing(sample, config) => emptyReturn
-          case p =>
-            (p.getEvents(config) :: Nil)
-              .map{ URLEncoder.encode(_, "UTF-8") }
-              .toArray
+          case p => Array(p.getEvents(config))
         }
     }
   }
