@@ -1,0 +1,2210 @@
+{
+    "eventGroupName": "Focus", 
+    "events": [
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Start session", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "foreground"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Stop session", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "background"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "URL entered", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "type_url"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_bar"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Search entered", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "type_query"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_bar"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Search hint clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "select_query"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_bar"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "intent_type": "method"
+                }, 
+                "description": "", 
+                "name": "Link from third-party app", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "intent_url", 
+                                "text_selection_intent"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Pull to refresh", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "swipe"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "reload"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Custom tab opened", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "intent_custom_tab"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Custom Tab - Close button clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "custom_tab_close_bu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Custom Tab - Action button clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "custom_tab_action_bu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Custom Tab - Menu item selected", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "open"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "custom_tab"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Custom Tab - Open full browser", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "full_browser"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Context menu dismissed", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "cancel"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser_contextmenu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "item": "method"
+                }, 
+                "description": "", 
+                "name": "Link Context Menu - Item selected", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "share", 
+                                "copy"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser_contextmenu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "link"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "item": "method"
+                }, 
+                "description": "", 
+                "name": "Image Context Menu - Item selected", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "share", 
+                                "copy", 
+                                "save"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser_contextmenu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "image"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Open link in new tab", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "open"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser_contextmenu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "tab"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Floating erase button clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "erase_button"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "destination": "value"
+                }, 
+                "description": "", 
+                "name": "Back button clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "back_button"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "erase_home", 
+                                "erase_app"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Home screen shortcut clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "shortcut"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "erase"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Erase history in tabs tray", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "tabs_tray"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "erase"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "app": "value"
+                }, 
+                "description": "", 
+                "name": "Open URL Outside Focus", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "open"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "default", 
+                                "firefox", 
+                                "selection"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Click \"Download Firefox\"", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "install"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "firefox"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Click \"What's New\"", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "whats_new"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "start_type": "value"
+                }, 
+                "description": "", 
+                "name": "Start Focus", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "app_icon", 
+                                "homescreen_shortcut"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "open", 
+                                "resume"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Autocomplete domain added", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "save"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "autocomplete_domain"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Autocomplete domain removed", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "remove"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "autocomplete_domain"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Autocomplete domain reordered", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "reorder"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "autocomplete_domain"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Default search engine clicked", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "open"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_engine_setting"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Change default search engine", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "save"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_engine_setting"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Delete search engines", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "remove"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "remove"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "remove_search_engines"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Restore bundled engines", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "restore"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_engine_setting"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Select \"Add another engine\"", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "show"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "custom_search_engine"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Save custom search engine", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "save"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "custom_search_engine"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Click \"Add search engine\" Informational Button", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "search_engine_learn_more"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Show first run", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "show"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "firstrun"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "0"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Skip button pressed", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "firstrun"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "skip"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Finish button pressed", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "firstrun"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "finish"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Open the tabs tray", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "show"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "tabs_tray"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Close the tabs tray", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "hide"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "tabs_tray"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Switch to tab in tabs tray", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "tabs_tray"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "tab"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Erase history in tabs tray", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "tabs_tray"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "erase"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Long press on image / link", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "long_press"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "browser"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Autofill popup is shown", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "show"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "autofill"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Autofill performed", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "autofill"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "enabled": "value"
+                }, 
+                "description": "", 
+                "name": "Content Blocking changed\n", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "blocking_switch"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "true", 
+                                "false"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Share URL with third-party app", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "share"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {}, 
+                "description": "", 
+                "name": "Reload current page", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "menu"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "reload"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "action": "value"
+                }, 
+                "description": "", 
+                "name": "Download Dialog Shown", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "download_dialog"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "download", 
+                                "cancel"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ], 
+        [
+            {
+                "amplitudeProperties": {
+                    "action": "value"
+                }, 
+                "description": "", 
+                "name": "\"Add to Homescreen\" dialog shown", 
+                "schema": {
+                    "$schema": "http://json-schema.org/schema#", 
+                    "properties": {
+                        "category": {
+                            "enum": [
+                                "action"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "method": {
+                            "enum": [
+                                "click"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "object": {
+                            "enum": [
+                                "add_to_homescreen_dialog"
+                            ], 
+                            "type": "string"
+                        }, 
+                        "timestamp": {
+                            "minimum": 0, 
+                            "type": "number"
+                        }, 
+                        "value": {
+                            "enum": [
+                                "add_to_homescreen", 
+                                "cancel"
+                            ], 
+                            "type": "string"
+                        }
+                    }, 
+                    "required": [
+                        "category", 
+                        "timestamp", 
+                        "object", 
+                        "method", 
+                        "value"
+                    ], 
+                    "type": "object"
+                }
+            }
+        ]
+    ], 
+    "filters": {
+        "appName": [
+            "Focus", 
+            "OTHER"
+        ], 
+        "docType": [
+            "focus-event"
+        ], 
+        "os": [
+            "Android"
+        ]
+    }
+}
