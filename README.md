@@ -38,3 +38,14 @@ It's also good to shut down the cluster afterwards:
 ```bash
 sbt dockerComposeStop
 ```
+
+## Deploying to Databricks
+### Using manually created cluster
+```bash
+databricks-deploy/create_cluster.sh
+databricks-deploy/build_and_deploy.sh
+```
+### Using cluster automatically created for each run
+```bash
+databricks-deploy/build_and_deploy_autocluster.sh
+```

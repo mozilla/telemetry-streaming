@@ -6,3 +6,4 @@ metastore_db/
 derby.log
 *.iml
 .DS_Store
+databricks-deploy/set_env.sh
