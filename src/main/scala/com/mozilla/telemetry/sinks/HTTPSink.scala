@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 import scala.util.{Try, Success, Failure}
 import scala.util.control.NonFatal
 
-class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
+class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
   extends ForeachWriter[String] {
 
   // codes to retry a request on - allow retries on timeouts
@@ -35,16 +35,10 @@ class HttpSink[String](url: String, parameters: Map[String, String], maxAttempts
 
   def open(partitionId: Long, version: Long): Boolean = true
 
-  def getRequest: HttpRequest = {
-    parameters.foldLeft(Http(url.toString)){
-      case (r, e) => r.param(e._1.toString, e._2.toString)
-    }
-  }
-
   def process(event: String): Unit = {
     attempt(
-      getRequest
-        .param("event", event.toString)
+      Http(url.toString)
+        .postForm(("event" -> event.toString) :: data.toList.map{ case(a, b) => a.toString -> b.toString })
         .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = ReadTimeout))
   }
 
