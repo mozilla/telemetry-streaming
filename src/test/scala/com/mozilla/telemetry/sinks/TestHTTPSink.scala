@@ -50,7 +50,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   private def multiStub(responseCodes: Seq[Int], scenarioState: String = STARTED): Unit = {
     val nextScenario = "post" + scenarioState
 
-    stubFor(get(urlMatching(pathMatch))
+    stubFor(post(urlMatching(Path))
       .inScenario(scenario)
       .whenScenarioStateIs(scenarioState)
       .willReturn(aResponse().withStatus(responseCodes.head))
@@ -62,7 +62,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   }
 
   private def verifyCount(count: Int): Unit = {
-    verify(count, getRequestedFor(urlMatching(pathMatch)))
+    verify(count, postRequestedFor(urlMatching(Path)))
   }
 
   "HTTP Sink" should "only send once on success" in {
@@ -92,7 +92,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   it should "retry after timeout" in {
     val scenario = "retry after timeout"
 
-    stubFor(get(urlMatching(pathMatch))
+    stubFor(post(urlMatching(Path))
       .inScenario(scenario)
       .whenScenarioStateIs(STARTED)
       .willSetStateTo("nowait")
@@ -100,7 +100,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
         .withStatus(BAD_REQUEST)
         .withFixedDelay(timeout + 10)))
 
-    stubFor(get(urlMatching(pathMatch))
+    stubFor(post(urlMatching(Path))
       .inScenario(scenario)
       .whenScenarioStateIs("nowait")
       .willReturn(aResponse()

@@ -10,6 +10,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
 import com.mozilla.telemetry.pings.FocusEventPing
+import java.net.URLDecoder
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
@@ -65,8 +66,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     wireMockServer.start()
     WireMock.configureFor(Host, Port)
 
-    stubFor(get(urlMatching(path + "\\?.*"))
-      .withQueryParam("api_key", equalTo(apiKey))
+    stubFor(post(urlMatching(path))
       .willReturn(aResponse().withStatus(200)))
   }
 
@@ -79,13 +79,20 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       requestMadeFor(new ValueMatcher[Request] {
         // scalastyle:off methodName
         def `match`(request: Request): MatchResult = {
-          val events = request.queryParameter("event").values.head
+          val params = request
+            .getBodyAsString()
+            .split("&")
+            .map( v => {
+              val m = v.split("=")
+              m(0) -> URLDecoder.decode(m(1), "UTF-8")
+            }).toMap
+
           MatchResult.of(
             request.getUrl.startsWith(path) &&
-            request.queryParameter("api_key").values.head == apiKey &&
-            parse(events).asInstanceOf[JArray].arr.flatMap(e => requiredKeys.map(k => e.has(k))).reduce(_ & _) &&
+            params("api_key") == apiKey &&
+            parse(params("event")).asInstanceOf[JArray].arr.flatMap(e => requiredKeys.map(k => e.has(k))).reduce(_ & _) &&
             (new EqualToJsonPattern(compact(jsonMatch), true, true))
-              .`match`(events)
+              .`match`(params("event"))
               .isExactMatch()
           )
         }
@@ -107,7 +114,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
     msgs.foreach(m => sink.process(FocusEventPing(m).getEvents(config)))
 
-    verify(expectedTotalMsgs, getRequestedFor(urlMatching(path + "\\?.*")))
+    verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
   }
 
   "Events to Amplitude" should "send events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
