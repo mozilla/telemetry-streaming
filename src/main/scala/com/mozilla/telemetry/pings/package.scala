@@ -3,18 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry
 
-import scala.util.{Success, Try}
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.Message
-import org.joda.time.{DateTime, Duration, Months}
 import org.joda.time.format.DateTimeFormat
-
-
-import org.json4s._
+import org.joda.time.{DateTime, Duration, Months}
 import org.json4s.JsonDSL._
+import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization.write
+
+import scala.util.{Success, Try}
 
 package object pings {
   case class Event(
@@ -234,11 +232,13 @@ package object pings {
     }
   }
 
+  case class CrashMetadata(StartupCrash: Option[String])
+
   case class CrashPayload(
       crashDate: String,
       processType: Option[String],
       hasCrashEnvironment: Option[Boolean],
-      metadata: Option[Map[String, String]],
+      metadata: CrashMetadata,
       version: Option[Int])
 
   case class CrashPing(
@@ -250,6 +250,10 @@ package object pings {
 
     def isMainCrash: Boolean = {
       payload.processType.getOrElse("main") == "main"
+    }
+
+    def isStartupCrash: Boolean = {
+      payload.metadata.StartupCrash.getOrElse("0") == "1"
     }
   }
 
