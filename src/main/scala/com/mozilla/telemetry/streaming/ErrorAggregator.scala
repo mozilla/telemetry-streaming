@@ -31,8 +31,11 @@ object ErrorAggregator {
   val kafkaTopic = "telemetry"
   val defaultNumFiles = 60
 
-  private val allowedDocTypes = List("main", "crash")
-  private val allowedAppNames = List("Firefox")
+  //TODO: make relationships visible here - we're adding crash/Fennec and core/Fennec/Android
+  private val allowedDocTypes = List("main", "crash", "core")
+  private val allowedAppNames = List("Firefox", "Fennec")
+  private val coreFennecPingAllowedOses = List("Android")
+  private val disallowedChannels = List("Other")
   private val kafkaCacheMaxCapacity = 1000
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
@@ -206,7 +209,7 @@ object ErrorAggregator {
     // add a null experiment_id and experiment_branch for each ping
     val experiments = (meta.experiments :+ (None, None)).toSet.toArray
 
-    experiments.map{ case (experiment_id, experiment_branch) =>
+    experiments.map { case (experiment_id, experiment_branch) =>
       val dimensions = new RowBuilder(dimensionsSchema)
       dimensions("timestamp") = Some(meta.normalizedTimestamp())
       dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
@@ -215,7 +218,7 @@ object ErrorAggregator {
       dimensions("display_version") = application.displayVersion
       dimensions("build_id") = meta.normalizedBuildId
       dimensions("application") = Some(meta.appName)
-      dimensions("os_name") = meta.`environment.system`.map(_.os.name)
+      dimensions("os_name") = meta.osName
       dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
       dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
       dimensions("country") = Some(meta.geoCountry)
@@ -223,6 +226,27 @@ object ErrorAggregator {
       dimensions("experiment_branch") = experiment_branch
       dimensions.build
     }
+  }
+
+  private def buildDimensions(dimensionsSchema: StructType, corePing: CorePing): Array[Row] = {
+    val meta = corePing.meta
+
+    val dimensions = new RowBuilder(dimensionsSchema)
+    dimensions("timestamp") = Some(meta.normalizedTimestamp())
+    dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
+    dimensions("channel") = Some(meta.normalizedChannel)
+    dimensions("version") = Option(corePing.meta.appVersion)
+    dimensions("display_version") = Option(corePing.meta.appVersion)
+    dimensions("build_id") = corePing.normalizedBuildId
+    dimensions("application") = Some(meta.appName)
+    dimensions("os_name") = Option(corePing.os)
+    dimensions("os_version") = Option(corePing.osversion)
+    dimensions("architecture") = Option(corePing.arch)
+    dimensions("country") = Some(meta.geoCountry)
+    // Ignore Fennec experiments for now as these are different than desktop ones
+    dimensions("experiment_id") = None
+    dimensions("experiment_branch") = None
+    Array(dimensions.build)
   }
 
   def parse(ping: CrashPing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
@@ -286,13 +310,19 @@ object ErrorAggregator {
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
-  /*
-   * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
-   * The best we can do is to resort to use a container, e.g. Array.
-   * This will also give us the ability to parse more than one row from the same ping.
-   */
+  def parse(ping: CorePing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
+    val dimensions = buildDimensions(dimensionsSchema, ping)
+    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+    stats("count") = Some(1)
+    stats("client_id") = ping.meta.clientId
+    stats("usage_hours") = ping.usageHours
+    stats("first_subsession_count") = if (ping.isFirstSubsession) Some(1) else Some(0)
+
+    dimensions.map(RowBuilder.merge(_, stats.build))
+  }
+
   def parsePing(dimensions: StructType, statsSchema: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])])
-    (message: Message): Array[Row] = {
+               (message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
     val fields = message.fieldsAsMap
@@ -306,10 +336,32 @@ object ErrorAggregator {
       throw new Exception("AppName should be one of " + allowedAppNames.mkString(sep = ","))
     }
 
-    if(docType == "crash") {
-      parse(CrashPing(message), dimensions, statsSchema)
+    val channel = fields.getOrElse("normalizedChannel", "").asInstanceOf[String]
+    if (disallowedChannels.contains(channel)) {
+      throw new Exception("Channel can't be one of " + disallowedChannels.mkString(sep = ","))
+    }
+
+    if (docType == "crash") {
+      val crashPing = CrashPing(message)
+      if (crashPing.meta.normalizedBuildId.isEmpty) {
+        throw new Exception("Empty buildId")
+      }
+      parse(crashPing, dimensions, statsSchema)
+    } else if (docType == "core") {
+      val corePing = CorePing(message)
+      if (!coreFennecPingAllowedOses.contains(corePing.os)) {
+        throw new Exception("OS for core/Fennec pings should be one of: " + coreFennecPingAllowedOses.mkString(sep = ","))
+      }
+      if (corePing.normalizedBuildId.isEmpty) {
+        throw new Exception("Empty buildId")
+      }
+      parse(corePing, dimensions, statsSchema)
     } else {
-      parse(MainPing(message), dimensions, statsSchema, countHistograms, thresholds)
+      val mainPing = MainPing(message)
+      if (mainPing.meta.normalizedBuildId.isEmpty) {
+        throw new Exception("Empty buildId")
+      }
+      parse(mainPing, dimensions, statsSchema, countHistograms, thresholds)
     }
   }
 
@@ -357,8 +409,6 @@ object ErrorAggregator {
       val pings = Dataset("telemetry")
         .where("sourceName") {
           case "telemetry" => true
-        }.where("sourceVersion") {
-          case "4" => true
         }.where("docType") {
           case docType if allowedDocTypes.contains(docType) => true
         }.where("appName") {

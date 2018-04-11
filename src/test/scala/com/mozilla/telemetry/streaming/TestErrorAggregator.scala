@@ -7,6 +7,7 @@ import java.io.File
 import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
+import com.mozilla.telemetry.streaming.TestUtils.Fennec
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
@@ -19,7 +20,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
-  val app = TestUtils.application
+  val app = TestUtils.defaultFirefoxApplication
 
   // 2016-04-07T02:01:56.000Z
   val earlierTimestamp = 1459994516000000000L
@@ -181,7 +182,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("os_version") should be (Set(s"10.2.42"))
   }
 
-  "The aggregator" should "handle new style experiments" in {
+  it should "handle new style experiments" in {
     import spark.implicits._
     val crashMessage = TestUtils.generateCrashMessages(
       k,
@@ -237,7 +238,42 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("experiment_branch").toSet should be (Set("control", "chaos", null))
   }
 
-  "The aggregator" should "correctly compute client counts" in {
+  it should "handle Fennec pings" in {
+    import spark.implicits._
+
+    // Ignore Fennec experiments for now as these are different than desktop ones
+    val fieldsOverride = Some(Map("environment.addons" -> "{}", "environment.experiments" -> "{}"))
+
+    val messages =
+      (TestUtils.generateCrashMessages(k, appType = Fennec, fieldsOverride = fieldsOverride)
+        ++ TestUtils.generateFennecCoreMessages(k)
+        ).map(_.toByteArray).seq
+
+    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
+    val numberOfAggregatedRows = 1
+
+    aggregates.count() shouldBe numberOfAggregatedRows
+    aggregates.filter($"application" === "Fennec").count() shouldBe numberOfAggregatedRows
+
+    val inspectedFields = List(
+      "build_id",
+      "usage_hours",
+      "os_name",
+      "first_subsession_count"
+    )
+    val rows = aggregates.select(inspectedFields(0), inspectedFields.drop(1): _*).collect()
+    val results = inspectedFields.zip(inspectedFields.map(field => rows.map(row => row.getAs[Any](field)).toSet)).toMap
+    results("usage_hours") should be(Set(k.toFloat))
+    results("os_name") should be(Set("Android"))
+    results("build_id") should be(Set(TestUtils.defaultFennecApplication.buildId))
+    results("first_subsession_count") should be(Set(k))
+  }
+
+  it should "correctly compute client counts" in {
     import spark.implicits._
     val crashMessages = 1 to 10 flatMap (i =>
       TestUtils.generateCrashMessages(
@@ -260,7 +296,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     client_count should be (10)
   }
 
-  "The aggregator" should "correctly compute subsession counts" in {
+  it should "correctly compute subsession counts" in {
     import spark.implicits._
     val mainMessages = 1 to 10 flatMap (i =>
       TestUtils.generateMainMessages(
@@ -278,25 +314,26 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     subsession_count should be (10)
   }
 
-  "The aggregator" should "discard non-Firefox pings" in {
+  it should "discard non-Firefox and non-Fennec pings" in {
     import spark.implicits._
-    val fxCrashMessage = TestUtils.generateCrashMessages(k)
-    val fxMainMessage = TestUtils.generateMainMessages(k)
-    val otherCrashMessage = TestUtils.generateCrashMessages(k, Some(Map("appName" -> "Icefox")))
-    val otherMainMessage = TestUtils.generateMainMessages(k, Some(Map("appName" -> "Icefox")))
+    val fxCrashMessages = TestUtils.generateCrashMessages(k)
+    val fxMainMessages = TestUtils.generateMainMessages(k)
+    val otherCrashMessages = TestUtils.generateCrashMessages(k, Some(Map("appName" -> "Icefox")))
+    val otherMainMessages = TestUtils.generateMainMessages(k, Some(Map("appName" -> "Icefox")))
+    val fennecCoreMessages = TestUtils.generateFennecCoreMessages(k)
 
     val messages =
-      (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
+      (fxCrashMessages ++ fxMainMessages ++ otherCrashMessages ++ otherMainMessages ++ fennecCoreMessages).map(_.toByteArray).seq
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
 
-    df.where("application <> 'Firefox'").count() should be (0)
+    df.where("application not in ('Firefox','Fennec')").count() should be(0)
   }
 
-  "the aggregator" should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
+  it should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
     spark.sparkContext.setLogLevel("WARN")
 
     Kafka.createTopic(ErrorAggregator.kafkaTopic)
@@ -306,12 +343,15 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
     }
 
-    val earlier = (TestUtils.generateMainMessages(k, timestamp = Some(earlierTimestamp)) ++
-      TestUtils.generateCrashMessages(k, timestamp = Some(earlierTimestamp))).map(_.toByteArray)
+    val earlier = (
+      TestUtils.generateMainMessages(k, timestamp = Some(earlierTimestamp)) ++
+        TestUtils.generateCrashMessages(k, timestamp = Some(earlierTimestamp)) ++
+        TestUtils.generateFennecCoreMessages(k, timestamp = Some(earlierTimestamp))
+      ).map(_.toByteArray)
 
     val later = TestUtils.generateMainMessages(1, timestamp = Some(laterTimestamp)).map(_.toByteArray)
 
-    val expectedTotalMsgs = 2 * k
+    val expectedTotalMsgs = 3 * k
 
     val listener = new StreamingQueryListener {
       val DefaultWatermark = "1970-01-01T00:00:00.000Z"
@@ -363,7 +403,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     ErrorAggregator.main(args.toArray)
 
-    assert(spark.read.parquet(s"$streamingOutputPath/${ErrorAggregator.outputPrefix}").count() == 3)
+    assert(spark.read.parquet(s"$streamingOutputPath/${ErrorAggregator.outputPrefix}").count() == 3 + 1) // 3 from desktop + 1 from Fennec
 
     kafkaProducer.close
     spark.streams.removeListener(listener)
@@ -381,12 +421,12 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     df.schema.fields.map(_.name) should not contain ("client_id")
   }
 
-  "BuildId" should "not be older than 6 months" in {
+  "BuildId older than 6 months" should "not be aggregated" in {
     import spark.implicits._
     val messages = TestUtils.generateMainMessages(
       1, Some(Map(
-        "environment.build" -> """{"buildId": "20170102"""",
-        "submissionDate" -> "20170601"
+        "environment.build" -> """{"buildId": "20170102"}""",
+        "submissionDate" -> "20170810"
         )
       )
     ).map(_.toByteArray).seq
@@ -396,22 +436,23 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
 
-    df.where("build_id IS NOT NULL").collect().length should be (0)
+    df.count() should be (0)
 
     val messages2 = TestUtils.generateMainMessages(
       1, Some(Map(
-        "environment.build" -> """{"buildId": "20170101"""",
+        "environment.build" -> """{"buildId": "20170101"}""",
         "submissionDate" -> "20170601"
         )
       )
     ).map(_.toByteArray).seq
 
-    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages2).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
 
     df2.where("build_id IS NULL").collect().length should be (0)
+    df2.count() should be (3)
   }
 
   "display version" can "be undefined" in {
