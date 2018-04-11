@@ -7,6 +7,7 @@ import java.io.File
 import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
+import com.mozilla.telemetry.pings.CrashPing
 import com.mozilla.telemetry.streaming.TestUtils.todayDays
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
@@ -57,7 +58,9 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
     val messages =
-      (TestUtils.generateCrashMessages(k)
+      (TestUtils.generateCrashMessages(k - 2)
+        ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "0""""))
+        ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "1""""))
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
 
@@ -86,6 +89,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "plugin_crashes",
       "gmplugin_crashes",
       "content_shutdown_crashes",
+      "startup_crashes",
       "count",
       "subsession_count",
       "usage_hours",
@@ -130,6 +134,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("plugin_crashes") should be (Set(k))
     results("gmplugin_crashes") should be (Set(k))
     results("content_shutdown_crashes") should be (Set(k))
+    results("startup_crashes") should be(Set(1))
     results("count") should be (Set(k * 2))
     results("subsession_count") should be (Set(k))
     results("usage_hours") should be (Set(k.toFloat))
@@ -476,7 +481,5 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     df.where("display_version IS NULL").collect().length should be (3)
     // should be no cases where displayVersion is null for this test case
     df.where("display_version <> NULL").collect().length should be (0)
-
   }
 }
-

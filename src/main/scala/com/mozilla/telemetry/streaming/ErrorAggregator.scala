@@ -10,13 +10,13 @@ import com.mozilla.spark.sql.hyperloglog.functions._
 import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
-import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.functions.{sum, window, col, expr}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.functions.{col, expr, sum, window}
+import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.joda.time.{DateTime, Days, format}
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
-import org.joda.time.{DateTime, Days, format}
 
 object ErrorAggregator {
   private val dateFormat = "yyyyMMdd"
@@ -125,6 +125,7 @@ object ErrorAggregator {
     .add[Int]("count")
     .add[Int]("subsession_count")
     .add[Int]("main_crashes")
+    .add[Int]("startup_crashes")
     .add[Int]("content_crashes")
     .add[Int]("gpu_crashes")
     .add[Int]("plugin_crashes")
@@ -247,6 +248,7 @@ object ErrorAggregator {
     stats("count") = Some(1)
     stats("client_id") = ping.meta.clientId
     stats("main_crashes") = Some(1)
+    stats("startup_crashes") = if (ping.isStartupCrash) Some(1) else None
 
     dimensions.map(RowBuilder.merge(_, stats.build))
   }

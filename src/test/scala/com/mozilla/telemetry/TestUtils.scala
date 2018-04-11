@@ -6,8 +6,8 @@ package com.mozilla.telemetry.streaming
 import com.mozilla.telemetry.heka.{Message, RichMessage}
 import com.mozilla.telemetry.pings
 import org.joda.time.{DateTime, Duration}
-import org.json4s.{DefaultFormats, Extraction, JField}
 import org.json4s.jackson.JsonMethods.{compact, render}
+import org.json4s.{DefaultFormats, Extraction, JField}
 
 
 object TestUtils {
@@ -21,7 +21,8 @@ object TestUtils {
   val today = new DateTime(testTimestampMillis)
   val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
 
-  def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None): Seq[Message] = {
+  def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None,
+                            customMetadata: Option[String] = None, timestamp: Option[Long] = None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "crash",
@@ -70,16 +71,20 @@ object TestUtils {
       case _ => defaultMap
     }
     val applicationJson = compact(render(Extraction.decompose(application)))
+    val payload =
+      s""""crashDate": "2017-01-01",
+        |"metadata":{
+        |  ${customMetadata.getOrElse("")}
+        |}
+      """.stripMargin
     1.to(size) map { index =>
-      RichMessage(s"crash-${index}",
+      RichMessage(s"crash-$index",
         outputMap,
         Some(
           s"""
              |{
-             |  "payload": {
-             |    "crashDate": "2017-01-01"
-             |  },
-             |  "application": ${applicationJson}
+             |  "payload": { $payload },
+             |  "application": $applicationJson
              |}""".stripMargin),
         timestamp=timestamp.getOrElse(testTimestampNano)
       )
