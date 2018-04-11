@@ -226,6 +226,7 @@ object EventsToAmplitude {
     }
 
     val filters = config.getBatchFilters
+    val maxParallelRequests = opts.maxParallelRequests()
 
     implicit val sc = spark.sparkContext
 
@@ -241,7 +242,7 @@ object EventsToAmplitude {
           }
         }.where("submissionDate") {
           case date if date == currentDate => true
-        }.records(opts.fileLimit.get)
+        }.records(opts.fileLimit.get, Some(maxParallelRequests))
          .map(m => Row(m.toByteArray))
 
       val schema = StructType(List(
@@ -254,7 +255,7 @@ object EventsToAmplitude {
       val url = opts.url()
 
       getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
-        .repartition(opts.maxParallelRequests())
+        .repartition(maxParallelRequests)
         .foreachPartition{ it: Iterator[String] =>
           val httpSink = new HttpSink(url, Map("api_key" -> apiKey))
           it.foreach{ event =>
