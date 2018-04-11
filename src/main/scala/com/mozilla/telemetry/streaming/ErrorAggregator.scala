@@ -31,8 +31,10 @@ object ErrorAggregator {
   val kafkaTopic = "telemetry"
   val defaultNumFiles = 60
 
-  private val allowedDocTypes = List("main", "crash")
-  private val allowedAppNames = List("Firefox")
+  //TODO: make relationships visible here - we're adding crash/Fennec and core/Fennec/Android
+  private val allowedDocTypes = List("main", "crash", "core")
+  private val allowedAppNames = List("Firefox", "Fennec")
+  private val coreFennecPingAllowedOses = List("Android")
   private val kafkaCacheMaxCapacity = 1000
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
@@ -225,6 +227,34 @@ object ErrorAggregator {
     }
   }
 
+  private def buildDimensions(dimensionsSchema: StructType, corePing: CorePing): Array[Row] = {
+    val meta = corePing.meta
+    // add a null experiment_id and experiment_branch for each ping
+    // add a null experiment_branch for each experiment, as experiments on Fennec do not report branches
+    val experiments = (
+      corePing.experiments.map(_.map(e => (Option(e), Option.empty[String])))
+        .getOrElse(Array[(Option[String], Option[String])]()) :+ (None, None)
+      ).distinct
+
+    experiments.map { case (experiment_id, experiment_branch) =>
+      val dimensions = new RowBuilder(dimensionsSchema)
+      dimensions("timestamp") = Some(meta.normalizedTimestamp())
+      dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
+      dimensions("channel") = Some(meta.normalizedChannel)
+      dimensions("version") = Option(corePing.meta.appVersion)
+      dimensions("display_version") = Option(corePing.meta.appVersion)
+      dimensions("build_id") = meta.normalizedBuildId
+      dimensions("application") = Some(meta.appName)
+      dimensions("os_name") = Option(corePing.os)
+      dimensions("os_version") = Option(corePing.osversion)
+      dimensions("architecture") = Option(corePing.arch)
+      dimensions("country") = Some(meta.geoCountry)
+      dimensions("experiment_id") = experiment_id
+      dimensions("experiment_branch") = experiment_branch
+      dimensions.build
+    }
+  }
+
   def parse(ping: CrashPing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
     if (ping.isMainCrash || ping.isContentCrash) {
 
@@ -286,13 +316,18 @@ object ErrorAggregator {
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
-  /*
-   * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
-   * The best we can do is to resort to use a container, e.g. Array.
-   * This will also give us the ability to parse more than one row from the same ping.
-   */
+  def parse(ping: CorePing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
+    val dimensions = buildDimensions(dimensionsSchema, ping)
+    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+    stats("count") = Some(1)
+    stats("client_id") = ping.meta.clientId
+    stats("usage_hours") = ping.usageHours
+
+    dimensions.map(RowBuilder.merge(_, stats.build))
+  }
+
   def parsePing(dimensions: StructType, statsSchema: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])])
-    (message: Message): Array[Row] = {
+               (message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
     val fields = message.fieldsAsMap
@@ -306,8 +341,14 @@ object ErrorAggregator {
       throw new Exception("AppName should be one of " + allowedAppNames.mkString(sep = ","))
     }
 
-    if(docType == "crash") {
+    if (docType == "crash") {
       parse(CrashPing(message), dimensions, statsSchema)
+    } else if (docType == "core") {
+      val corePing = CorePing(message)
+      if (!coreFennecPingAllowedOses.contains(corePing.os)) {
+        throw new Exception("OS for core/Fennec pings should be one of: " + coreFennecPingAllowedOses.mkString(sep = ","))
+      }
+      parse(corePing, dimensions, statsSchema)
     } else {
       parse(MainPing(message), dimensions, statsSchema, countHistograms, thresholds)
     }

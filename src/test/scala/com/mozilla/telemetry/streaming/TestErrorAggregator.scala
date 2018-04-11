@@ -7,6 +7,7 @@ import java.io.File
 import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
+import com.mozilla.telemetry.streaming.TestUtils.Fennec
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
@@ -19,7 +20,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
-  val app = TestUtils.application
+  val app = TestUtils.defaultFirefoxApplication
 
   // 2016-04-07T02:01:56.000Z
   val earlierTimestamp = 1459994516000000000L
@@ -181,7 +182,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("os_version") should be (Set(s"10.2.42"))
   }
 
-  "The aggregator" should "handle new style experiments" in {
+  it should "handle new style experiments" in {
     import spark.implicits._
     val crashMessage = TestUtils.generateCrashMessages(
       k,
@@ -237,7 +238,40 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("experiment_branch").toSet should be (Set("control", "chaos", null))
   }
 
-  "The aggregator" should "correctly compute client counts" in {
+  it should "handle Fennec pings" in {
+    import spark.implicits._
+    val messages =
+      (TestUtils.generateCrashMessages(k, appType = Fennec)
+        ++ TestUtils.generateFennecCoreMessages(k)
+        ).map(_.toByteArray).seq
+
+    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema,
+      ErrorAggregator.defaultThresholdHistograms)
+
+    // On Android, Fennec reports it's OS as:
+    // * 'Android' in core pings
+    // * 'Linux' in crash pings
+    // In effect we have twice as many rows as we would have if it reported os in a consistent way
+
+    // 1 for each experiment (there are 2), and one for a null experiment x2
+    val numberOfAggregatedRows = (1 + 1 + 1) * 2
+
+    aggregates.count() shouldBe numberOfAggregatedRows
+    aggregates.filter($"application" === "Fennec").count() shouldBe numberOfAggregatedRows
+
+    val inspectedFields = List(
+      "usage_hours",
+      "os_name"
+    )
+    val rows = aggregates.select(inspectedFields(0), inspectedFields.drop(1): _*).collect()
+    val results = inspectedFields.zip(inspectedFields.map(field => rows.map(row => row.getAs[Any](field)).toSet)).toMap
+    results("usage_hours") should be(Set(k.toFloat, null)) // no usage_hours from crash pings
+    results("os_name") should be(Set("Android", "Linux"))
+  }
+
+  it should "correctly compute client counts" in {
     import spark.implicits._
     val crashMessages = 1 to 10 flatMap (i =>
       TestUtils.generateCrashMessages(
@@ -260,7 +294,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     client_count should be (10)
   }
 
-  "The aggregator" should "correctly compute subsession counts" in {
+  it should "correctly compute subsession counts" in {
     import spark.implicits._
     val mainMessages = 1 to 10 flatMap (i =>
       TestUtils.generateMainMessages(
@@ -278,25 +312,26 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     subsession_count should be (10)
   }
 
-  "The aggregator" should "discard non-Firefox pings" in {
+  it should "discard non-Firefox and non-Fennec pings" in {
     import spark.implicits._
-    val fxCrashMessage = TestUtils.generateCrashMessages(k)
-    val fxMainMessage = TestUtils.generateMainMessages(k)
-    val otherCrashMessage = TestUtils.generateCrashMessages(k, Some(Map("appName" -> "Icefox")))
-    val otherMainMessage = TestUtils.generateMainMessages(k, Some(Map("appName" -> "Icefox")))
+    val fxCrashMessages = TestUtils.generateCrashMessages(k)
+    val fxMainMessages = TestUtils.generateMainMessages(k)
+    val otherCrashMessages = TestUtils.generateCrashMessages(k, Some(Map("appName" -> "Icefox")))
+    val otherMainMessages = TestUtils.generateMainMessages(k, Some(Map("appName" -> "Icefox")))
+    val fennecCoreMessages = TestUtils.generateFennecCoreMessages(k)
 
     val messages =
-      (fxCrashMessage ++ fxMainMessage ++ otherCrashMessage ++ otherMainMessage).map(_.toByteArray).seq
+      (fxCrashMessages ++ fxMainMessages ++ otherCrashMessages ++ otherMainMessages ++ fennecCoreMessages).map(_.toByteArray).seq
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema,
       ErrorAggregator.defaultThresholdHistograms)
 
-    df.where("application <> 'Firefox'").count() should be (0)
+    df.where("application not in ('Firefox','Fennec')").count() should be(0)
   }
 
-  "the aggregator" should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
+  it should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
     spark.sparkContext.setLogLevel("WARN")
 
     Kafka.createTopic(ErrorAggregator.kafkaTopic)
