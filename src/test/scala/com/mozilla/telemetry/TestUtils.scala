@@ -12,19 +12,31 @@ import org.json4s.{DefaultFormats, Extraction, JField}
 
 object TestUtils {
   implicit val formats = DefaultFormats
-  val application = pings.Application(
+  val defaultFirefoxApplication = pings.Application(
     "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", Some("42.0b1"), "x86-msvc"
   )
+  val defaultFennecApplication = pings.Application(
+    "arm64-v8a", "20170101000000", "release", "Fennec", "59.0", "Mozilla", "59.0", Some("59.0"), "arm-eabi-gcc3"
+  )
+
   val scalarValue = 42
   val testTimestampNano = 1460036116829920000L
   val testTimestampMillis = testTimestampNano / 1000000
   val today = new DateTime(testTimestampMillis)
   val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
 
-  def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None,
+  def generateCrashMessages(size: Int,
+                            fieldsOverride: Option[Map[String, Any]] = None,
                             customMetadata: Option[String] = None,
                             customPayload: Option[String] = None,
-                            timestamp: Option[Long] = None): Seq[Message] = {
+                            timestamp: Option[Long] = None,
+                            appType: AppType = Firefox): Seq[Message] = {
+
+    val application = appType match {
+      case Fennec => defaultFennecApplication
+      case _ => defaultFirefoxApplication
+    }
+
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "crash",
@@ -98,11 +110,11 @@ object TestUtils {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "main",
-      "normalizedChannel" -> application.channel,
-      "appName" -> application.name,
-      "appVersion" -> application.version.toDouble,
-      "displayVersion" -> application.displayVersion.getOrElse(null),
-      "appBuildId" -> application.buildId,
+      "normalizedChannel" -> defaultFirefoxApplication.channel,
+      "appName" -> defaultFirefoxApplication.name,
+      "appVersion" -> defaultFirefoxApplication.version.toDouble,
+      "displayVersion" -> defaultFirefoxApplication.displayVersion.getOrElse(null),
+      "appBuildId" -> defaultFirefoxApplication.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
       "submissionDate" -> "20170101",
@@ -131,9 +143,9 @@ object TestUtils {
       "environment.build" ->
         s"""
           |{
-          |  "architecture": "${application.architecture}",
-          |  "buildId": "${application.buildId}",
-          |  "version": "${application.version}"
+          |  "architecture": "${defaultFirefoxApplication.architecture}",
+          |  "buildId": "${defaultFirefoxApplication.buildId}",
+          |  "version": "${defaultFirefoxApplication.version}"
           |}""".stripMargin,
       "payload.histograms" ->
         """{
@@ -168,7 +180,7 @@ object TestUtils {
       case Some(m) => defaultMap ++ m
       case _ => defaultMap
     }
-    val applicationData = Extraction.decompose(application) removeField {
+    val applicationData = Extraction.decompose(defaultFirefoxApplication) removeField {
       case JField(x, _) if fieldsToRemove.contains(x) => true
       case _ => false
     }
@@ -281,4 +293,73 @@ object TestUtils {
       )
     }
   }
+
+  // scalastyle:off methodLength
+  def generateFennecCoreMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None, timestamp: Option[Long] = None): Seq[Message] = {
+    val defaultMap = Map(
+      "appBuildId" -> defaultFennecApplication.buildId,
+      "appName" -> defaultFennecApplication.name,
+      "appUpdateChannel" -> defaultFennecApplication.channel,
+      "appVersion" -> defaultFennecApplication.version.toDouble,
+      "clientId" -> "ca7fb81d-5deb-4ea6-8b74-797b8e58cfae",
+      "Date" -> "Sun, 29 Apr 2018 15:35:38 GMT+00:00",
+      "docType" -> "core",
+      "documentId" -> "befd87f9-472d-4a38-9ae1-2f4668e10c62",
+      "geoCity" -> "Modena",
+      "geoCountry" -> "IT",
+      "geoSubdivision1" -> "45",
+      "geoSubdivision2" -> "MO",
+      "Host" -> "incoming.telemetry.mozilla.org",
+      "normalizedChannel" -> "release",
+      "sampleId" -> 22L,
+      "sourceName" -> "telemetry",
+      "sourceVersion" -> "9",
+      "submissionDate" -> "20170101",
+      "submission" ->
+        """
+          |{
+          |  "durations": 3600,
+          |  "device": "samsung-SM-G930F",
+          |  "experiments": [
+          |    "experiment1",
+          |    "experiment2"
+          |  ],
+          |  "tz": 120,
+          |  "flashUsage": 0,
+          |  "locale": "en-US",
+          |  "arch": "arm64-v8a",
+          |  "os": "Android",
+          |  "defaultSearch": "google",
+          |  "seq": 1,
+          |  "v": 9,
+          |  "clientId": "ca7fb81d-5deb-4ea6-8b74-797b8e58cfae",
+          |  "osversion": "42",
+          |  "sessions": 1,
+          |  "profileDate": 17622,
+          |  "defaultBrowser": false,
+          |  "created": "2018-04-29",
+          |  "searches": {
+          |    "google.actionbar": 1
+          |  }
+          |}
+        """.stripMargin
+    )
+    val outputMap = fieldsOverride match {
+      case Some(m) => defaultMap ++ m
+      case _ => defaultMap
+    }
+
+    1.to(size) map { index =>
+      RichMessage(s"core-ping-$index",
+        outputMap,
+        None,
+        timestamp = timestamp.getOrElse(testTimestampNano)
+      )
+    }
+  }
+  // scalastyle:on methodLength
+
+  abstract class AppType
+  case object Firefox extends AppType
+  case object Fennec extends AppType
 }

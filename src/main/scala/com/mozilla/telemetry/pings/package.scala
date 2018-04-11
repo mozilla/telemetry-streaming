@@ -170,6 +170,16 @@ package object pings {
 
       newStyleExperiments ++ oldStyleExperiment
     }
+
+    def osName: Option[String] = {
+      val reportedOsName = `environment.system`.map(_.os.name)
+      if (appName == "Fennec" && docType.contains("crash") && reportedOsName.contains("Linux")) {
+        //Fennec incorrectly reports its OS in crash pings
+        Some("Android")
+      } else {
+        reportedOsName
+      }
+    }
   }
 
   object Meta {
@@ -364,6 +374,63 @@ package object pings {
     }
   }
 
+  case class CorePing(
+      arch: String,
+      durations: Option[Int],
+      experiments: Option[Array[String]],
+      meta: Meta,
+      os: String,
+      osversion: String,
+      seq: Int) {
+
+    def normalizedBuildId: Option[String] = {
+      val buildId = meta.appBuildId
+      val buildIdDay = buildId.slice(0, 8)
+      val buildDateTime = BuildDateFormat.parseDateTime(buildIdDay)
+      val submissionDateTime = SubmissionDateFormat.parseDateTime(meta.submissionDate)
+
+      Months.monthsBetween(buildDateTime, submissionDateTime).getMonths match {
+        case m if (0 <= m) && (m <= 6) => Some(buildId)
+        case _ => None
+      }
+    }
+
+    def usageHours: Option[Float] = {
+      val seconds_per_hour = 3600
+      this.durations match {
+        case Some(d) => Option(d.toFloat / seconds_per_hour)
+        case _ => None
+      }
+    }
+
+    def isFirstSubsession: Boolean = seq == 1
+  }
+
+  object CorePing {
+    def apply(message: Message): CorePing = {
+      implicit val formats = DefaultFormats
+      val ping = messageToPing(message)
+      ping.extract[CorePing]
+    }
+  }
+
+  def messageToPing(message: Message, jsonFieldNames: List[String] = List(), eventPaths: List[List[String]] = List()): JValue = {
+    implicit val formats = DefaultFormats
+    val fields = message.fieldsAsMap ++ Map("Timestamp" -> message.timestamp)
+    val jsonObj = Extraction.decompose(fields)
+    // Transform json fields into JValues
+    val meta = jsonObj transformField {
+      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
+    }
+    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
+    val json = submission match {
+      case Some(value: String) => parse(value)
+      case _ => JObject()
+    }
+
+    replaceEvents(json, eventPaths) ++ JObject(List(JField("meta", meta)))
+  }
+
   /**
    * Events come in as arrays, but to extract them to Event case classes
    * we need them as key-value json blobs. This takes in a list of event
@@ -398,22 +465,5 @@ package object pings {
 
         currentJson.replace(path, newEvents)
     }
-  }
-
-  def messageToPing(message: Message, jsonFieldNames: List[String], eventPaths: List[List[String]] = List()): JValue = {
-    implicit val formats = DefaultFormats
-    val fields = message.fieldsAsMap ++ Map("Timestamp" -> message.timestamp)
-    val jsonObj = Extraction.decompose(fields)
-    // Transform json fields into JValues
-    val meta = jsonObj transformField {
-      case JField(key, JString(s)) if jsonFieldNames contains key => (key, parse(s))
-    }
-    val submission = if(message.payload.isDefined) message.payload else fields.get("submission")
-    val json = submission match {
-      case Some(value: String) => parse(value)
-      case _ => JObject()
-    }
-
-    replaceEvents(json, eventPaths) ++ JObject(List(JField("meta", meta)))
   }
 }
