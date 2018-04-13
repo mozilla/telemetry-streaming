@@ -44,7 +44,27 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   val path = "/httpapi"
 
   // present in all events
-  val sharedEventsJson = s"""{"app_version": "1.1", "os_name": "Android", "os_version": "23", "country": "CA", "city": "Victoria", "device_id": "client1"}"""
+  val sharedEventsJson = s"""{
+    "app_version": "1.1",
+    "os_name": "Android",
+    "os_version": "23",
+    "country": "CA",
+    "city": "Victoria",
+    "device_id": "client1",
+    "user_properties": {
+      "pref_privacy_block_ads": true,
+      "pref_locale": "",
+      "pref_privacy_block_social": true,
+      "pref_secure": true,
+      "pref_privacy_block_analytics": true,
+      "pref_search_engine": "custom",
+      "pref_privacy_block_other": false,
+      "pref_default_browser": true,
+      "pref_performance_block_webfonts": false,
+      "pref_performance_block_images": false,
+      "pref_autocomplete_installed": true,
+      "pref_autocomplete_custom": false}
+    }}"""
 
   // these keys are present in all events, but values differ
   val requiredKeys = "session_id" :: "insert_id" :: "time" :: Nil

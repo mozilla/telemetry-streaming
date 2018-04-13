@@ -22,6 +22,22 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException
 
 import scala.util.{Try, Success, Failure}
 
+
+case class FocusSettings(
+    pref_privacy_block_ads: Boolean,
+    pref_locale: String,
+    pref_privacy_block_social: Boolean,
+    pref_secure: Boolean,
+    pref_privacy_block_analytics: Boolean,
+    pref_search_engine: String,
+    pref_privacy_block_other: Boolean,
+    pref_default_browser: Boolean,
+    pref_performance_block_webfonts: Boolean,
+    pref_performance_block_images: Boolean,
+    pref_autocomplete_installed: Boolean,
+    pref_autocomplete_custom: Boolean)
+
+
 case class FocusEventPing(
     clientId: String,
     created: Long,
@@ -30,6 +46,7 @@ case class FocusEventPing(
     seq: Integer,
     os: String,
     osversion: String,
+    settings: FocusSettings,
     meta: Meta) {
 
   def getEvents(config: Config): String = {
@@ -60,7 +77,20 @@ case class FocusEventPing(
         ("os_name" -> os) ~
         ("os_version" -> osversion) ~
         ("country" -> meta.geoCountry) ~
-        ("city" -> meta.geoCity)
+        ("city" -> meta.geoCity) ~
+        ("user_properties" ->
+          ("pref_privacy_block_ads" -> settings.pref_privacy_block_ads) ~
+          ("pref_locale" -> settings.pref_locale) ~
+          ("pref_privacy_block_social" -> settings.pref_privacy_block_social) ~
+          ("pref_secure" -> settings.pref_secure) ~
+          ("pref_privacy_block_analytics" -> settings.pref_privacy_block_analytics) ~
+          ("pref_search_engine" -> settings.pref_search_engine) ~
+          ("pref_privacy_block_other" -> settings.pref_privacy_block_other) ~
+          ("pref_default_browser" -> settings.pref_default_browser) ~
+          ("pref_performance_block_webfonts" -> settings.pref_performance_block_webfonts) ~
+          ("pref_performance_block_images" -> settings.pref_performance_block_images) ~
+          ("pref_autocomplete_installed" -> settings.pref_autocomplete_installed) ~
+          ("pref_autocomplete_custom" -> settings.pref_autocomplete_custom))
       }
 
     compact(render(eventsList))
