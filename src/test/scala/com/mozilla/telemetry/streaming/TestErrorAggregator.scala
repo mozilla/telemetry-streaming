@@ -95,7 +95,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "browser_shim_usage_blocked",
       "experiment_id",
       "experiment_branch",
-      "e10s_enabled",
       "gfx_compositor",
       "input_event_response_coalesced_ms_main_above_150",
       "input_event_response_coalesced_ms_main_above_250",
@@ -139,7 +138,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("browser_shim_usage_blocked") should be (Set(k))
     results("experiment_id") should be (Set("experiment1", "experiment2", null))
     results("experiment_branch") should be (Set("control", "chaos", null))
-    results("e10s_enabled") should equal (Set(true))
     results("gfx_compositor") should be (Set("opengl"))
     results("input_event_response_coalesced_ms_main_above_150") should be (Set(42 * 14))
     results("input_event_response_coalesced_ms_main_above_250") should be (Set(42 * 12))

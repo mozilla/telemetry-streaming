@@ -114,7 +114,6 @@ object ErrorAggregator {
     .add[String]("country")
     .add[String]("experiment_id")
     .add[String]("experiment_branch")
-    .add[Boolean]("e10s_enabled")
     .add[String]("gfx_compositor")
     .add[Int]("profile_age_days")
     .build
@@ -222,7 +221,6 @@ object ErrorAggregator {
       dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
       dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
       dimensions("country") = Some(meta.geoCountry)
-      dimensions("e10s_enabled") = meta.`environment.settings`.flatMap(_.e10sEnabled)
       dimensions("gfx_compositor") = for {
         system <- meta.`environment.system`
         gfx <- system.gfx

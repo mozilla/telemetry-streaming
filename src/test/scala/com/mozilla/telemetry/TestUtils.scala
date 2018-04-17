@@ -41,7 +41,6 @@ object TestUtils {
            |  "buildId": "${application.buildId}",
            |  "version": "${application.version}"
            |}""".stripMargin,
-      "environment.settings" ->"""{"e10sEnabled": true}""",
       "environment.system" ->
         """
           |{
@@ -105,7 +104,6 @@ object TestUtils {
       "geoCountry" -> "IT",
       "os" -> "Linux",
       "submissionDate" -> "2017-01-01",
-      "environment.settings" ->"""{"e10sEnabled": true}""",
       "environment.system" ->
         """
           |{
