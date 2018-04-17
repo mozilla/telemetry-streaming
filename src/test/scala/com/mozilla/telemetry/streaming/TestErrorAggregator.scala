@@ -105,8 +105,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "first_subsession_count",
       "window_start",
       "window_end",
-      "HllCardinality(client_count) as client_count",
-      "profile_age_days"
+      "HllCardinality(client_count) as client_count"
     )
 
     val query = df.selectExpr(inspectedFields:_*)
@@ -148,7 +147,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
     results("client_count") should be (Set(1))
-    results("profile_age_days") should be (Set(70))
   }
 
   it should "normalize os_version" in {
@@ -271,57 +269,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
     subsession_count should be (10)
-  }
-
-  "The aggregator" should "use proper bins for profile age" in {
-    import spark.implicits._
-    val crashMessagesNewProfile = TestUtils.generateCrashMessages(
-      k,
-      Some(Map(
-        "environment.profile" ->
-        s"""
-           |{
-           | "creationDate": ${todayDays-41}
-           | }""".stripMargin
-      )))
-
-    val crashMessagesYoungProfile = TestUtils.generateCrashMessages(
-      k,
-      Some(Map(
-        "environment.profile" ->
-          s"""
-             |{
-             | "creationDate": ${todayDays-50}
-             | }""".stripMargin
-      )))
-
-    val crashMessagesOldProfile = TestUtils.generateCrashMessages(
-      k,
-      Some(Map(
-        "environment.profile" ->
-        s"""
-           |{
-           | "creationDate": ${todayDays-3000}
-           | }""".stripMargin
-      )))
-
-
-    val messages =
-      (crashMessagesNewProfile ++ crashMessagesYoungProfile ++ crashMessagesOldProfile).map(_.toByteArray).seq
-
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
-
-    // one count for each age, limited to 60
-    // multiplied by the number of experiments (chaos, control, null)
-    df.count() should be (9)
-
-    val rows = df.select("profile_age_days").collect()
-    val results = rows.map(row => row.getAs[Any]("profile_age_days")).toSet
-
-    results should be (Set(41, 56, 365))
   }
 
   "The aggregator" should "discard non-Firefox pings" in {

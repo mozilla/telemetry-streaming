@@ -97,34 +97,6 @@ package object pings {
       locale: Option[String],
       telemetryEnabled: Option[Boolean])
 
-  case class Profile(creationDate: Option[Int], resetDate: Option[Int]){
-    def ageDays(today: DateTime): Option[Int] ={
-      creationDate match {
-        case Some(days) if days >= 0 => {
-          val creationDateTime = new DateTime(0).plusDays(days)
-          val age = new Duration(creationDateTime, today)
-          if (age.getMillis > 0) Some(age.getStandardDays.toInt) else None
-        }
-        case _ => None
-      }
-    }
-
-    /**
-     * Return the profile age binned using the following logic:
-     * up to 6 weeks -> daily resolution
-     * up to 1 year -> weekly resolution
-     * over 1 year -> bin 366
-     */
-    def ageDaysBin(today: DateTime): Option[Int] = {
-      ageDays(today) match {
-        case Some(d) if d <= 42 => Some(d)
-        case Some(d) if d <= 364 => Some(((d / 7.0).ceil * 7).toInt)
-        case Some(d) => Some(365)
-        case _ => None
-      }
-    }
-  }
-
   case class Meta(
       Host: Option[String],
       Hostname: Option[String],
@@ -153,7 +125,6 @@ package object pings {
       `environment.build`: Option[EnvironmentBuild],
       `environment.settings`: Option[Settings],
       `environment.system`: Option[System],
-      `environment.profile`: Option[Profile],
       `environment.addons`: Option[Addons],
       `environment.experiments`: Option[Map[String, NewStyleExperiment]],
       // Main ping fields preparsed by hindsight
