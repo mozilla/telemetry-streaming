@@ -68,24 +68,6 @@ class TestPings extends FlatSpec with Matchers{
     mainPing.sessionId should be (Some("sample-session-id"))
   }
 
-  "A Profile instance" should "return its age in days" in {
-    val today = TestUtils.today
-    val todayDays = TestUtils.todayDays
-    // Profile with age zero
-    Profile(Some(todayDays), None).ageDays(today) should be (Some(0))
-    // Profile with positive age
-    Profile(Some(todayDays - 10), None).ageDays(today) should be (Some(10))
-    // Profile with negative age
-    Profile(Some(todayDays + 10), None).ageDays(today) should be (None)
-
-    Profile(Some(todayDays - 42), None).ageDaysBin(today) should be (Some(42))
-    Profile(Some(todayDays - 43), None).ageDaysBin(today) should be (Some(49))
-    Profile(Some(todayDays - 49), None).ageDaysBin(today) should be (Some(49))
-    Profile(Some(todayDays - 364), None).ageDaysBin(today) should be (Some(364))
-    Profile(Some(todayDays - 367), None).ageDaysBin(today) should be (Some(365))
-    Profile(Some(todayDays - 3000), None).ageDaysBin(today) should be (Some(365))
-  }
-
   "An OS instance" should "normalize the version" in {
     OS(Some("linux"), Some("1.1.1-ignore")).normalizedVersion should be ("1.1.1")
     OS(Some("linux"), Some("1.1.1ignore")).normalizedVersion should be ("1.1.1")

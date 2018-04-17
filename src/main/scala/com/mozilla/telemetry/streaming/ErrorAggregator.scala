@@ -114,7 +114,6 @@ object ErrorAggregator {
     .add[String]("country")
     .add[String]("experiment_id")
     .add[String]("experiment_branch")
-    .add[Int]("profile_age_days")
     .build
 
   val defaultMetricsSchema: StructType = new SchemaBuilder()
@@ -222,9 +221,6 @@ object ErrorAggregator {
       dimensions("country") = Some(meta.geoCountry)
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
-      dimensions("profile_age_days") = meta.`environment.profile`.flatMap(
-        _.ageDaysBin(new DateTime(meta.normalizedTimestamp().getTime))
-      )
       dimensions.build
     }
   }
