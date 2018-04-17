@@ -101,7 +101,6 @@ package object pings {
   case class Settings(
       blocklistEnabled: Option[Boolean],
       isDefaultBrowser: Option[Boolean],
-      e10sEnabled: Option[Boolean],
       locale: Option[String],
       telemetryEnabled: Option[Boolean])
 
@@ -195,8 +194,6 @@ package object pings {
         case _ => None
       }
     }
-
-    def isE10sEnabled: Option[Boolean] = this.`environment.settings`.flatMap(_.e10sEnabled)
 
     def experiments: Seq[(Option[String], Option[String])] = {
       val oldStyleExperiment = for {
