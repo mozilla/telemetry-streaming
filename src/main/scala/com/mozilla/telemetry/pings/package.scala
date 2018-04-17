@@ -78,11 +78,7 @@ package object pings {
 
   case class NewStyleExperiment(branch: String)
 
-  case class ActiveAddon(isSystem: Option[Boolean], isWebExtension: Option[Boolean]) {
-    def isQuantumReady: Boolean = {
-      (this.isSystem contains true) || (this.isWebExtension contains true)
-    }
-  }
+  case class ActiveAddon(isSystem: Option[Boolean], isWebExtension: Option[Boolean])
 
   object Theme {
     val newThemes = List(
@@ -100,14 +96,7 @@ package object pings {
       activeAddons: Option[Map[String, ActiveAddon]],
       activeExperiment: Option[OldStyleExperiment],
       theme: Option[Theme]
-  ) {
-    def isQuantumReady: Option[Boolean] = {
-      for {
-        activeAddons <- this.activeAddons
-        theme <- this.theme
-      } yield activeAddons.values.forall(_.isQuantumReady) && ! theme.isOld
-    }
-  }
+  )
 
   case class Settings(
       blocklistEnabled: Option[Boolean],
@@ -221,14 +210,6 @@ package object pings {
       } yield (Some(experimentId), Some(experiment.branch))
 
       newStyleExperiments ++ oldStyleExperiment
-    }
-
-    def isQuantumReady: Option[Boolean] = {
-      for {
-        addons <- this.`environment.addons`
-        addonsReady <- addons.isQuantumReady
-        e10sEnabled <- this.isE10sEnabled
-      } yield addonsReady && e10sEnabled
     }
   }
 

@@ -116,7 +116,6 @@ object ErrorAggregator {
     .add[String]("experiment_branch")
     .add[Boolean]("e10s_enabled")
     .add[String]("gfx_compositor")
-    .add[Boolean]("quantum_ready")
     .add[Int]("profile_age_days")
     .build
 
@@ -230,7 +229,6 @@ object ErrorAggregator {
         features <- gfx.features
         compositor <- features.compositor
       } yield compositor
-      dimensions("quantum_ready") = meta.isQuantumReady
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
       dimensions("profile_age_days") = meta.`environment.profile`.flatMap(
