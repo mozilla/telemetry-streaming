@@ -82,7 +82,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "os_version",
       "architecture",
       "country",
-      "quantum_ready",
       "main_crashes",
       "content_crashes",
       "gpu_crashes",
@@ -127,7 +126,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("os_version") should be (Set(s"${k}"))
     results("architecture") should be (Set(app.architecture))
     results("country") should be (Set("IT"))
-    results("quantum_ready") should equal (Set(true))
     results("main_crashes") should be (Set(k))
     results("content_crashes") should be (Set(k))
     results("gpu_crashes") should be (Set(k))
