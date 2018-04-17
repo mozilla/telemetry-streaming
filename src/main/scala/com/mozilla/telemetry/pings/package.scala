@@ -65,14 +65,7 @@ package object pings {
     val normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
   }
 
-  case class SystemGfxFeatures(compositor: Option[String])
-
-  case class SystemGfx(
-      D2DEnabled: Option[Boolean],
-      DWriteEnabled: Option[Boolean],
-      features: Option[SystemGfxFeatures])
-
-  case class System(os: SystemOs, gfx: Option[SystemGfx])
+  case class System(os: SystemOs)
 
   case class OldStyleExperiment(id: String, branch: String)
 

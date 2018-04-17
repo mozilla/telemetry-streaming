@@ -114,7 +114,6 @@ object ErrorAggregator {
     .add[String]("country")
     .add[String]("experiment_id")
     .add[String]("experiment_branch")
-    .add[String]("gfx_compositor")
     .add[Int]("profile_age_days")
     .build
 
@@ -221,12 +220,6 @@ object ErrorAggregator {
       dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
       dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
       dimensions("country") = Some(meta.geoCountry)
-      dimensions("gfx_compositor") = for {
-        system <- meta.`environment.system`
-        gfx <- system.gfx
-        features <- gfx.features
-        compositor <- features.compositor
-      } yield compositor
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
       dimensions("profile_age_days") = meta.`environment.profile`.flatMap(

@@ -44,8 +44,7 @@ object TestUtils {
       "environment.system" ->
         """
           |{
-          | "os": {"name": "Linux", "version": "42"},
-          | "gfx": {"features": {"compositor": "opengl"}}
+          | "os": {"name": "Linux", "version": "42"}
           |}""".stripMargin,
       "environment.addons" ->
         """
@@ -107,8 +106,7 @@ object TestUtils {
       "environment.system" ->
         """
           |{
-          | "os": {"name": "Linux", "version": "42"},
-          | "gfx": {"features": {"compositor": "opengl"}}
+          | "os": {"name": "Linux", "version": "42"}
           |}""".stripMargin,
       "environment.addons" ->
         """
