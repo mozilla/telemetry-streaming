@@ -29,6 +29,7 @@ object ExperimentsErrorAggregator {
     .add[Int]("count")
     .add[Int]("subsession_count")
     .add[Int]("main_crashes")
+    .add[Int]("startup_crashes")
     .add[Int]("content_crashes")
     .add[Int]("gpu_crashes")
     .add[Int]("plugin_crashes")

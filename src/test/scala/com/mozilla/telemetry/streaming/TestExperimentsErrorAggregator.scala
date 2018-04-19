@@ -4,24 +4,11 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
-import java.util.Properties
 
-import kafka.admin.AdminUtils
-import kafka.utils.ZkUtils
-
-import com.mozilla.spark.sql.hyperloglog.functions.{hllCreate, hllCardinality}
-import com.mozilla.telemetry.streaming.TestUtils.todayDays
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
+import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.streaming.StreamingQueryListener
-import org.joda.time.{Duration, DateTime}
 import org.json4s.DefaultFormats
-import org.scalatest.{FlatSpec, Matchers, Tag}
-
-import scala.collection.JavaConversions._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.sys.process._
+import org.scalatest.{FlatSpec, Matchers}
 
 class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
 
@@ -40,8 +27,10 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
-    val messages = (TestUtils.generateCrashMessages(k)
-        ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
+    val messages = (TestUtils.generateCrashMessages(k - 2)
+      ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "0""""))
+      ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "1""""))
+      ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ExperimentsErrorAggregator.defaultDimensionsSchema, ExperimentsErrorAggregator.defaultMetricsSchema,
@@ -57,6 +46,7 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
       "os_name",
       "country",
       "main_crashes",
+      "startup_crashes",
       "content_crashes",
       "gpu_crashes",
       "plugin_crashes",
@@ -81,6 +71,7 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
     results("os_name") should be (Set("Linux"))
     results("country") should be (Set("IT"))
     results("main_crashes") should be (Set(k))
+    results("startup_crashes") should be(Set(1))
     results("content_crashes") should be (Set(k))
     results("gpu_crashes") should be (Set(k))
     results("plugin_crashes") should be (Set(k))
