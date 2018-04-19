@@ -24,18 +24,18 @@ import scala.util.{Try, Success, Failure}
 
 
 case class FocusSettings(
-    pref_privacy_block_ads: Boolean,
-    pref_locale: String,
-    pref_privacy_block_social: Boolean,
-    pref_secure: Boolean,
-    pref_privacy_block_analytics: Boolean,
-    pref_search_engine: String,
-    pref_privacy_block_other: Boolean,
-    pref_default_browser: Boolean,
-    pref_performance_block_webfonts: Boolean,
-    pref_performance_block_images: Boolean,
-    pref_autocomplete_installed: Boolean,
-    pref_autocomplete_custom: Boolean)
+    pref_privacy_block_ads: Option[Boolean],
+    pref_locale: Option[String],
+    pref_privacy_block_social: Option[Boolean],
+    pref_secure: Option[Boolean],
+    pref_privacy_block_analytics: Option[Boolean],
+    pref_search_engine: Option[String],
+    pref_privacy_block_other: Option[Boolean],
+    pref_default_browser: Option[Boolean],
+    pref_performance_block_webfonts: Option[Boolean],
+    pref_performance_block_images: Option[Boolean],
+    pref_autocomplete_installed: Option[Boolean],
+    pref_autocomplete_custom: Option[Boolean])
 
 
 case class FocusEventPing(
