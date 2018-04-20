@@ -1,27 +1,51 @@
 sudo: required
+
 language: scala
+
 jdk:
-  - oraclejdk8
+- oraclejdk8
+
 addons:
   apt:
-    packages: # Required for docker build
-      - net-tools
-# These directories are cached to S3 at the end of the build
+    packages:
+    - net-tools
+
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt/boot/
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/boot/"
+
 before_cache:
-  # Tricks to avoid unnecessary cache updates
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
+
 services:
   - docker
+
 scala:
   - 2.11.8
+
 env:
+  - DEPLOY_JAR="telemetry-streaming.jar"
   - DOCKER_DIR="../docker/"
+
 script:
   - sbt ci
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+before_deploy:
+  - mv target/scala-2.11/telemetry-streaming-assembly-0.1-SNAPSHOT.jar $DEPLOY_JAR
+
+deploy:
+  provider: s3
+  bucket: telemetry-artifacts-stage
+  file: $DEPLOY_JAR
+  skip_cleanup: true
+  secret_access_key:
+    secure: IMYR0erciSuXNeuJYfhnbd+vm00TKXP5OyYzset/NzYNQs7KFhiSLO3yDLdgedcEQtZK3hDG442VEaNhnOGwjMhZBpmRGSeZwLQjgi22DPdmNhkJ0UXlCGAMRn8DepQzHCKmrghDn/thKlMY5QysfR/Hvm+DHs5Jaa2NpofHY6iGjUMsmuPx+C5OId7g1TSJ0rRCBataGVOuQplo6RyJvSAok6d7wAUB/yxBzcXzn1QveEGfxGM5Jaieg+GxZNgF2b58Ir/WrYPSjT7uxH5Xj90VXCK7JvPl6HBG+lYXOOkuOvUCL6DnWEeexM6vvA0+AyUfQmV7UUL/EM0hUjDCaaCw37q36DufDGdYOsfHPkQbFZZIEhsuswPO2PK0uMp2PrepMUPhBOXoyFPf1gAgSseIj+krhqyksY3ETJyZFDa+a86BTDbHvB8XvlW5qDm0kDbWYMRT3Sh0p0UFuEhd2TGs8KLpifTe773nML+CzvIQIU6txAQ8O8TbDoGzC+SrJhZKED9VpEMrXpCCttewjUqmkUPAqHz9dRrzcpJj4J59ZVxXvmS2FIIwyX47A3xehpT8vq6ez1dBSgTCWScpQJ0rmsVu6+MGb0QLyzc0QaUKdlh9WVjfZ44z+A/7B1Qe8NLBKqXxMFvZmXsaSWlc3GRNyApYjsCkBBGGeg+NGzI=
+  access_key_id:
+    secure: Waz3CTMMnVkJ1Es0FVWmvxqsobG9Ulf76T/uxjIrAUGcViCuYg/ghyH+zYEG5WmlgzDUpxMUVGqPYuyD+JkNd22imloqKj3n5/puXOdF9Jv/OxLPUwDMNL1rag2FPJUI6msLo68nYHXvhh59tM/bPKqES3PSzjTMaKVIrkrwphXN4bN1Y++eFcQ/Ut9Dj/Bayb5yuPSXTbiSZuxfsn3uqCUpH+ai4w4ikujljo/P7lFCTSkO78Qxw/8GpxsKXo51Onz1XpW8UJhofE/+hsi/Es7ojos4XQ3/I5TLPvo4kevr1e6WVNB4eUwApKV4CQmEKC6QwkMuef2G9YJP9NjKbKzLIuUcNvUQZTNwhRlhK9M7Qp2ddiZ6mUQIDxC8O4Kb6j7rZIdBxvlYAL2pCQ+pn7+cRZJEfLi0mEawEWwut1Z6qR9Dc9TzD+UEH1VUNzbSpplpIWBiA2Zdnq3b7qsoPbDIYF5lMxJkUSwHrWu6EJlEfOMBBRbG/cJjfb/V6HXKbLYYjwKmRneX9MUwbLJPFdsbjrZlC61YysDbbqp3/HGzKV0sVZ+Urv9Zwc+83DtwkRPgjLjEsPHW4+40hxXrrmmwILHlYgDaKnF6V4fERibp7UofCFHMqqvQmWQcLDKkTqIiWWz/7RwhJHiDyiZbYPyPVHrT6M+HkWG9ETSEsbo=
+  on:
+    branch: master
