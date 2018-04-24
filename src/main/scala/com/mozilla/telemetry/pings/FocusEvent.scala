@@ -24,18 +24,32 @@ import scala.util.{Try, Success, Failure}
 
 
 case class FocusSettings(
-    pref_privacy_block_ads: Option[Boolean],
+    pref_privacy_block_ads: Option[String],
     pref_locale: Option[String],
-    pref_privacy_block_social: Option[Boolean],
-    pref_secure: Option[Boolean],
-    pref_privacy_block_analytics: Option[Boolean],
+    pref_privacy_block_social: Option[String],
+    pref_secure: Option[String],
+    pref_privacy_block_analytics: Option[String],
     pref_search_engine: Option[String],
-    pref_privacy_block_other: Option[Boolean],
-    pref_default_browser: Option[Boolean],
-    pref_performance_block_webfonts: Option[Boolean],
-    pref_performance_block_images: Option[Boolean],
-    pref_autocomplete_installed: Option[Boolean],
-    pref_autocomplete_custom: Option[Boolean])
+    pref_privacy_block_other: Option[String],
+    pref_default_browser: Option[String],
+    pref_performance_block_webfonts: Option[String],
+    pref_performance_block_images: Option[String],
+    pref_autocomplete_installed: Option[String],
+    pref_autocomplete_custom: Option[String]){
+
+  def asBool(param: Option[String]): Option[Boolean] = param.map(_ == "true")
+
+  def blockAds: Option[Boolean] = asBool(pref_privacy_block_ads)
+  def blockSocial: Option[Boolean] = asBool(pref_privacy_block_social)
+  def secure: Option[Boolean] = asBool(pref_secure)
+  def blockAnalytics: Option[Boolean] = asBool(pref_privacy_block_analytics)
+  def blockOther: Option[Boolean] = asBool(pref_privacy_block_other)
+  def defaultBrowser: Option[Boolean] = asBool(pref_default_browser)
+  def blockWebfonts: Option[Boolean] = asBool(pref_performance_block_webfonts)
+  def blockImages: Option[Boolean] = asBool(pref_performance_block_images)
+  def autocompleteInstalled: Option[Boolean] = asBool(pref_autocomplete_installed)
+  def autocompleteCustom: Option[Boolean] = asBool(pref_autocomplete_custom)
+}
 
 
 case class FocusEventPing(
@@ -79,18 +93,18 @@ case class FocusEventPing(
         ("country" -> meta.geoCountry) ~
         ("city" -> meta.geoCity) ~
         ("user_properties" ->
-          ("pref_privacy_block_ads" -> settings.pref_privacy_block_ads) ~
+          ("pref_privacy_block_ads" -> settings.blockAds) ~
           ("pref_locale" -> settings.pref_locale) ~
-          ("pref_privacy_block_social" -> settings.pref_privacy_block_social) ~
-          ("pref_secure" -> settings.pref_secure) ~
-          ("pref_privacy_block_analytics" -> settings.pref_privacy_block_analytics) ~
+          ("pref_privacy_block_social" -> settings.blockSocial) ~
+          ("pref_secure" -> settings.secure) ~
+          ("pref_privacy_block_analytics" -> settings.blockAnalytics) ~
           ("pref_search_engine" -> settings.pref_search_engine) ~
-          ("pref_privacy_block_other" -> settings.pref_privacy_block_other) ~
-          ("pref_default_browser" -> settings.pref_default_browser) ~
-          ("pref_performance_block_webfonts" -> settings.pref_performance_block_webfonts) ~
-          ("pref_performance_block_images" -> settings.pref_performance_block_images) ~
-          ("pref_autocomplete_installed" -> settings.pref_autocomplete_installed) ~
-          ("pref_autocomplete_custom" -> settings.pref_autocomplete_custom))
+          ("pref_privacy_block_other" -> settings.blockOther) ~
+          ("pref_default_browser" -> settings.defaultBrowser) ~
+          ("pref_performance_block_webfonts" -> settings.blockWebfonts) ~
+          ("pref_performance_block_images" -> settings.blockImages) ~
+          ("pref_autocomplete_installed" -> settings.autocompleteInstalled) ~
+          ("pref_autocomplete_custom" -> settings.autocompleteCustom))
       }
 
     compact(render(eventsList))
