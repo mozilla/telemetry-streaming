@@ -1,27 +1,48 @@
 sudo: required
+
 language: scala
+
 jdk:
-  - oraclejdk8
+- oraclejdk8
+
 addons:
   apt:
-    packages: # Required for docker build
-      - net-tools
-# These directories are cached to S3 at the end of the build
+    packages:
+    - net-tools
+
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt/boot/
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/boot/"
+
 before_cache:
-  # Tricks to avoid unnecessary cache updates
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
+
 services:
   - docker
+
 scala:
   - 2.11.8
+
 env:
   - DOCKER_DIR="../docker/"
+
 script:
   - sbt ci
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+before_deploy:
+  - export TOP_LEVEL_JAR_DIR=mozilla
+  - ./deploy_setup.sh
+  - ls -alhR $TOP_LEVEL_JAR_DIR
+
+deploy:
+  - provider: script
+    script: bash deploy.sh
+    skip_cleanup: true
+    on:
+      repo: mozilla/telemetry-streaming
+      all_branches: true
