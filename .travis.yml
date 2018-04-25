@@ -35,7 +35,7 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 before_deploy:
-  - export TOP_LEVEL_JAR_DIR=artifacts
+  - export TOP_LEVEL_JAR_DIR=mozilla
   - ./deploy_setup.sh
   - ls -alhR $TOP_LEVEL_JAR_DIR
 
