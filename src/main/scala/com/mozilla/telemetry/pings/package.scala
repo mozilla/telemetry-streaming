@@ -174,7 +174,9 @@ package object pings {
     }
   }
 
-  case class CrashMetadata(StartupCrash: Option[String])
+  case class CrashMetadata(
+      StartupCrash: Option[String],
+      ipc_channel_error: Option[String])
 
   case class CrashPayload(
       crashDate: String,
