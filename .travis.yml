@@ -35,16 +35,14 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 before_deploy:
-  - export TOP_LEVEL_JAR_DIR=mozilla
+  - export TOP_LEVEL_JAR_DIR=artifacts
   - ./deploy_setup.sh
-  - ls -alh
-  - find $TOP_LEVEL_JAR_DIR -type f
-  - find $TOP_LEVEL_JAR_DIR -type f | tr "\n" ":"
-  - find $TOP_LEVEL_JAR_DIR -type f | tr "\n" ":" | sed -e 's/:$//'
+  - ls -alhR $TOP_LEVEL_JAR_DIR
 
 deploy:
   - provider: script
     script: bash deploy.sh
     skip_cleanup: true
     on:
-      branch: deploy_story
+      repo: mozilla/telemetry-streaming
+      all_branches: true

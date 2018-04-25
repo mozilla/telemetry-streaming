@@ -1,6 +1,6 @@
 #!/bin/bash
 
-JAR_DIR="mozilla/telemetry-streaming"
+JAR_DIR="$TOP_LEVEL_JAR_DIR/mozilla/telemetry-streaming"
 JAR_NAME="telemetry-streaming.jar"
 TXT_NAME="telemetry-streaming.txt"
 JAR="target/scala-2.11/telemetry-streaming-assembly-0.1-SNAPSHOT.jar"
