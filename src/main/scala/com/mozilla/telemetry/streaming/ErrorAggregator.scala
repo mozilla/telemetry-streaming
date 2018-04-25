@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import java.sql.{Date, Timestamp}
+import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.aggregates._
 import com.mozilla.spark.sql.hyperloglog.functions._
@@ -14,7 +14,7 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{col, expr, sum, window}
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.joda.time.{DateTime, Days, format}
+import org.joda.time.{DateTime, Days, LocalDateTime, format}
 import org.json4s._
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
@@ -75,7 +75,7 @@ object ErrorAggregator {
       default = Some("latest"))
     val numParquetFiles: ScallopOption[Int] = opt[Int](
       "numParquetFiles",
-      descr = "Number of parquet files per submission_date",
+      descr = "Number of parquet files per submission_date_s3 (batch mode only)",
       required = false,
       default = Some(defaultNumFiles)
       )
@@ -102,7 +102,7 @@ object ErrorAggregator {
 
   val defaultDimensionsSchema: StructType = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
-    .add[Date]("submission_date")
+    .add[String]("submission_date_s3")
     .add[String]("channel")
     .add[String]("version")
     .add[String]("display_version")
@@ -209,7 +209,7 @@ object ErrorAggregator {
     experiments.map{ case (experiment_id, experiment_branch) =>
       val dimensions = new RowBuilder(dimensionsSchema)
       dimensions("timestamp") = Some(meta.normalizedTimestamp())
-      dimensions("submission_date") = Some(new Date(meta.normalizedTimestamp().getTime))
+      dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
       dimensions("channel") = Some(meta.normalizedChannel)
       dimensions("version") = meta.`environment.build`.flatMap(_.version)
       dimensions("display_version") = application.displayVersion
@@ -335,7 +335,7 @@ object ErrorAggregator {
       .format("parquet")
       .option("path", s"${outputPath}/${outputPrefix}")
       .option("checkpointLocation", opts.checkpointPath())
-      .partitionBy("submission_date")
+      .partitionBy("submission_date_s3")
       .start()
       .awaitTermination()
   }
@@ -379,7 +379,8 @@ object ErrorAggregator {
         .repartition(opts.numParquetFiles())
         .write
         .mode("overwrite")
-        .parquet(s"${outputPath}/${outputPrefix}/submission_date_s3=${currentDate.toString(dateFormat)}")
+        .partitionBy("submission_date_s3")
+        .parquet(s"${outputPath}/${outputPrefix}")
     }
 
     spark.stop()
@@ -400,7 +401,10 @@ object ErrorAggregator {
     val spark = SparkSession.builder()
       .appName("Error Aggregates")
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
+      .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
       .getOrCreate()
+
+    require(spark.version >= "2.3", "Spark 2.3 is required due to dynamic partition overwrite mode")
 
     spark.udf.register("HllCreate", hllCreate _)
 
