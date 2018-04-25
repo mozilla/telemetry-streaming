@@ -39,11 +39,7 @@ before_deploy:
   - ./deploy_setup.sh
 
 deploy:
-  - provider: s3
-    bucket: net-mozaws-data-us-west-2-ops-ci-artifacts
-    local_dir: $TOP_LEVEL_JAR_DIR
-    skip_cleanup: true
-    region: us-west-2
-    acl: public_read
+  - provider: script
+    script: deploy.sh
     on:
       branch: deploy_story
