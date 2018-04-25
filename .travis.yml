@@ -40,6 +40,7 @@ before_deploy:
   - ls -alh
   - find $TOP_LEVEL_JAR_DIR -type f
   - find $TOP_LEVEL_JAR_DIR -type f | tr "\n" ":"
+  - find $TOP_LEVEL_JAR_DIR -type f | tr "\n" ":" | sed -e 's/:$//'
 
 deploy:
   - provider: script
