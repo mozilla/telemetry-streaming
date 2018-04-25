@@ -43,7 +43,7 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: deploy.sh
+    script: bash deploy.sh
     skip_cleanup: true
     on:
       branch: deploy_story
