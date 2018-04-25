@@ -36,7 +36,7 @@ after_success:
 
 before_deploy:
   - export TOP_LEVEL_JAR_DIR=mozilla
-  - deploy_setup.sh
+  - ./deploy_setup.sh
 
 deploy:
   - provider: s3
