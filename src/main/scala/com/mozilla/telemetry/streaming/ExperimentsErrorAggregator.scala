@@ -15,7 +15,7 @@ object ExperimentsErrorAggregator {
 
   val defaultDimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
-    .add[Date]("submission_date")
+    .add[String]("submission_date_s3")
     .add[String]("channel")
     .add[String]("version")
     .add[String]("os_name")

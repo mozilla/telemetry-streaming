@@ -79,7 +79,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
     val inspectedFields = List(
-      "submission_date",
+      "submission_date_s3",
       "channel",
       "version",
       "display_version",
@@ -120,7 +120,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val results = columns.zip(columns.map(field => query.collect().map(row => row.getAs[Any](field)).toSet) ).toMap
 
 
-    results("submission_date").map(_.toString) should be (Set("2016-04-07"))
+    results("submission_date_s3").map(_.toString) should be (Set("20160407"))
     results("channel") should be (Set(app.channel))
     results("version") should be (Set(app.version))
     results("display_version") should be (Set(app.displayVersion.getOrElse(null)))
