@@ -46,4 +46,4 @@ deploy:
     region: us-west-2
     acl: public_read
     on:
-      branch: master
+      branch: deploy_story
