@@ -38,7 +38,7 @@ before_deploy:
   - export JAR="target/scala-2.11/telemetry-streaming-assembly-0.1-SNAPSHOT.jar"
   - git config --local user.name "fbertsch"
   - git config --local user.email "fbertsch@mozilla.com"
-  - git tag "[Auto-Release] $(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+  - git tag "Auto-Release $(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
   - export AUTO_DEPLOY_REGEX="\[auto-deploy\]"
 
 deploy:
