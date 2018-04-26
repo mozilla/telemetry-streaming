@@ -1,4 +1,5 @@
 sudo: required
+
 language: scala
 
 jdk:
@@ -7,7 +8,7 @@ jdk:
 addons:
   apt:
     packages:
-    - net-tools
+      - net-tools
 
 cache:
   directories:
@@ -42,10 +43,10 @@ before_deploy:
 
 deploy:
   - provider: releases
-    skip_cleanup: true
     api_key:
-      secure: vwvgv6lzm4XN+qwn/dyxftLXI15fea7yUN3aFYonRmjknQX8exeZWN12nBGl3etmVn5yYK88LdaC+trFzhVEMXB1qQxhTpx2wJ/3mZz8ImPElwRDkSBgwEf5Ufid4gHPr3fMEEyq+WanQP9JRKbhvWXi7oskfVJLNgB0PgFQqgpQY+VRtYDIqcP2zMVMOArNz+F46XvnGwWS2d14L0EoaO8i4ValbA/7zmcJtg/yPoJnWbJAi55H6HlKS4Mn+eVWdOXQAmdvmStSNEsYvInp1tksjRrfO5UNp9kaHqAHTsVLWVbr+im9rRn4hgpNJMDP1NaNx8cLTSQlMRWxjUyKeUhZYCkHuAm5UVP6Ow2jT0UcFfM40KF+JM26CcwAU5OhExjjCSgEBRI/8IBV/o4grEh4MlLHJLD9FNM+eod9+SE9X2MZpKCNT9ATumqqzp/fd/fKA8XPFeRN5blxO/OVvRBYJK1bNY1RnOnbCVOTXfzOOM3m1JMsyS7vuCUFk+05eu5sL/8pceevtQ9u0H4IBSuGn5dww3ggNoUDqfWYBGwGAPBuYSfe5D1m6/gk+GS7D4g+YzI3tHpiUKYluRLuWJdLnq0zmHc6f3G4aoLAC2cD3v+YbyM7tuO/lySNY/Q2ZBKjXt6nu6/9zmGuhNK3S1nrfZw1dXtUM3TntXcIL64=
+      secure: GhKttYjlrlm5mkAaApg563yj60ZoPWZaaTEt9KIqXXIayGVOGQTnyvmSSKAGBlwAj5PGVWMAalAOP3nE8zjv5kCA0EjQLTYvG+FZNJRYzSAtjOuP5GtfkBrOJdd+0D9y2h1iSDZfUNyayo7wHF7GNXEnYtywGrU24Do6NhYm6fx2+bIyXWZJFp+9JwnB3eFIs5mIdSp9IyouLCa/5pMSw0Z60qUjvVsGEGzxxPBjrT7Oa63XuJG1KdzBgR1FIoJOK0x5I6m2jQFl4/TqFrZFqdWRRp0NdFdxdOPG6Hojw0MuQxI9/1h/uMX3Ws2UzmBn3h4oyUMfpuxdTT+DFME61iyHAusQZRegt7x328RcOjyiA2NJ2DDW4WQfjBLIa/wGsyNnL+SVDh9SU1/6/5QJwO/J8r+IIiL0Y6Nb+Ocw9m78LUUUVapGKBWMAQv75y7ZxFJD20HkaqCv3Lb7x6NUcSWUS/0T3Bp/nndgkTNAWT97to+7YHhBEeJr8MLZ3MYVNfrb+HsbSZ3pwfcg45K7JYIdcmyJw/JD/XUz5tT/q7+rdVEfcXfcS2CVaucXTvDZWVmHM2MM+YJ/ttflz3lYS9MAHKm4jHw/5Kr17hjNeTGh2IAe0Hq7YLtTbP/FcGQSS62JccncpbfSgYEZVEaRjuaRAXjKa1U5ktvO27G+Gds=
     on:
+      repo: mozilla/telemetry-streaming
       condition: $TRAVIS_COMMIT_MESSAGE =~ $AUTO_DEPLOY_REGEX
       all_branches: true
   - provider: script
