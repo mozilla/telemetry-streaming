@@ -22,7 +22,9 @@ object TestUtils {
   val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
 
   def generateCrashMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None,
-                            customMetadata: Option[String] = None, timestamp: Option[Long] = None): Seq[Message] = {
+                            customMetadata: Option[String] = None,
+                            customPayload: Option[String] = None,
+                            timestamp: Option[Long] = None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "crash",
@@ -74,6 +76,7 @@ object TestUtils {
         |"metadata":{
         |  ${customMetadata.getOrElse("")}
         |}
+        |${customPayload.map("," + _).getOrElse("")}
       """.stripMargin
     1.to(size) map { index =>
       RichMessage(s"crash-$index",

@@ -226,23 +226,30 @@ object ErrorAggregator {
   }
 
   def parse(ping: CrashPing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
-    // Non-main crashes are already retrieved from main pings
-    if(!ping.isMainCrash) throw new Exception("Only Crash pings of type `main` are allowed")
-    val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
-    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
-    stats("count") = Some(1)
-    stats("client_id") = ping.meta.clientId
-    stats("main_crashes") = Some(1)
-    stats("startup_crashes") = if (ping.isStartupCrash) Some(1) else None
+    if (ping.isMainCrash || ping.isContentCrash) {
 
-    val isContentShutdownCrash = ping.payload.metadata.ipc_channel_error.contains("ShutDownKill")
-    if (isContentShutdownCrash) {
-      stats("content_shutdown_crashes") = Some(1)
+      val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
+      val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+
+      stats("count") = Some(1)
+      stats("client_id") = ping.meta.clientId
+
+      if (ping.isMainCrash) {
+        stats("main_crashes") = Some(1)
+        stats("startup_crashes") = if (ping.isStartupCrash) Some(1) else None
+      } else {
+        if (ping.isContentShutdownCrash) {
+          stats("content_shutdown_crashes") = Some(1)
+        } else {
+          stats("content_crashes") = Some(1)
+        }
+      }
+
+      dimensions.map(RowBuilder.merge(_, stats.build))
     } else {
-      stats("content_crashes") = Some(1)
+      // Non- main and content crashes are already retrieved from main pings
+      throw new Exception("Only Crash pings of type `main` and `content` are allowed")
     }
-
-    dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
   def parse(ping: MainPing, dimensionsSchema: StructType, statsSchema: StructType, countHistograms: StructType,

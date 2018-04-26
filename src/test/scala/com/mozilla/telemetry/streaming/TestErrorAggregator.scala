@@ -7,8 +7,6 @@ import java.io.File
 import java.sql.Timestamp
 
 import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
-import com.mozilla.telemetry.pings.CrashPing
-import com.mozilla.telemetry.streaming.TestUtils.todayDays
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
@@ -57,10 +55,19 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
+
+    val mainCrashes =
+      TestUtils.generateCrashMessages(k - 2) ++
+        TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "0"""")) ++
+        TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "1""""))
+    val contentCrashes =
+      TestUtils.generateCrashMessages(1, customMetadata = Some(""""ipc_channel_error": "ShutDownKill""""),
+        customPayload = Some(""""processType": "content"""")) ++
+        TestUtils.generateCrashMessages(1, customPayload = Some(""""processType": "content""""))
+
     val messages =
-      (TestUtils.generateCrashMessages(k - 2)
-        ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "0", "ipc_channel_error": "ShutDownKill""""))
-        ++ TestUtils.generateCrashMessages(1, customMetadata = Some(""""StartupCrash": "1""""))
+      (mainCrashes
+        ++ contentCrashes
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
 
@@ -124,13 +131,13 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("architecture") should be (Set(app.architecture))
     results("country") should be (Set("IT"))
     results("main_crashes") should be (Set(k))
-    results("content_crashes") should be (Set(k-1))
+    results("content_crashes") should be (Set(1))
     results("gpu_crashes") should be (Set(k))
     results("plugin_crashes") should be (Set(k))
     results("gmplugin_crashes") should be (Set(k))
     results("content_shutdown_crashes") should be (Set(1))
     results("startup_crashes") should be(Set(1))
-    results("count") should be (Set(k * 2))
+    results("count") should be (Set(k * 2 + 2))
     results("subsession_count") should be (Set(k))
     results("usage_hours") should be (Set(k.toFloat))
     results("browser_shim_usage_blocked") should be (Set(k))

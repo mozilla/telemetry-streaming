@@ -196,6 +196,14 @@ package object pings {
       payload.processType.getOrElse("main") == "main"
     }
 
+    def isContentCrash: Boolean = {
+      payload.processType.contains("content")
+    }
+
+    def isContentShutdownCrash: Boolean = {
+      payload.metadata.ipc_channel_error.contains("ShutDownKill")
+    }
+
     def isStartupCrash: Boolean = {
       payload.metadata.StartupCrash.getOrElse("0") == "1"
     }
