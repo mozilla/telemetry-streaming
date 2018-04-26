@@ -1,9 +1,8 @@
 sudo: required
-
 language: scala
 
 jdk:
-- oraclejdk8
+  - oraclejdk8
 
 addons:
   apt:
@@ -12,8 +11,8 @@ addons:
 
 cache:
   directories:
-  - "$HOME/.ivy2/cache"
-  - "$HOME/.sbt/boot/"
+    - "$HOME/.ivy2/cache"
+    - "$HOME/.sbt/boot/"
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
@@ -36,8 +35,19 @@ after_success:
 
 before_deploy:
   - export JAR="target/scala-2.11/telemetry-streaming-assembly-0.1-SNAPSHOT.jar"
+  - git config --local user.name "fbertsch"
+  - git config --local user.email "fbertsch@mozilla.com"
+  - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+  - export AUTO_DEPLOY_REGEX="\[auto-deploy\]"
 
 deploy:
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: vwvgv6lzm4XN+qwn/dyxftLXI15fea7yUN3aFYonRmjknQX8exeZWN12nBGl3etmVn5yYK88LdaC+trFzhVEMXB1qQxhTpx2wJ/3mZz8ImPElwRDkSBgwEf5Ufid4gHPr3fMEEyq+WanQP9JRKbhvWXi7oskfVJLNgB0PgFQqgpQY+VRtYDIqcP2zMVMOArNz+F46XvnGwWS2d14L0EoaO8i4ValbA/7zmcJtg/yPoJnWbJAi55H6HlKS4Mn+eVWdOXQAmdvmStSNEsYvInp1tksjRrfO5UNp9kaHqAHTsVLWVbr+im9rRn4hgpNJMDP1NaNx8cLTSQlMRWxjUyKeUhZYCkHuAm5UVP6Ow2jT0UcFfM40KF+JM26CcwAU5OhExjjCSgEBRI/8IBV/o4grEh4MlLHJLD9FNM+eod9+SE9X2MZpKCNT9ATumqqzp/fd/fKA8XPFeRN5blxO/OVvRBYJK1bNY1RnOnbCVOTXfzOOM3m1JMsyS7vuCUFk+05eu5sL/8pceevtQ9u0H4IBSuGn5dww3ggNoUDqfWYBGwGAPBuYSfe5D1m6/gk+GS7D4g+YzI3tHpiUKYluRLuWJdLnq0zmHc6f3G4aoLAC2cD3v+YbyM7tuO/lySNY/Q2ZBKjXt6nu6/9zmGuhNK3S1nrfZw1dXtUM3TntXcIL64=
+    on:
+      condition: $TRAVIS_COMMIT_MESSAGE =~ $AUTO_DEPLOY_REGEX
+      all_branches: true
   - provider: script
     script: bash deploy.sh
     skip_cleanup: true
