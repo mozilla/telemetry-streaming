@@ -235,6 +235,13 @@ object ErrorAggregator {
     stats("main_crashes") = Some(1)
     stats("startup_crashes") = if (ping.isStartupCrash) Some(1) else None
 
+    val isContentShutdownCrash = ping.payload.metadata.ipc_channel_error.contains("ShutDownKill")
+    if (isContentShutdownCrash) {
+      stats("content_shutdown_crashes") = Some(1)
+    } else {
+      stats("content_crashes") = Some(1)
+    }
+
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
@@ -253,11 +260,9 @@ object ErrorAggregator {
     countHistograms.fieldNames.foreach(stats_name => {
       stats(stats_name) = ping.getCountHistogramValue(stats_name)
     })
-    stats("content_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content")
     stats("gpu_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu")
     stats("plugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin")
     stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
-    stats("content_shutdown_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_KILL_HARD", "ShutDownKill")
     stats("first_paint") = ping.firstPaint
     stats("first_subsession_count") = ping.isFirstSubsession match {
       case Some(true) => Some(1)
