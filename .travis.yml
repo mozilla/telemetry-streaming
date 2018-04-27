@@ -29,7 +29,12 @@ env:
   - DOCKER_DIR="../docker/"
 
 script:
-  - sbt ci
+  - export TEST_SKIP_REGEX="\[skip-tests\]"
+  - if [[ (! $TRAVIS_COMMIT_MESSAGE =~ $TEST_SKIP_REGEX) || -n $TRAVIS_TAG || $TRAVIS_BRANCH == "master" ]];
+      then sbt ci;
+    else
+      echo "Skipping tests";
+    fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
