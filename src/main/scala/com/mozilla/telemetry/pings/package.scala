@@ -6,8 +6,9 @@ package com.mozilla.telemetry
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.Message
+import com.mozilla.telemetry.pings.Meta._
+import org.joda.time.Months
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, Duration, Months}
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -143,18 +144,15 @@ package object pings {
 
     val normalizedBuildId: Option[String] = {
       `environment.build`.flatMap(_.buildId) match {
-        case Some(buildId: String) => {
-          val buildIdDay = buildId.slice(0, 8).toString()
-          val buildDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
-          val buildDateTime = buildDateFormat.parseDateTime(buildIdDay)
-          val submissionDateTime = DateTime.parse(submissionDate)
-          val p = Months.monthsBetween(buildDateTime, submissionDateTime)
+        case Some(buildId: String) =>
+          val buildIdDay = buildId.slice(0, 8)
+          val buildDateTime = BuildDateFormat.parseDateTime(buildIdDay)
+          val submissionDateTime = SubmissionDateFormat.parseDateTime(submissionDate)
 
-          p.getMonths() match {
-            case p if 0 to 6 contains(p) => Some(buildId)
+          Months.monthsBetween(buildDateTime, submissionDateTime).getMonths match {
+            case m if (0 <= m) && (m <= 6) => Some(buildId)
             case _ => None
           }
-        }
         case _ => None
       }
     }
@@ -172,6 +170,11 @@ package object pings {
 
       newStyleExperiments ++ oldStyleExperiment
     }
+  }
+
+  object Meta {
+    private[pings] val BuildDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
+    private[pings] val SubmissionDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
   }
 
   case class CrashMetadata(

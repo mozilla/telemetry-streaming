@@ -386,7 +386,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val messages = TestUtils.generateMainMessages(
       1, Some(Map(
         "environment.build" -> """{"buildId": "20170102"""",
-        "submissionDate" -> "2017-06-01"
+        "submissionDate" -> "20170601"
         )
       )
     ).map(_.toByteArray).seq
@@ -401,7 +401,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val messages2 = TestUtils.generateMainMessages(
       1, Some(Map(
         "environment.build" -> """{"buildId": "20170101"""",
-        "submissionDate" -> "2017-06-01"
+        "submissionDate" -> "20170601"
         )
       )
     ).map(_.toByteArray).seq
