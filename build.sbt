@@ -66,6 +66,9 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeSca
 // Don't run tests when assemblying the fat jar.
 test in assembly := {}
 
+// Add configs to resources
+unmanagedResourceDirectories in Compile += baseDirectory.value / "configs"
+
 // Default SBT settings suck
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
