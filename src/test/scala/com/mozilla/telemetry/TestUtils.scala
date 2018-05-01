@@ -35,7 +35,7 @@ object TestUtils {
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
-      "submissionDate" -> "2017-01-01",
+      "submissionDate" -> "20170101",
       "environment.build" ->
         s"""
            |{
@@ -105,7 +105,7 @@ object TestUtils {
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
-      "submissionDate" -> "2017-01-01",
+      "submissionDate" -> "20170101",
       "environment.system" ->
         """
           |{
@@ -214,7 +214,7 @@ object TestUtils {
       "geoCountry" -> "CA",
       "geoCity" -> "Victoria",
       "sampleId" -> 73L,
-      "submissionDate" -> "2017-01-01",
+      "submissionDate" -> "20170101",
       "submission" -> """
       |{
       |  "v":1,
