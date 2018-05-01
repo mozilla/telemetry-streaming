@@ -163,23 +163,23 @@ object ErrorAggregator {
       .drop("window")
   }
 
-  private def buildDimensions(dimensionsSchema: StructType, meta: Meta, application: Application): Array[Row] = {
+  private def buildDimensions(dimensionsSchema: StructType, ping: Ping): Array[Row] = {
+    val meta = ping.meta
 
-    // add a null experiment_id and experiment_branch for each ping
-    val experiments = (meta.experiments :+ (None, None)).toSet.toArray
+    val experiments = ping.getExperiments
 
     experiments.map { case (experiment_id, experiment_branch) =>
       val dimensions = new RowBuilder(dimensionsSchema)
       dimensions("timestamp") = Some(meta.normalizedTimestamp())
       dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
       dimensions("channel") = Some(meta.normalizedChannel)
-      dimensions("version") = meta.`environment.build`.flatMap(_.version)
-      dimensions("display_version") = application.displayVersion
-      dimensions("build_id") = meta.normalizedBuildId
+      dimensions("version") = ping.getVersion
+      dimensions("display_version") = ping.getDisplayVersion
+      dimensions("build_id") = ping.getNormalizedBuildId
       dimensions("application") = Some(meta.appName)
-      dimensions("os_name") = meta.osName
-      dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
-      dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
+      dimensions("os_name") = ping.getOsName
+      dimensions("os_version") = ping.getOsVersion
+      dimensions("architecture") = ping.getArchitecture
       dimensions("country") = Some(meta.geoCountry)
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
@@ -187,31 +187,10 @@ object ErrorAggregator {
     }
   }
 
-  private def buildDimensions(dimensionsSchema: StructType, corePing: CorePing): Array[Row] = {
-    val meta = corePing.meta
-
-    val dimensions = new RowBuilder(dimensionsSchema)
-    dimensions("timestamp") = Some(meta.normalizedTimestamp())
-    dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
-    dimensions("channel") = Some(meta.normalizedChannel)
-    dimensions("version") = Option(corePing.meta.appVersion)
-    dimensions("display_version") = corePing.displayVersion.orElse(Option(corePing.meta.appVersion))
-    dimensions("build_id") = corePing.normalizedBuildId
-    dimensions("application") = Some(meta.appName)
-    dimensions("os_name") = Option(corePing.os)
-    dimensions("os_version") = Option(corePing.osversion)
-    dimensions("architecture") = Option(corePing.arch)
-    dimensions("country") = Some(meta.geoCountry)
-    // Ignore Fennec experiments for now as these are different than desktop ones
-    dimensions("experiment_id") = None
-    dimensions("experiment_branch") = None
-    Array(dimensions.build)
-  }
-
   def parse(ping: CrashPing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
     if (ping.isMainCrash || ping.isContentCrash) {
 
-      val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
+      val dimensions = buildDimensions(dimensionsSchema, ping)
       val stats = new RowBuilder(SchemaBuilder.merge(statsSchema))
 
       stats("count") = Some(1)
@@ -240,7 +219,7 @@ object ErrorAggregator {
     val usageHours = ping.usageHours
     if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
-    val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
+    val dimensions = buildDimensions(dimensionsSchema, ping)
     val stats = new RowBuilder(SchemaBuilder.merge(statsSchema))
     stats("count") = Some(1)
     stats("client_id") = ping.meta.clientId
@@ -286,7 +265,7 @@ object ErrorAggregator {
 
     if (docType == "crash") {
       val crashPing = CrashPing(message)
-      if (crashPing.meta.normalizedBuildId.isEmpty) {
+      if (crashPing.getNormalizedBuildId.isEmpty) {
         throw new Exception("Empty buildId")
       }
       parse(crashPing, dimensions, statsSchema)
@@ -295,13 +274,13 @@ object ErrorAggregator {
       if (!coreFennecPingAllowedOses.contains(corePing.os)) {
         throw new Exception("OS for core/Fennec pings should be one of: " + coreFennecPingAllowedOses.mkString(sep = ","))
       }
-      if (corePing.normalizedBuildId.isEmpty) {
+      if (corePing.getNormalizedBuildId.isEmpty) {
         throw new Exception("Empty buildId")
       }
       parse(corePing, dimensions, statsSchema)
     } else {
       val mainPing = MainPing(message)
-      if (mainPing.meta.normalizedBuildId.isEmpty) {
+      if (mainPing.getNormalizedBuildId.isEmpty) {
         throw new Exception("Empty buildId")
       }
       parse(mainPing, dimensions, statsSchema, countHistograms)
