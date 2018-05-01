@@ -226,10 +226,10 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
       ErrorAggregator.defaultCountHistogramErrorsSchema)
 
-    val numberOfAggregatedRows = 1
+    val expectedNumberOfAggregatedRows = 1
 
-    aggregates.count() shouldBe numberOfAggregatedRows
-    aggregates.filter($"application" === "Fennec").count() shouldBe numberOfAggregatedRows
+    aggregates.count() shouldBe expectedNumberOfAggregatedRows
+    aggregates.filter($"application" === "Fennec").count() shouldBe expectedNumberOfAggregatedRows
 
     val inspectedFields = List(
       "build_id",
