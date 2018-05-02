@@ -14,7 +14,7 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
-  val app = TestUtils.application
+  val app = TestUtils.defaultFennecApplication
 
   val spark = SparkSession.builder()
     .appName("Error Aggregates")

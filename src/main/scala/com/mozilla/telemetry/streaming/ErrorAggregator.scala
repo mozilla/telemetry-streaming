@@ -31,8 +31,10 @@ object ErrorAggregator {
   val kafkaTopic = "telemetry"
   val defaultNumFiles = 60
 
-  private val allowedDocTypes = List("main", "crash")
-  private val allowedAppNames = List("Firefox")
+  //TODO: make relationships visible here - we're adding crash/Fennec and core/Fennec/Android
+  private val allowedDocTypes = List("main", "crash", "core")
+  private val allowedAppNames = List("Firefox", "Fennec")
+  private val coreFennecPingAllowedOses = List("Android")
   private val kafkaCacheMaxCapacity = 1000
 
   private class Opts(args: Array[String]) extends ScallopConf(args) {
@@ -201,23 +203,23 @@ object ErrorAggregator {
       .drop("window")
   }
 
-  private def buildDimensions(dimensionsSchema: StructType, meta: Meta, application: Application): Array[Row] = {
+  private def buildDimensions(dimensionsSchema: StructType, ping: Ping): Array[Row] = {
+    val meta = ping.meta
 
-    // add a null experiment_id and experiment_branch for each ping
-    val experiments = (meta.experiments :+ (None, None)).toSet.toArray
+    val experiments = ping.getExperiments
 
-    experiments.map{ case (experiment_id, experiment_branch) =>
+    experiments.map { case (experiment_id, experiment_branch) =>
       val dimensions = new RowBuilder(dimensionsSchema)
       dimensions("timestamp") = Some(meta.normalizedTimestamp())
       dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
       dimensions("channel") = Some(meta.normalizedChannel)
-      dimensions("version") = meta.`environment.build`.flatMap(_.version)
-      dimensions("display_version") = application.displayVersion
+      dimensions("version") = ping.getVersion
+      dimensions("display_version") = ping.getDisplayVersion
       dimensions("build_id") = meta.normalizedBuildId
       dimensions("application") = Some(meta.appName)
-      dimensions("os_name") = meta.`environment.system`.map(_.os.name)
-      dimensions("os_version") = meta.`environment.system`.map(_.os.normalizedVersion)
-      dimensions("architecture") = meta.`environment.build`.flatMap(_.architecture)
+      dimensions("os_name") = ping.getOsName
+      dimensions("os_version") = ping.getOsVersion
+      dimensions("architecture") = ping.getArchitecture
       dimensions("country") = Some(meta.geoCountry)
       dimensions("experiment_id") = experiment_id
       dimensions("experiment_branch") = experiment_branch
@@ -228,7 +230,7 @@ object ErrorAggregator {
   def parse(ping: CrashPing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
     if (ping.isMainCrash || ping.isContentCrash) {
 
-      val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
+      val dimensions = buildDimensions(dimensionsSchema, ping)
       val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
 
       stats("count") = Some(1)
@@ -258,7 +260,7 @@ object ErrorAggregator {
     val usageHours = ping.usageHours
     if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
-    val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
+    val dimensions = buildDimensions(dimensionsSchema, ping)
     val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
     stats("count") = Some(1)
     stats("subsession_count") = Some(1)
@@ -286,13 +288,18 @@ object ErrorAggregator {
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
-  /*
-   * We can't use an Option[Row] because entire rows cannot be null in Spark SQL.
-   * The best we can do is to resort to use a container, e.g. Array.
-   * This will also give us the ability to parse more than one row from the same ping.
-   */
+  def parse(ping: CorePing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
+    val dimensions = buildDimensions(dimensionsSchema, ping)
+    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+    stats("count") = Some(1)
+    stats("client_id") = ping.meta.clientId
+    stats("usage_hours") = ping.usageHours
+
+    dimensions.map(RowBuilder.merge(_, stats.build))
+  }
+
   def parsePing(dimensions: StructType, statsSchema: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])])
-    (message: Message): Array[Row] = {
+               (message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
     val fields = message.fieldsAsMap
@@ -306,8 +313,14 @@ object ErrorAggregator {
       throw new Exception("AppName should be one of " + allowedAppNames.mkString(sep = ","))
     }
 
-    if(docType == "crash") {
+    if (docType == "crash") {
       parse(CrashPing(message), dimensions, statsSchema)
+    } else if (docType == "core") {
+      val corePing = CorePing(message)
+      if (!coreFennecPingAllowedOses.contains(corePing.os)) {
+        throw new Exception("OS for core/Fennec pings should be one of: " + coreFennecPingAllowedOses.mkString(sep = ","))
+      }
+      parse(corePing, dimensions, statsSchema)
     } else {
       parse(MainPing(message), dimensions, statsSchema, countHistograms, thresholds)
     }
