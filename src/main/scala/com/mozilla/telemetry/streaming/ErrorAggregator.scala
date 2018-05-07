@@ -5,8 +5,6 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
 
-import com.mozilla.spark.sql.hyperloglog.aggregates._
-import com.mozilla.spark.sql.hyperloglog.functions._
 import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
@@ -96,13 +94,6 @@ object ErrorAggregator {
     .add[Int]("SLOW_SCRIPT_PAGE_COUNT")
     .build
 
-  val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map(
-    "INPUT_EVENT_RESPONSE_COALESCED_MS" -> (List("main", "content"), List(150, 250, 2500)),
-    "GHOST_WINDOWS" -> (List("main", "content"), List(1)),
-    "GC_MAX_PAUSE_MS_2" -> (List("main", "content"), List(150, 250, 2500)),
-    "CYCLE_COLLECTOR_MAX_PAUSE" -> (List("main", "content"), List(150, 250, 2500))
-  )
-
   val defaultDimensionsSchema: StructType = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[String]("submission_date_s3")
@@ -122,7 +113,6 @@ object ErrorAggregator {
   val defaultMetricsSchema: StructType = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
-    .add[Int]("subsession_count")
     .add[Int]("main_crashes")
     .add[Int]("startup_crashes")
     .add[Int]("content_crashes")
@@ -130,49 +120,20 @@ object ErrorAggregator {
     .add[Int]("plugin_crashes")
     .add[Int]("gmplugin_crashes")
     .add[Int]("content_shutdown_crashes")
-    .add[Int]("first_paint")
-    .add[Int]("first_subsession_count")
     .build
 
-  // this part of the schema is used to temporarily hold
-  // data that will not be part of the final schema
-  private val tempSchema = new SchemaBuilder()
-    .add[String]("client_id")
-    .build
-
-  private def thresholdHistogramName(histogramName: String, processType: String, threshold: Int): String =
-    s"${histogramName.toLowerCase}_${processType}_above_${threshold}"
-
-  private def buildThresholdSchema(thresholds: Map[String, (List[String], List[Int])]): StructType =
-    thresholds.foldLeft(new SchemaBuilder())( (schema, kv) => {
-      val histogramName = kv._1
-      kv._2 match {
-        case (processTypes: List[String], thresholds: List[Int]) => {
-          val fields = for {
-            processType <- processTypes
-            threshold <- thresholds
-          } yield thresholdHistogramName(histogramName, processType, threshold)
-          fields.foldLeft(schema)((acc, curr) => {acc.add[Long](curr)})
-        }
-        case _ => schema
-      }
-    }).build
-
-  private def buildStatsSchema(metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]):
-    StructType = SchemaBuilder.merge(metrics, countHistograms, buildThresholdSchema(thresholds))
-
-  private val HllMerge = new HyperLogLogMerge
+  private def buildStatsSchema(metrics: StructType, countHistograms: StructType): StructType = SchemaBuilder.merge(metrics, countHistograms)
 
   private[streaming] def aggregate(pings: DataFrame, raiseOnError: Boolean = false, dimensions: StructType,
-                                   metrics: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): DataFrame = {
+                                   metrics: StructType, countHistograms: StructType): DataFrame = {
     import pings.sparkSession.implicits._
 
     // A custom row encoder is needed to use Rows within a Spark Dataset
-    val statsSchema = buildStatsSchema(metrics, countHistograms, thresholds)
-    val mergedSchema = SchemaBuilder.merge(dimensions, statsSchema, tempSchema)
+    val statsSchema = buildStatsSchema(metrics, countHistograms)
+    val mergedSchema = SchemaBuilder.merge(dimensions, statsSchema)
     implicit val rowEncoder = RowEncoder(mergedSchema).resolveAndBind()
 
-    val parseMessage = parsePing(dimensions, statsSchema, countHistograms, thresholds) _
+    val parseMessage = parsePing(dimensions, statsSchema, countHistograms) _
     val parsedPings = pings
       .flatMap( v => {
         try {
@@ -189,8 +150,7 @@ object ErrorAggregator {
     ) ++ dimensions.fieldNames.filter(_ != "timestamp").map(col(_))
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
-    val sumCols = stats.map(s => sum(s).as(s))
-    val aggCols = HllMerge($"client_hll").as("client_count") :: Nil ++ sumCols
+    val aggCols = stats.map(s => sum(s).as(s))
 
     /*
     * The resulting DataFrame will contain the grouping columns + the columns aggregated.
@@ -198,7 +158,6 @@ object ErrorAggregator {
     * */
     parsedPings
       .withWatermark("timestamp", "1 minute")
-      .withColumn("client_hll", expr("HllCreate(client_id, 12)"))
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
       .drop("window")
@@ -253,7 +212,7 @@ object ErrorAggregator {
     if (ping.isMainCrash || ping.isContentCrash) {
 
       val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
-      val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+      val stats = new RowBuilder(SchemaBuilder.merge(statsSchema))
 
       stats("count") = Some(1)
       stats("client_id") = ping.meta.clientId
@@ -276,16 +235,14 @@ object ErrorAggregator {
     }
   }
 
-  def parse(ping: MainPing, dimensionsSchema: StructType, statsSchema: StructType, countHistograms: StructType,
-    thresholds: Map[String, (List[String], List[Int])]): Array[Row] = {
+  def parse(ping: MainPing, dimensionsSchema: StructType, statsSchema: StructType, countHistograms: StructType): Array[Row] = {
     // If a main ping has no usage hours discard it.
     val usageHours = ping.usageHours
     if (usageHours.isEmpty) throw new Exception("Main pings should have a  number of usage hours != 0")
 
     val dimensions = buildDimensions(dimensionsSchema, ping.meta, ping.application)
-    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema))
     stats("count") = Some(1)
-    stats("subsession_count") = Some(1)
     stats("client_id") = ping.meta.clientId
     stats("usage_hours") = usageHours
     countHistograms.fieldNames.foreach(stats_name => {
@@ -294,35 +251,21 @@ object ErrorAggregator {
     stats("gpu_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gpu")
     stats("plugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "plugin")
     stats("gmplugin_crashes") = ping.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "gmplugin")
-    stats("first_paint") = ping.firstPaint
-    stats("first_subsession_count") = ping.isFirstSubsession match {
-      case Some(true) => Some(1)
-      case _ => Some(0)
-    }
-
-    for {
-      (histogramName, (processTypes, histogramThresholds)) <- thresholds
-      processType <- processTypes
-      threshold <- histogramThresholds
-    } stats(thresholdHistogramName(histogramName, processType, threshold)) =
-      Some(ping.histogramThresholdCount(histogramName, threshold, processType))
 
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
   def parse(ping: CorePing, dimensionsSchema: StructType, statsSchema: StructType): Array[Row] = {
     val dimensions = buildDimensions(dimensionsSchema, ping)
-    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema, tempSchema))
+    val stats = new RowBuilder(SchemaBuilder.merge(statsSchema))
     stats("count") = Some(1)
     stats("client_id") = ping.meta.clientId
     stats("usage_hours") = ping.usageHours
-    stats("first_subsession_count") = if (ping.isFirstSubsession) Some(1) else Some(0)
 
     dimensions.map(RowBuilder.merge(_, stats.build))
   }
 
-  def parsePing(dimensions: StructType, statsSchema: StructType, countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])])
-               (message: Message): Array[Row] = {
+  def parsePing(dimensions: StructType, statsSchema: StructType, countHistograms: StructType)(message: Message): Array[Row] = {
     implicit val formats = DefaultFormats
 
     val fields = message.fieldsAsMap
@@ -361,12 +304,11 @@ object ErrorAggregator {
       if (mainPing.meta.normalizedBuildId.isEmpty) {
         throw new Exception("Empty buildId")
       }
-      parse(mainPing, dimensions, statsSchema, countHistograms, thresholds)
+      parse(mainPing, dimensions, statsSchema, countHistograms)
     }
   }
 
-  def writeStreamingAggregates(spark: SparkSession, opts: Opts, dimensions: StructType, metrics: StructType,
-    countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): Unit = {
+  def writeStreamingAggregates(spark: SparkSession, opts: Opts, dimensions: StructType, metrics: StructType, countHistograms: StructType): Unit = {
     val pings = spark
       .readStream
       .format("kafka")
@@ -380,7 +322,7 @@ object ErrorAggregator {
 
     val outputPath = opts.outputPath()
 
-    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
+    aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms)
       .repartition(1)
       .writeStream
       .queryName(queryName)
@@ -392,8 +334,7 @@ object ErrorAggregator {
       .awaitTermination()
   }
 
-  def writeBatchAggregates(spark: SparkSession, opts: Opts, dimensions: StructType, metrics: StructType,
-    countHistograms: StructType, thresholds: Map[String, (List[String], List[Int])]): Unit = {
+  def writeBatchAggregates(spark: SparkSession, opts: Opts, dimensions: StructType, metrics: StructType, countHistograms: StructType): Unit = {
 
     val from = dateFormatter.parseDateTime(opts.from())
     val to = opts.to.get match {
@@ -425,7 +366,7 @@ object ErrorAggregator {
       val pingsDataframe = spark.createDataFrame(pings, schema)
       val outputPath = opts.outputPath()
 
-      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms, thresholds)
+      aggregate(pingsDataframe, raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms)
         .repartition(opts.numParquetFiles())
         .write
         .mode("overwrite")
@@ -444,8 +385,7 @@ object ErrorAggregator {
     ErrorAggregator.queryName = name
   }
 
-  def run(args: Array[String], dimensions: StructType, metrics: StructType, countHistograms: StructType,
-    thresholds: Map[String, (List[String], List[Int])]): Unit = {
+  def run(args: Array[String], dimensions: StructType, metrics: StructType, countHistograms: StructType): Unit = {
     val opts = new Opts(args)
 
     val spark = SparkSession.builder()
@@ -456,13 +396,11 @@ object ErrorAggregator {
 
     require(spark.version >= "2.3", "Spark 2.3 is required due to dynamic partition overwrite mode")
 
-    spark.udf.register("HllCreate", hllCreate _)
-
     opts.kafkaBroker.get match {
-      case Some(_) => writeStreamingAggregates(spark, opts, dimensions, metrics, countHistograms, thresholds)
-      case None => writeBatchAggregates(spark, opts, dimensions, metrics, countHistograms, thresholds)
+      case Some(_) => writeStreamingAggregates(spark, opts, dimensions, metrics, countHistograms)
+      case None => writeBatchAggregates(spark, opts, dimensions, metrics, countHistograms)
     }
   }
 
-  def main(args: Array[String]): Unit = run(args, defaultDimensionsSchema, defaultMetricsSchema, defaultCountHistogramErrorsSchema, defaultThresholdHistograms)
+  def main(args: Array[String]): Unit = run(args, defaultDimensionsSchema, defaultMetricsSchema, defaultCountHistogramErrorsSchema)
 }

@@ -5,7 +5,6 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
 
-import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
 import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers}
@@ -21,9 +20,6 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
     .config("spark.streaming.stopGracefullyOnShutdown", "true")
     .master("local[1]")
     .getOrCreate()
-
-  spark.udf.register("HllCreate", hllCreate _)
-  spark.udf.register("HllCardinality", hllCardinality _)
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
@@ -43,8 +39,7 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ExperimentsErrorAggregator.defaultDimensionsSchema, ExperimentsErrorAggregator.defaultMetricsSchema,
-      ExperimentsErrorAggregator.defaultCountHistogramErrorsSchema,
-      ExperimentsErrorAggregator.defaultThresholdHistograms)
+      ExperimentsErrorAggregator.defaultCountHistogramErrorsSchema)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -62,13 +57,11 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
       "gmplugin_crashes",
       "content_shutdown_crashes",
       "count",
-      "subsession_count",
       "usage_hours",
       "experiment_id",
       "experiment_branch",
       "window_start",
-      "window_end",
-      "HllCardinality(client_count) as client_count"
+      "window_end"
     )
 
     val query = df.selectExpr(inspectedFields:_*)
@@ -87,12 +80,10 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
     results("gmplugin_crashes") should be (Set(k))
     results("content_shutdown_crashes") should be (Set(1))
     results("count") should be (Set(k * 2 + 2))
-    results("subsession_count") should be (Set(k))
     results("usage_hours") should be (Set(k.toFloat))
     results("experiment_id") should be (Set("experiment1", "experiment2", null))
     results("experiment_branch") should be (Set("control", "chaos", null))
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
-    results("client_count") should be (Set(1))
   }
 }
