@@ -25,7 +25,6 @@ val sparkVersion = "2.3.0"
 lazy val root = (project in file(".")).
   settings(
     libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.0-SNAPSHOT",
-    libraryDependencies += "com.mozilla.telemetry" %% "spark-hyperloglog" % "2.0.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % Test,
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",

@@ -6,7 +6,6 @@ package com.mozilla.telemetry.streaming
 import java.io.File
 import java.sql.Timestamp
 
-import com.mozilla.spark.sql.hyperloglog.functions.{hllCardinality, hllCreate}
 import com.mozilla.telemetry.streaming.TestUtils.Fennec
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
@@ -33,9 +32,6 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     .config("spark.streaming.stopGracefullyOnShutdown", "true")
     .master("local[1]")
     .getOrCreate()
-
-  spark.udf.register("HllCreate", hllCreate _)
-  spark.udf.register("HllCardinality", hllCardinality _)
 
 
   val streamingOutputPath = "/tmp/parquet"
@@ -74,8 +70,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -98,22 +93,12 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
       "content_shutdown_crashes",
       "startup_crashes",
       "count",
-      "subsession_count",
       "usage_hours",
       "browser_shim_usage_blocked",
       "experiment_id",
       "experiment_branch",
-      "input_event_response_coalesced_ms_main_above_150",
-      "input_event_response_coalesced_ms_main_above_250",
-      "input_event_response_coalesced_ms_main_above_2500",
-      "input_event_response_coalesced_ms_content_above_150",
-      "input_event_response_coalesced_ms_content_above_250",
-      "input_event_response_coalesced_ms_content_above_2500",
-      "first_paint",
-      "first_subsession_count",
       "window_start",
-      "window_end",
-      "HllCardinality(client_count) as client_count"
+      "window_end"
     )
 
     val query = df.selectExpr(inspectedFields:_*)
@@ -139,22 +124,12 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("content_shutdown_crashes") should be (Set(1))
     results("startup_crashes") should be(Set(1))
     results("count") should be (Set(k * 2 + 2))
-    results("subsession_count") should be (Set(k))
     results("usage_hours") should be (Set(k.toFloat))
     results("browser_shim_usage_blocked") should be (Set(k))
     results("experiment_id") should be (Set("experiment1", "experiment2", null))
     results("experiment_branch") should be (Set("control", "chaos", null))
-    results("input_event_response_coalesced_ms_main_above_150") should be (Set(42 * 14))
-    results("input_event_response_coalesced_ms_main_above_250") should be (Set(42 * 12))
-    results("input_event_response_coalesced_ms_main_above_2500") should be (Set(42 * 9))
-    results("input_event_response_coalesced_ms_content_above_150") should be (Set(42 * 4))
-    results("input_event_response_coalesced_ms_content_above_250") should be (Set(42 * 3))
-    results("input_event_response_coalesced_ms_content_above_2500") should be (Set(42 * 2))
-    results("first_paint") should be (Set(42 * 1200))
-    results("first_subsession_count") should be (Set(42))
     results("window_start").head.asInstanceOf[Timestamp].getTime should be <= (TestUtils.testTimestampMillis)
     results("window_end").head.asInstanceOf[Timestamp].getTime should be >= (TestUtils.testTimestampMillis)
-    results("client_count") should be (Set(1))
   }
 
   it should "normalize os_version" in {
@@ -166,8 +141,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -220,8 +194,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
 
     // one count for each experiment-branch, and one for null-null
@@ -251,8 +224,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     val numberOfAggregatedRows = 1
 
@@ -262,59 +234,16 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     val inspectedFields = List(
       "build_id",
       "usage_hours",
-      "os_name",
-      "first_subsession_count"
+      "os_name"
     )
     val rows = aggregates.select(inspectedFields(0), inspectedFields.drop(1): _*).collect()
     val results = inspectedFields.zip(inspectedFields.map(field => rows.map(row => row.getAs[Any](field)).toSet)).toMap
     results("usage_hours") should be(Set(k.toFloat))
     results("os_name") should be(Set("Android"))
     results("build_id") should be(Set(TestUtils.defaultFennecApplication.buildId))
-    results("first_subsession_count") should be(Set(k))
   }
 
-  it should "correctly compute client counts" in {
-    import spark.implicits._
-    val crashMessages = 1 to 10 flatMap (i =>
-      TestUtils.generateCrashMessages(
-        2, Some(Map("clientId" -> s"client${i}")))
-      )
-
-    val mainMessages = 1 to 10 flatMap (i =>
-      TestUtils.generateMainMessages(
-        2, Some(Map("clientId" -> s"client${i}")))
-      )
-
-    val messages = (crashMessages ++ mainMessages).map(_.toByteArray).seq
-
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
-
-    val client_count = df.selectExpr("HllCardinality(client_count) as client_count").collect()(0).getAs[Any]("client_count")
-    client_count should be (10)
-  }
-
-  it should "correctly compute subsession counts" in {
-    import spark.implicits._
-    val mainMessages = 1 to 10 flatMap (i =>
-      TestUtils.generateMainMessages(
-        1, Some(Map("payload.info" -> s"""{"subsessionLength": 3600, "sessionId": "session${i%5}"}""")))
-      )
-
-    val messages = mainMessages.map(_.toByteArray).seq
-
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
-
-    val subsession_count = df.selectExpr("subsession_count").collect()(0).getAs[Any]("subsession_count")
-    subsession_count should be (10)
-  }
-
-  it should "discard non-Firefox and non-Fennec pings" in {
+  it should "discard non-Firefox pings" in {
     import spark.implicits._
     val fxCrashMessages = TestUtils.generateCrashMessages(k)
     val fxMainMessages = TestUtils.generateMainMessages(k)
@@ -327,8 +256,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     df.where("application not in ('Firefox','Fennec')").count() should be(0)
   }
@@ -415,8 +343,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     df.schema.fields.map(_.name) should not contain ("client_id")
   }
@@ -433,8 +360,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     df.count() should be (0)
 
@@ -448,8 +374,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages2).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     df2.where("build_id IS NULL").collect().length should be (0)
     df2.count() should be (3)
@@ -463,8 +388,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
       ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema,
-      ErrorAggregator.defaultThresholdHistograms)
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.where("display_version IS NULL").collect().length should be (3)
