@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestFocusEventPing extends FlatSpec with Matchers{
   val message = TestUtils.generateFocusEventMessages(1).head
-  val ping = FocusEventPing(message)
+  val ping = SendsToAmplitude(message)
   val ts = TestUtils.testTimestampMillis
 
   "Focus Event Ping" can "read events" in {
