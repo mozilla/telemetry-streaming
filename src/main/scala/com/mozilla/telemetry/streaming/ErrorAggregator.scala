@@ -9,7 +9,7 @@ import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.{col, expr, sum, window}
+import org.apache.spark.sql.functions.{col, sum, window}
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.joda.time.{DateTime, Days, LocalDateTime, format}
@@ -195,7 +195,7 @@ object ErrorAggregator {
     dimensions("submission_date_s3") = Some(LocalDateTime.fromDateFields(meta.normalizedTimestamp()).toString(dateFormat))
     dimensions("channel") = Some(meta.normalizedChannel)
     dimensions("version") = Option(corePing.meta.appVersion)
-    dimensions("display_version") = Option(corePing.meta.appVersion)
+    dimensions("display_version") = corePing.displayVersion.orElse(Option(corePing.meta.appVersion))
     dimensions("build_id") = corePing.normalizedBuildId
     dimensions("application") = Some(meta.appName)
     dimensions("os_name") = Option(corePing.os)

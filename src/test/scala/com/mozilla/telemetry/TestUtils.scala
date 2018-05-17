@@ -5,6 +5,7 @@ package com.mozilla.telemetry.streaming
 
 import com.mozilla.telemetry.heka.{Message, RichMessage}
 import com.mozilla.telemetry.pings
+import com.mozilla.telemetry.pings.Application
 import org.joda.time.{DateTime, Duration}
 import org.json4s.jackson.JsonMethods.{compact, render}
 import org.json4s.{DefaultFormats, Extraction, JField}
@@ -16,7 +17,7 @@ object TestUtils {
     "x86", "20170101000000", "release", "Firefox", "42.0", "Mozilla", "42.0", Some("42.0b1"), "x86-msvc"
   )
   val defaultFennecApplication = pings.Application(
-    "arm64-v8a", "20170101000000", "release", "Fennec", "59.0", "Mozilla", "59.0", Some("59.0"), "arm-eabi-gcc3"
+    "arm64-v8a", "20170101000000", "release", "Fennec", "59.0", "Mozilla", "59.0", Some("59.0b1"), "arm-eabi-gcc3"
   )
 
   val scalarValue = 42
@@ -43,7 +44,7 @@ object TestUtils {
       "normalizedChannel" -> application.channel,
       "appName" -> application.name,
       "appVersion" -> application.version.toDouble,
-      "displayVersion" -> application.displayVersion.getOrElse(null),
+      "displayVersion" -> application.displayVersion.orNull,
       "appBuildId" -> application.buildId,
       "geoCountry" -> "IT",
       "os" -> "Linux",
@@ -295,12 +296,13 @@ object TestUtils {
   }
 
   // scalastyle:off methodLength
-  def generateFennecCoreMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None, timestamp: Option[Long] = None): Seq[Message] = {
+  def generateFennecCoreMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None, timestamp: Option[Long] = None,
+                                 app: Application = defaultFennecApplication): Seq[Message] = {
     val defaultMap = Map(
-      "appBuildId" -> defaultFennecApplication.buildId,
-      "appName" -> defaultFennecApplication.name,
-      "appUpdateChannel" -> defaultFennecApplication.channel,
-      "appVersion" -> defaultFennecApplication.version.toDouble,
+      "appBuildId" -> app.buildId,
+      "appName" -> app.name,
+      "appUpdateChannel" -> app.channel,
+      "appVersion" -> app.version.toDouble,
       "clientId" -> "ca7fb81d-5deb-4ea6-8b74-797b8e58cfae",
       "Date" -> "Sun, 29 Apr 2018 15:35:38 GMT+00:00",
       "docType" -> "core",
@@ -316,32 +318,33 @@ object TestUtils {
       "sourceVersion" -> "9",
       "submissionDate" -> "20170101",
       "submission" ->
-        """
-          |{
-          |  "durations": 3600,
-          |  "device": "samsung-SM-G930F",
-          |  "experiments": [
-          |    "experiment1",
-          |    "experiment2"
-          |  ],
-          |  "tz": 120,
-          |  "flashUsage": 0,
-          |  "locale": "en-US",
-          |  "arch": "arm64-v8a",
-          |  "os": "Android",
-          |  "defaultSearch": "google",
-          |  "seq": 1,
-          |  "v": 9,
-          |  "clientId": "ca7fb81d-5deb-4ea6-8b74-797b8e58cfae",
-          |  "osversion": "42",
-          |  "sessions": 1,
-          |  "profileDate": 17622,
-          |  "defaultBrowser": false,
-          |  "created": "2018-04-29",
-          |  "searches": {
-          |    "google.actionbar": 1
-          |  }
-          |}
+        s"""
+           |{
+           |  "durations": 3600,
+           |  "device": "samsung-SM-G930F",
+           |  "displayVersion": ${app.displayVersion.map("\"" + _ + "\"").orNull},
+           |  "experiments": [
+           |    "experiment1",
+           |    "experiment2"
+           |  ],
+           |  "tz": 120,
+           |  "flashUsage": 0,
+           |  "locale": "en-US",
+           |  "arch": "arm64-v8a",
+           |  "os": "Android",
+           |  "defaultSearch": "google",
+           |  "seq": 1,
+           |  "v": 9,
+           |  "clientId": "ca7fb81d-5deb-4ea6-8b74-797b8e58cfae",
+           |  "osversion": "42",
+           |  "sessions": 1,
+           |  "profileDate": 17622,
+           |  "defaultBrowser": false,
+           |  "created": "2018-04-29",
+           |  "searches": {
+           |    "google.actionbar": 1
+           |  }
+           |}
         """.stripMargin
     )
     val outputMap = fieldsOverride match {
