@@ -243,6 +243,29 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
     results("build_id") should be(Set(TestUtils.defaultFennecApplication.buildId))
   }
 
+  it should "correctly extract displayVersion from Fennec pings" in {
+    import spark.implicits._
+
+    val messages =
+      (TestUtils.generateFennecCoreMessages(k)
+        ++ TestUtils.generateFennecCoreMessages(k, app = TestUtils.defaultFennecApplication.copy(displayVersion = None))
+        ).map(_.toByteArray).seq
+
+    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
+      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
+      ErrorAggregator.defaultCountHistogramErrorsSchema)
+
+    val expectedNumberOfAggregatedRows = 2
+    aggregates.count() shouldBe expectedNumberOfAggregatedRows
+
+    val inspectedFields = List(
+      "display_version"
+    )
+    val rows = aggregates.select(inspectedFields(0), inspectedFields.drop(1): _*).collect()
+    val results = inspectedFields.zip(inspectedFields.map(field => rows.map(row => row.getAs[Any](field)).toSet)).toMap
+    results("display_version") should be(Set(TestUtils.defaultFennecApplication.displayVersion.get, TestUtils.defaultFennecApplication.version))
+  }
+
   it should "discard non-Firefox pings" in {
     import spark.implicits._
     val fxCrashMessages = TestUtils.generateCrashMessages(k)

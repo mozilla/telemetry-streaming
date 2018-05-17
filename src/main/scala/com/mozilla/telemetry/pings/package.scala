@@ -376,6 +376,7 @@ package object pings {
 
   case class CorePing(
       arch: String,
+      displayVersion: Option[String],
       durations: Option[Int],
       experiments: Option[Array[String]],
       meta: Meta,
