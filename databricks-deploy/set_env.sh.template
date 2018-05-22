@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+export DATABRICKS_TOKEN=
+export KAFKA_BROKER=
+export IAM_ROLE=
+export OUTPUT_PATH=
+export CHECKPOINT_PATH=
+export SSH_PUBLIC_KEY=
+
+export DBFS_JAR_DIR_DEV=
+export JAR_NAME=
