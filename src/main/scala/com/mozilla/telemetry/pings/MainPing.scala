@@ -99,6 +99,12 @@ case class MainPing(application: Application,
     }
   }
 
+  def getNormandyEvents: Seq[Event] = {
+    implicit val formats = org.json4s.DefaultFormats
+
+    val dynamicProcessEvents = (this.payload.processes \ "dynamic" \ "events").extract[Seq[Event]]
+    dynamicProcessEvents.filter(_.category == "normandy")
+  }
 }
 
 object MainPing {
@@ -119,7 +125,7 @@ object MainPing {
       "payload.histograms",
       "payload.info"
     )
-    val ping = messageToPing(message, jsonFieldNames)
+    val ping = messageToPing(message, jsonFieldNames, List("payload" :: "processes" :: "dynamic" :: "events" :: Nil))
     ping.extract[MainPing]
   }
 }

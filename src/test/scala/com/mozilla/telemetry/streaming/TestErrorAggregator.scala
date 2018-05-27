@@ -6,14 +6,14 @@ package com.mozilla.telemetry.streaming
 import java.io.File
 import java.sql.Timestamp
 
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.streaming.TestUtils.Fennec
 import org.apache.commons.io.FileUtils
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers, Tag}
+import org.scalatest.{FlatSpec, Matchers, Tag}
 
-class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll {
+class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase {
 
   object DockerErrorAggregatorTag extends Tag("DockerErrorAggregatorTag")
 
@@ -27,21 +27,16 @@ class TestErrorAggregator extends FlatSpec with Matchers with BeforeAndAfterAll 
   // 2016-04-07T02:35:16.000Z
   val laterTimestamp = 1459996516000000000L
 
-  val spark = SparkSession.builder()
-    .appName("Error Aggregates")
-    .config("spark.streaming.stopGracefullyOnShutdown", "true")
-    .master("local[1]")
-    .getOrCreate()
-
-
   val streamingOutputPath = "/tmp/parquet"
   val streamingCheckpointPath = "/tmp/checkpoint"
 
-  override protected def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
+    super.beforeAll()
     cleanupTestDirectories()
   }
 
-  override protected def afterAll(): Unit = {
+  override def afterAll(): Unit = {
+    super.beforeAll()
     cleanupTestDirectories()
   }
 

@@ -11,6 +11,8 @@ import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
 import com.mozilla.telemetry.pings.FocusEventPing
 import java.net.URLDecoder
+
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
@@ -19,7 +21,7 @@ import org.scalatest._
 
 import scala.collection.JavaConversions._
 
-class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with DataFrameSuiteBase {
 
   object DockerEventsTag extends Tag("DockerEventsTag")
 
@@ -33,12 +35,6 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   implicit val formats = DefaultFormats
 
   val expectedTotalMsgs = TestUtils.scalarValue
-
-  val spark = SparkSession.builder()
-    .appName("Events to Amplitude")
-    .config("spark.streaming.stopGracefullyOnShutdown", "true")
-    .master("local[1]")
-    .getOrCreate()
 
   // mocked server pieces
   val path = "/httpapi"

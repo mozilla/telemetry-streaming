@@ -37,7 +37,9 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.apache.kafka" %% "kafka" % "0.10.0.1" % Test,
     libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.3.0",
     libraryDependencies += "com.github.tomakehurst" % "wiremock-standalone" % "2.14.0" % "provided",
-    libraryDependencies += "com.github.java-json-tools" % "json-schema-validator" % "2.2.8"
+    libraryDependencies += "com.github.java-json-tools" % "json-schema-validator" % "2.2.8",
+    libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "2.3.0_0.9.0" % Test,
+    libraryDependencies += "org.apache.spark" %% "spark-hive" % "2.3.0" % Test
   )
 
 // Setup docker task
