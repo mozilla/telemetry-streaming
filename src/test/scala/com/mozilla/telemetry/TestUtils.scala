@@ -106,8 +106,8 @@ object TestUtils {
   }
 
   // scalastyle:off methodLength
-  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]]=None, timestamp: Option[Long]=None,
-                           fieldsToRemove: List[String] = List[String]()): Seq[Message] = {
+  def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None, timestamp: Option[Long] = None,
+                           fieldsToRemove: List[String] = List[String](), customProcesses: Option[String] = None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "main",
@@ -206,6 +206,7 @@ object TestUtils {
              |          }
              |        }
              |      }
+             |      ${customProcesses.map("," + _).getOrElse("")}
              |    }
              |  }
              |}""".stripMargin),

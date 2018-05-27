@@ -4,17 +4,13 @@
 package com.mozilla.telemetry.pings
 
 import java.sql.Timestamp
-import com.mozilla.telemetry.heka.Message
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Meta._
 import org.joda.time.Months
 import org.joda.time.format.DateTimeFormat
-import org.json4s
 import org.json4s.jackson.JsonMethods.parse
-import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue}
+import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
 
 trait Ping {
   val meta: Meta
@@ -95,6 +91,8 @@ object Ping {
             case o => throw new java.io.InvalidObjectException(
               s"Expected JArray for event at ${path.mkString("\\")}, got ${o.getClass}")
           })
+
+          case JNothing => JNothing
 
           case o => throw new java.io.InvalidObjectException(
             s"Expected JArray for events container at ${path.mkString("\\")}, got ${o.getClass}")

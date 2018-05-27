@@ -5,21 +5,16 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
 
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestExperimentsErrorAggregator extends FlatSpec with Matchers {
+class TestExperimentsErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue
   val app = TestUtils.defaultFennecApplication
-
-  val spark = SparkSession.builder()
-    .appName("Error Aggregates")
-    .config("spark.streaming.stopGracefullyOnShutdown", "true")
-    .master("local[1]")
-    .getOrCreate()
 
   "The aggregator" should "sum metrics over a set of dimensions" in {
     import spark.implicits._
