@@ -9,6 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import com.mozilla.telemetry.streaming.sinks.HttpSink
+import org.apache.log4j.Level
 import org.scalatest._
 
 import scala.annotation.tailrec
@@ -35,6 +36,17 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   val BAD_REQUEST = 400
   val SERVER_ERROR = 503
   val UNKNOWN = 666
+
+  // silence intentionally failed httpSink logs
+  def processEventWithError(): Unit = {
+    val prevLogLevel = httpSink.log.getLevel
+    httpSink.log.setLevel(Level.ERROR)
+    try {
+      httpSink.process(event)
+    } finally {
+      httpSink.log.setLevel(prevLogLevel)
+    }
+  }
 
   override def beforeEach {
     wireMockServer = new WireMockServer(wireMockConfig().port(Port))
@@ -85,7 +97,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     val responseCodes = List.fill(maxAttempts)(SERVER_ERROR) :+ OK
 
     multiStub(responseCodes)
-    httpSink.process(event)
+    processEventWithError()
     verifyCount(maxAttempts)
   }
 
@@ -106,7 +118,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
       .willReturn(aResponse()
         .withStatus(OK)))
 
-    httpSink.process(event)
+    processEventWithError()
     verifyCount(1) // only the success
   }
 
@@ -114,7 +126,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     val responseCodes = UNKNOWN :: Nil
 
     multiStub(responseCodes)
-    httpSink.process(event)
+    processEventWithError()
     verifyCount(1)
   }
 }
