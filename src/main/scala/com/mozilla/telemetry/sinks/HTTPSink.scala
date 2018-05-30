@@ -64,7 +64,7 @@ class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int 
       case (ErrorPseudoCode, _) =>
       case (c, false) if RetryCodes.contains(c) => attempt(request, tries + 1)
       case (c, _) => {
-        val url = request.url + "?" + request.params.map{ case(k, v) => s"k=v" }.mkString("&")
+        val url = request.url + "?" + request.params.map{ case(k, v) => s"$k=$v" }.mkString("&")
         log.warn(s"Failed request: $url, last status code: $c")
       }
     }
