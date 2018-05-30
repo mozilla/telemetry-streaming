@@ -1,7 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-import sys.process._;
+
+import scala.sys.process._;
 
 val localMavenHttps = "https://s3-us-west-2.amazonaws.com/net-mozaws-data-us-west-2-ops-mavenrepo/"
 
@@ -19,17 +20,17 @@ organization := "com.mozilla"
 
 scalaVersion in ThisBuild := "2.11.8"
 
-val sparkVersion = "2.2.0"
+val sparkVersion = "2.3.0"
 
 lazy val root = (project in file(".")).
   settings(
     libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.0-SNAPSHOT",
-    libraryDependencies += "com.mozilla.telemetry" %% "spark-hyperloglog" % "2.0.0-SNAPSHOT",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % Test,
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
-    libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,
+    libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion
+      exclude("net.jpountz.lz4", "lz4"), //conflicts with org.lz4:lz4-java:1.4.0 from spark-core
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
     libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.2",
@@ -65,6 +66,9 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeSca
 
 // Don't run tests when assemblying the fat jar.
 test in assembly := {}
+
+// Add configs to resources
+unmanagedResourceDirectories in Compile += baseDirectory.value / "configs"
 
 // Default SBT settings suck
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")

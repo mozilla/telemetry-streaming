@@ -15,7 +15,7 @@ object ExperimentsErrorAggregator {
 
   val defaultDimensionsSchema = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
-    .add[Date]("submission_date")
+    .add[String]("submission_date_s3")
     .add[String]("channel")
     .add[String]("version")
     .add[String]("os_name")
@@ -27,7 +27,6 @@ object ExperimentsErrorAggregator {
   val defaultMetricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
-    .add[Int]("subsession_count")
     .add[Int]("main_crashes")
     .add[Int]("startup_crashes")
     .add[Int]("content_crashes")
@@ -44,7 +43,6 @@ object ExperimentsErrorAggregator {
     ErrorAggregator.run(args,
       defaultDimensionsSchema,
       defaultMetricsSchema,
-      defaultCountHistogramErrorsSchema,
-      defaultThresholdHistograms)
+      defaultCountHistogramErrorsSchema)
   }
 }
