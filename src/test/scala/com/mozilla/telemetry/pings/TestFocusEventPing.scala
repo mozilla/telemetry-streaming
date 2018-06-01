@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import org.scalatest.{FlatSpec, Matchers}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.EventsToAmplitude.Config
-import org.joda.time.{DateTime, Duration}
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class TestFocusEventPing extends FlatSpec with Matchers{

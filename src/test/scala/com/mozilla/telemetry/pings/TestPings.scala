@@ -5,9 +5,8 @@ package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
 
-import org.scalatest.{FlatSpec, Matchers}
 import com.mozilla.telemetry.pings._
-import org.joda.time.{DateTime, Duration}
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class TestPings extends FlatSpec with Matchers{

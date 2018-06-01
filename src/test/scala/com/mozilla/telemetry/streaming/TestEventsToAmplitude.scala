@@ -3,23 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
+import java.net.URLDecoder
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
-import com.mozilla.telemetry.pings.FocusEventPing
-import java.net.URLDecoder
-
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import org.apache.spark.sql.SparkSession
+import com.mozilla.telemetry.pings.FocusEventPing
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
 import org.scalatest._
-
-import scala.collection.JavaConversions._
 
 class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with DataFrameSuiteBase {
 
@@ -171,8 +168,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     spark.streams.addListener(listener)
 
     val args = Array(
-      "--kafka-broker", Kafka.kafkaBrokers,
-      "--starting-offsets", "latest",
+      "--kafkaBroker", Kafka.kafkaBrokers,
+      "--startingOffsets", "latest",
       "--url", s"http://$Host:$Port$path",
       "--config-file-path", configFilePath,
       "--raise-on-error")

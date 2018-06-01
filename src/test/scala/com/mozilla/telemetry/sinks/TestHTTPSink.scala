@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import com.mozilla.telemetry.streaming.sinks.HttpSink
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
+import com.mozilla.telemetry.streaming.sinks.HttpSink
 import org.scalatest._
+
 import scala.annotation.tailrec
 
 class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {

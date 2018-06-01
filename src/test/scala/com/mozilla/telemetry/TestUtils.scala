@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
 import com.mozilla.telemetry.heka.{Message, RichMessage}
 import com.mozilla.telemetry.pings
 import com.mozilla.telemetry.pings.Application
-import org.joda.time.{DateTime, Duration}
 import org.json4s.jackson.JsonMethods.{compact, render}
 import org.json4s.{DefaultFormats, Extraction, JField}
 
@@ -23,8 +25,7 @@ object TestUtils {
   val scalarValue = 42
   val testTimestampNano = 1460036116829920000L
   val testTimestampMillis = testTimestampNano / 1000000
-  val today = new DateTime(testTimestampMillis)
-  val todayDays = new Duration(new DateTime(0), today).getStandardDays().toInt
+  val todayDays = ChronoUnit.DAYS.between(LocalDate.ofEpochDay(0), LocalDate.now())
 
   def generateCrashMessages(size: Int,
                             fieldsOverride: Option[Map[String, Any]] = None,

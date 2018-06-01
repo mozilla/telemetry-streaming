@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming.sinks
 
-import scalaj.http.{Http, HttpRequest}
 import org.apache.spark.sql.ForeachWriter
+import scalaj.http.{Http, HttpRequest}
+
 import scala.annotation.tailrec
-import scala.util.{Try, Success, Failure}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
   extends ForeachWriter[String] {

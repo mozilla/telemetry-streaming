@@ -3,18 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import java.net.URLEncoder
-
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.sinks.HttpSink
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
-import org.joda.time.{DateTime, Days, format}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.rogach.scallop.{ScallopConf, ScallopOption}
+import org.rogach.scallop.ScallopOption
 
 import scala.io.Source
 
@@ -38,7 +35,7 @@ import scala.io.Source
  * Sampling is limited to the hundredths place; anything
  * more will be truncated (e.g. .355 will be .35, so 35%).
  */
-object EventsToAmplitude {
+object EventsToAmplitude extends StreamingJobBase {
 
   val AMPLITUDE_API_KEY_KEY = "AMPLITUDE_API_KEY"
   val TOP_LEVEL_PING_FIELDS =
@@ -60,37 +57,17 @@ object EventsToAmplitude {
   val allowedAppNames = List("Focus")
   val kafkaCacheMaxCapacity = 1000
   val kafkaTopic = "telemetry"
-  val queryName = "EventsToAmplitude"
+  override val queryName = "EventsToAmplitude"
   val writeMode = "error"
 
-  private[streaming] class Opts(args: Array[String]) extends ScallopConf(args) {
+  private[streaming] class Opts(args: Array[String]) extends BaseOpts(args) {
     val configFilePath: ScallopOption[String] = opt[String](
       descr = "JSON file with the configuration",
       required = true)
-    val kafkaBroker: ScallopOption[String] = opt[String](
-      descr = "Kafka broker (streaming mode only)",
-      required = false)
-    val from: ScallopOption[String] = opt[String](
-      descr = "Start submission date (batch mode only). Format: YYYYMMDD",
-      required = false)
-    val to: ScallopOption[String] = opt[String](
-      descr = "End submission date (batch mode only). Default: yesterday. Format: YYYYMMDD",
-      required = false)
-    val fileLimit: ScallopOption[Int] = opt[Int](
-      descr = "Max number of files to retrieve (batch mode only). Default: All files",
-      required = false)
     val raiseOnError:ScallopOption[Boolean] = opt[Boolean](
       descr = "Whether the program should exit on a data processing error or not.")
     val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
       descr = "Whether to fail the query when it’s possible that data is lost.")
-    val checkpointPath:ScallopOption[String] = opt[String](
-      descr = "Checkpoint path (streaming mode only)",
-      required = false,
-      default = Some("/tmp/checkpoint"))
-    val startingOffsets:ScallopOption[String] = opt[String](
-      descr = "Starting offsets (streaming mode only)",
-      required = false,
-      default = Some("latest"))
     val url: ScallopOption[String] = opt[String](
       descr = "Endpoint to send data to",
       required = true)
@@ -107,7 +84,6 @@ object EventsToAmplitude {
       required = false,
       default = Some(100))
 
-    requireOne(kafkaBroker, from)
     conflicts(kafkaBroker, List(from, to, fileLimit, minDelay, maxParallelRequests))
     validateOpt (sample) {
       case Some(s) if 0.0 < s && s <= 1.0 => Right(Unit)
@@ -217,21 +193,13 @@ object EventsToAmplitude {
 
   def sendBatchEvents(spark: SparkSession, opts: Opts): Unit = {
     val config = readConfigFile(opts.configFilePath())
-    val fmt = format.DateTimeFormat.forPattern("yyyyMMdd")
-
-    val from = fmt.parseDateTime(opts.from())
-    val to = opts.to.get match {
-      case Some(t) => fmt.parseDateTime(t)
-      case _ => DateTime.now.minusDays(1)
-    }
 
     val filters = config.getBatchFilters
     val maxParallelRequests = opts.maxParallelRequests()
 
     implicit val sc = spark.sparkContext
 
-    for (offset <- 0 to Days.daysBetween(from, to).getDays) {
-      val currentDate = from.plusDays(offset).toString("yyyyMMdd")
+    datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val dataset = com.mozilla.telemetry.heka.Dataset("telemetry")
 
       val pings = config.getBatchFilters.filter{

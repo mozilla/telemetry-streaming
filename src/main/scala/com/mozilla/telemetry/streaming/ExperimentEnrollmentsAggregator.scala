@@ -4,23 +4,20 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.time.{Instant, LocalDate, ZoneId}
 
 import com.mozilla.telemetry.heka.{Message, Dataset => MozDataset}
 import com.mozilla.telemetry.pings.MainPing
 import com.mozilla.telemetry.streaming.ErrorAggregator._
 import org.apache.spark
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
-import org.rogach.scallop.{ScallopConf, ScallopOption}
+import org.rogach.scallop.ScallopOption
 
-object ExperimentEnrollmentsAggregator {
-  val queryName = "experiment_enrollments"
-  val outputPrefix = "experiment_enrollments/v1"
+object ExperimentEnrollmentsAggregator extends StreamingJobBase {
+  override val queryName = "experiment_enrollments"
+  override val outputPrefix = "experiment_enrollments/v1"
+
   val kafkaCacheMaxCapacity = 100
-  val dateFormat = "yyyyMMdd"
-  val dateFormatter = DateTimeFormatter.ofPattern(dateFormat)
+
   private val allowedDocTypes = List("main")
   private val allowedAppNames = List("Firefox")
 
@@ -68,22 +65,15 @@ object ExperimentEnrollmentsAggregator {
   }
 
   def writeBatchAggregates(spark: SparkSession, opts: Opts): Unit = {
-    val from = LocalDate.parse(opts.from(), dateFormatter)
-    val to = opts.to.get match {
-      case Some(t) => LocalDate.parse(t, dateFormatter)
-      case _ => LocalDate.now.minusDays(1)
-    }
-
     implicit val sc = spark.sparkContext
     import spark.implicits._
-    for (offset <- 0L to ChronoUnit.DAYS.between(from, to)) {
-      val currentDate = from.plusDays(offset)
 
+    datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val pings = MozDataset("telemetry")
         .where("sourceName") { case "telemetry" => true }
         .where("docType") { case docType if allowedDocTypes.contains(docType) => true }
         .where("appName") { case appName if allowedAppNames.contains(appName) => true }
-        .where("submissionDate") { case date if date == currentDate.format(dateFormatter) => true }
+        .where("submissionDate") { case date if date == currentDate => true }
         .records(opts.fileLimit.get)
         .map(_.toByteArray)
 
@@ -120,7 +110,7 @@ object ExperimentEnrollmentsAggregator {
           val mainPing = MainPing(m)
           mainPing.getNormandyEvents.map { e =>
             val timestamp = mainPing.meta.normalizedTimestamp()
-            val submissionDate = Instant.ofEpochMilli(timestamp.getTime).atZone(ZoneId.of("UTC")).toLocalDate.format(dateFormatter)
+            val submissionDate = timestampToDateString(mainPing.meta.normalizedTimestamp())
             ExperimentEnrollmentEvent(e.method, e.value, e.extra.flatMap(m => m.get("branch")), e.`object`, timestamp, submissionDate)
           }
         } catch {
@@ -154,23 +144,7 @@ object ExperimentEnrollmentsAggregator {
                                        timestamp: Timestamp,
                                        submission_date_s3: String)
 
-  private class Opts(args: Array[String]) extends ScallopConf(args) {
-    val kafkaBroker: ScallopOption[String] = opt[String](
-      "kafkaBroker",
-      descr = "Kafka broker (streaming mode only)",
-      required = false)
-    val from: ScallopOption[String] = opt[String](
-      "from",
-      descr = "Start submission date (batch mode only). Format: YYYYMMDD",
-      required = false)
-    val to: ScallopOption[String] = opt[String](
-      "to",
-      descr = "End submission date (batch mode only). Default: yesterday. Format: YYYYMMDD",
-      required = false)
-    val fileLimit: ScallopOption[Int] = opt[Int](
-      "fileLimit",
-      descr = "Max number of files to retrieve (batch mode only). Default: All files",
-      required = false)
+  private class Opts(args: Array[String]) extends BaseOpts(args) {
     val outputPath: ScallopOption[String] = opt[String](
       "outputPath",
       descr = "Output path",
@@ -179,16 +153,6 @@ object ExperimentEnrollmentsAggregator {
     val failOnDataLoss: ScallopOption[Boolean] = opt[Boolean](
       "failOnDataLoss",
       descr = "Whether to fail the query when it’s possible that data is lost.")
-    val checkpointPath: ScallopOption[String] = opt[String](
-      "checkpointPath",
-      descr = "Checkpoint path (streaming mode only)",
-      required = false,
-      default = Some("/tmp/checkpoint"))
-    val startingOffsets: ScallopOption[String] = opt[String](
-      "startingOffsets",
-      descr = "Starting offsets (streaming mode only)",
-      required = false,
-      default = Some("latest"))
     val numParquetFiles: ScallopOption[Int] = opt[Int](
       "numParquetFiles",
       descr = "Number of parquet files per submission_date_s3 (batch mode only)",
@@ -196,9 +160,7 @@ object ExperimentEnrollmentsAggregator {
       default = Some(defaultNumFiles)
     )
 
-    requireOne(kafkaBroker, from)
     conflicts(kafkaBroker, List(from, to, numParquetFiles))
     verify()
   }
-
 }

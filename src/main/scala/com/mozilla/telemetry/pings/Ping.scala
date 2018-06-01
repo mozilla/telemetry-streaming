@@ -4,11 +4,12 @@
 package com.mozilla.telemetry.pings
 
 import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Meta._
-import org.joda.time.Months
-import org.joda.time.format.DateTimeFormat
 import org.json4s.jackson.JsonMethods.parse
 import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
 
@@ -32,10 +33,10 @@ trait Ping {
     getRawBuildId match {
       case Some(buildId: String) =>
         val buildIdDay = buildId.slice(0, 8)
-        val buildDateTime = BuildDateFormat.parseDateTime(buildIdDay)
-        val submissionDateTime = SubmissionDateFormat.parseDateTime(meta.submissionDate)
+        val buildDateTime = LocalDate.parse(buildIdDay, DateFormatter)
+        val submissionDateTime = LocalDate.parse(meta.submissionDate, DateFormatter)
 
-        Months.monthsBetween(buildDateTime, submissionDateTime).getMonths match {
+        ChronoUnit.MONTHS.between(buildDateTime, submissionDateTime) match {
           case m if (0 <= m) && (m <= 6) => Some(buildId)
           case _ => None
         }
@@ -150,8 +151,7 @@ case class Meta(Host: Option[String],
 }
 
 object Meta {
-  private[pings] val BuildDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
-  private[pings] val SubmissionDateFormat = DateTimeFormat.forPattern("yyyyMMdd")
+  val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 }
 
 case class EnvironmentBuild(version: Option[String],
