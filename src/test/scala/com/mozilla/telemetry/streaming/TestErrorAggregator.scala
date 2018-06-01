@@ -63,9 +63,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -134,9 +132,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
       (TestUtils.generateCrashMessages(k, fieldsOverride=fieldsOverride)
         ++ TestUtils.generateMainMessages(k, fieldsOverride=fieldsOverride)).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
@@ -187,9 +183,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
       )))
     val messages = (crashMessage ++ mainMessage).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF)
 
 
     // one count for each experiment-branch, and one for null-null
@@ -217,9 +211,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
         ++ TestUtils.generateFennecCoreMessages(k)
         ).map(_.toByteArray).seq
 
-    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF)
 
     val expectedNumberOfAggregatedRows = 1
 
@@ -246,9 +238,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
         ++ TestUtils.generateFennecCoreMessages(k, app = TestUtils.defaultFennecApplication.copy(displayVersion = None))
         ).map(_.toByteArray).seq
 
-    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val aggregates = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF)
 
     val expectedNumberOfAggregatedRows = 2
     aggregates.count() shouldBe expectedNumberOfAggregatedRows
@@ -272,9 +262,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
     val messages =
       (fxCrashMessages ++ fxMainMessages ++ otherCrashMessages ++ otherMainMessages ++ fennecCoreMessages).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false)
 
     df.where("application not in ('Firefox','Fennec')").count() should be(0)
   }
@@ -359,9 +347,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
     import spark.implicits._
     val messages = TestUtils.generateCrashMessages(10).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false)
 
     df.schema.fields.map(_.name) should not contain ("client_id")
   }
@@ -376,9 +362,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
       )
     ).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false)
 
     df.count() should be (0)
 
@@ -390,9 +374,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
       )
     ).map(_.toByteArray).seq
 
-    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages2).toDF, raiseOnError = false,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df2 = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages2).toDF, raiseOnError = false)
 
     df2.where("build_id IS NULL").collect().length should be (0)
     df2.count() should be (3)
@@ -404,9 +386,7 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
       1, None, None, "displayVersion" :: Nil
     ).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false,
-      ErrorAggregator.defaultDimensionsSchema, ErrorAggregator.defaultMetricsSchema,
-      ErrorAggregator.defaultCountHistogramErrorsSchema)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = false)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.where("display_version IS NULL").collect().length should be (3)

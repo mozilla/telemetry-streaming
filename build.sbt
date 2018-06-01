@@ -33,7 +33,6 @@ lazy val root = (project in file(".")).
       exclude("net.jpountz.lz4", "lz4"), //conflicts with org.lz4:lz4-java:1.4.0 from spark-core
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
     libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0",
-    libraryDependencies += "joda-time" % "joda-time" % "2.9.2",
     libraryDependencies += "org.apache.kafka" %% "kafka" % "0.10.0.1" % Test,
     libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.3.0",
     libraryDependencies += "com.github.tomakehurst" % "wiremock-standalone" % "2.14.0" % "provided",
