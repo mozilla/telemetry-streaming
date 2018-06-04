@@ -282,13 +282,17 @@ trait SendsToAmplitude {
   def getCreated: Option[Long]
   private def filterProperties = Map("os" -> getOsName.getOrElse(""), "created" -> getCreated.getOrElse(0).toString)
 
+  def pingAmplitudeProperties: JObject = JObject()
+
   def eventToAmplitudeEvent(config: Config, e: Event, es: AmplitudeEvent): JObject = {
+    pingAmplitudeProperties merge
     ("device_id" -> getClientId) ~
       ("session_id" -> getSessionId) ~
       ("insert_id" -> (getClientId.getOrElse("None") + getSessionId.getOrElse("None") + e.getAmplitudeId)) ~
       ("event_type" -> getFullEventName(config.eventGroupName, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
       ("event_properties" -> e.getProperties(es.amplitudeProperties)) ~
+      ("user_properties" -> e.getProperties(es.userProperties)) ~
       ("app_version" -> meta.appVersion) ~
       ("os_name" -> getOsName) ~
       ("os_version" -> getOsVersion) ~

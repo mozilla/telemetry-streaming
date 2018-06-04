@@ -264,7 +264,8 @@ object TestUtils {
       |      "action",
       |      "click",
       |      "back_button",
-      |      "erase_home"
+      |      "erase_home",
+      |      { "host": "side" }
       |    ],[
       |      176151591,
       |      "action",
