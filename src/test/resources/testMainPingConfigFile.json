@@ -45,6 +45,7 @@
       "name": "Erase",
       "description": "",
       "amplitudeProperties": { "erase_object": "value" },
+      "userProperties": { "host": "extra.host" },
       "schema": {
         "$schema": "http://json-schema.org/schema#",
         "type": "object",
