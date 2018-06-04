@@ -1,5 +1,4 @@
 {
-  "eventGroupName": "m_foc",
   "filters": {
     "docType": [
       "focus-event"
@@ -8,107 +7,135 @@
       "Focus"
     ]
   },
-  "events": [
+  "eventGroups": [
     {
-      "name": "AppOpen",
-      "description": "User opening the app",
-      "schema": {
-        "$schema": "http://json-schema.org/schema#",
-        "type": "object",
-        "properties": {
-          "timestamp": {
-            "type": "number",
-            "minimum": 0
-          },
-          "category": {
-            "type": "string",
-            "enum": [ "action" ]
-          },
-          "method": {
-            "type": "string",
-            "enum": [ "foreground" ]
-          },
-          "object": {
-            "type": "string",
-            "enum": [ "app" ]
+      "eventGroupName": "m_foc",
+      "events": [
+        {
+          "name": "AppOpen",
+          "description": "User opening the app",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "action"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "foreground"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "app"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
           }
         },
-        "required": [
-          "timestamp",
-          "category",
-          "method",
-          "object"
-        ]
-      }
+        {
+          "name": "Erase",
+          "description": "",
+          "amplitudeProperties": {
+            "erase_object": "value"
+          },
+          "userProperties": {
+            "host": "extra.host"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string"
+              },
+              "object": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^erase"
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object",
+              "value"
+            ]
+          }
+        }
+      ]
     },
     {
-      "name": "Erase",
-      "description": "",
-      "amplitudeProperties": { "erase_object": "value" },
-      "userProperties": { "host": "extra.host" },
-      "schema": {
-        "$schema": "http://json-schema.org/schema#",
-        "type": "object",
-        "properties": {
-          "timestamp": {
-            "type": "number",
-            "minimum": 0
+      "eventGroupName": "second_event_group",
+      "events": [
+        {
+          "name": "AppClose",
+          "description": "User closing the app",
+          "amplitudeProperties": {
+            "session_length": "extra.sessionLength"
           },
-          "category": {
-            "type": "string"
-          },
-          "method": {
-            "type": "string"
-          },
-          "object": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string",
-            "pattern": "^erase"
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "action"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "background"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "app"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
           }
-        },
-        "required": [
-          "timestamp",
-          "category",
-          "method",
-          "object",
-          "value"
-        ]
-      }
-    },
-    {
-      "name": "AppClose",
-      "description": "User closing the app",
-      "amplitudeProperties": { "session_length": "extra.sessionLength" },
-      "schema": {
-        "$schema": "http://json-schema.org/schema#",
-        "type": "object",
-        "properties": {
-          "timestamp": {
-            "type": "number",
-            "minimum": 0
-          },
-          "category": {
-            "type": "string",
-            "enum": [ "action" ]
-          },
-          "method": {
-            "type": "string",
-            "enum": [ "background" ]
-          },
-          "object": {
-            "type": "string",
-            "enum": [ "app" ]
-          }
-        },
-        "required": [
-          "timestamp",
-          "category",
-          "method",
-          "object"
-        ]
-      }
+        }
+      ]
     }
   ]
-}
+}}

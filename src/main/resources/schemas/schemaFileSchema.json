@@ -5,42 +5,47 @@
   "type": "object",
   "definitions": {
     "schemaArray": {
-        "type": "array",
-        "minItems": 1,
-        "items": { "$ref": "#" }
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#"
+      }
     },
     "nonNegativeInteger": {
-        "type": "integer",
-        "minimum": 0
+      "type": "integer",
+      "minimum": 0
     },
     "nonNegativeIntegerDefault0": {
-        "allOf": [
-            { "$ref": "#/definitions/nonNegativeInteger" },
-            { "default": 0 }
-        ]
+      "allOf": [
+        {
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        {
+          "default": 0
+        }
+      ]
     },
     "simpleTypes": {
-        "enum": [
-            "array",
-            "boolean",
-            "integer",
-            "null",
-            "number",
-            "object",
-            "string"
-        ]
+      "enum": [
+        "array",
+        "boolean",
+        "integer",
+        "null",
+        "number",
+        "object",
+        "string"
+      ]
     },
     "stringArray": {
-        "type": "array",
-        "items": { "type": "string" },
-        "uniqueItems": true,
-        "default": []
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "default": []
     }
   },
   "properties": {
-    "eventGroupName": {
-      "type": "string"
-    },
     "filters": {
       "type": "object",
       "properties": {
@@ -68,69 +73,84 @@
       },
       "additionalProperties": false
     },
-    "events": {
+    "eventGroups": {
       "type": "array",
       "items": {
+        "title": "Event group",
         "type": "object",
-        "required": [ "name", "schema" ],
-        "additionalProperties": false,
         "properties": {
-          "name": {
+          "eventGroupName": {
             "type": "string"
           },
-          "description": {
-            "type": "string"
-          },
-          "userProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "timestamp",
-                    "category",
-                    "object",
-                    "method",
-                    "value"
-                  ]
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "schema"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
                 },
-                {
-                  "type": "string",
-                  "pattern": "^extra"
+                "description": {
+                  "type": "string"
+                },
+                "userProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "timestamp",
+                          "category",
+                          "object",
+                          "method",
+                          "value"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^extra"
+                      }
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                "amplitudeProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "timestamp",
+                          "category",
+                          "object",
+                          "method",
+                          "value"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^extra"
+                      }
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                "schema": {
+                  "type": "object"
                 }
-              ]
+              }
             },
             "uniqueItems": true
-          },
-          "amplitudeProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "timestamp",
-                    "category",
-                    "object",
-                    "method",
-                    "value"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "pattern": "^extra"
-                }
-              ]
-            },
-            "uniqueItems": true
-          },
-          "schema": {
-            "type": "object"
           }
         }
-      },
-      "uniqueItems": true
+      }
     }
   }
 }
