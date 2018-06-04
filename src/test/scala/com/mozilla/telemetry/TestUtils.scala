@@ -150,6 +150,13 @@ object TestUtils {
           |  "buildId": "${defaultFirefoxApplication.buildId}",
           |  "version": "${defaultFirefoxApplication.version}"
           |}""".stripMargin,
+      "environment.settings" ->
+        """
+          |{
+          |  "locale": "it_IT",
+          |  "isDefaultBrowser": true
+          |}
+        """.stripMargin,
       "payload.histograms" ->
         """{
           |  "BROWSER_SHIM_USAGE_BLOCKED": {"values": {"0": 1}},
