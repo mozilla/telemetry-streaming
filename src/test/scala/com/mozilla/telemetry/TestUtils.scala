@@ -108,7 +108,7 @@ object TestUtils {
 
   // scalastyle:off methodLength
   def generateMainMessages(size: Int, fieldsOverride: Option[Map[String, Any]] = None, timestamp: Option[Long] = None,
-                           fieldsToRemove: List[String] = List[String](), customProcesses: Option[String] = None): Seq[Message] = {
+                           fieldsToRemove: List[String] = List[String](), customPayload: Option[String] = None): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "main",
@@ -120,6 +120,7 @@ object TestUtils {
       "geoCountry" -> "IT",
       "os" -> "Linux",
       "submissionDate" -> "20170101",
+      "sampleId" -> 73L,
       "environment.system" ->
         """
           |{
@@ -176,7 +177,14 @@ object TestUtils {
           |  }
           |}""".stripMargin,
       "payload.simpleMeasurements" -> """{"firstPaint": 1200}""",
-      "payload.info" -> """{"subsessionLength": 3600, "subsessionCounter": 1, "sessionId": "sample-session-id"}"""
+      "payload.info" ->
+        """
+          |{
+          |  "subsessionLength": 3600,
+          |  "subsessionCounter": 1,
+          |  "sessionId": "sample-session-id",
+          |  "sessionStartDate": "2018-05-30T11:00:00.0-05:00"
+          |}""".stripMargin
     )
     val outputMap = fieldsOverride match {
       case Some(m) => defaultMap ++ m
@@ -186,6 +194,7 @@ object TestUtils {
       case JField(x, _) if fieldsToRemove.contains(x) => true
       case _ => false
     }
+
     val applicationJson = compact(render(applicationData))
     1.to(size) map { index =>
       RichMessage(s"main-${index}",
@@ -193,21 +202,7 @@ object TestUtils {
         Some(s"""{
              |  "application": ${applicationJson},
              |  "payload": {
-             |    "processes": {
-             |      "content": {
-             |        "histograms": {
-             |          "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-             |            "values": {
-             |              "1": 1,
-             |              "150": 1,
-             |              "250": 1,
-             |              "2500": 1,
-             |              "10000": 1
-             |            }
-             |          }
-             |        }
-             |      }
-             |      ${customProcesses.map("," + _).getOrElse("")}
+             |      ${customPayload.getOrElse("")}
              |    }
              |  }
              |}""".stripMargin),

@@ -4,7 +4,6 @@
 package com.mozilla.telemetry.pings
 
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings.Ping.messageToPing
 import com.mozilla.telemetry.streaming.EventsToAmplitude.{AmplitudeEvent, Config}
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -18,13 +17,18 @@ case class FocusEventPing(clientId: String,
                           osversion: String,
                           settings: FocusSettings,
                           meta: Meta) extends SendsToAmplitude {
+
+  override def getClientId: Option[String] = Some(clientId)
+
   def sessionStart: Long = created
 
-  def getSessionId: String = (events.map(_.timestamp).max).toString
+  def getSessionId: Option[String] = Some((events.map(_.timestamp).max).toString)
 
-  def getOs: String = os
+  def getOsName: Option[String] = Some(os)
 
-  def getOsVersion: String = osversion
+  def getOsVersion: Option[String] = Some(osversion)
+
+  def getCreated: Option[Long] = Some(created)
 
   override def eventToAmplitudeEvent(config: Config, e: Event, es: AmplitudeEvent): JObject = {
     super.eventToAmplitudeEvent(config, e, es) ~
@@ -42,31 +46,6 @@ case class FocusEventPing(clientId: String,
           ("pref_autocomplete_installed" -> settings.autocompleteInstalled) ~
           ("pref_autocomplete_custom" -> settings.autocompleteCustom))
   }
-}
-
-
-case class Event(timestamp: Int,
-                 category: String,
-                 method: String,
-                 `object`: String,
-                 value: Option[String],
-                 extra: Option[Map[String, String]]) {
-
-  def getProperties(properties: Option[Map[String, String]]): JObject = {
-    properties.getOrElse(Map.empty).map { case (k, v) =>
-      k -> (v match {
-        case "timestamp" => timestamp.toString
-        case "category" => category
-        case "method" => method
-        case "object" => `object`
-        case "value" => value.getOrElse("") // TODO - log if empty
-        case e if e.startsWith("extra") => extra.getOrElse(Map.empty).getOrElse(e.stripPrefix("extra."), "")
-        case _ => ""
-      })
-    }.foldLeft(JObject())(_ ~ _)
-  }
-
-  def getId: String = timestamp.toString + category + method + `object`
 }
 
 case class FocusSettings(pref_privacy_block_ads: Option[String],
@@ -103,4 +82,15 @@ case class FocusSettings(pref_privacy_block_ads: Option[String],
   def autocompleteInstalled: Option[Boolean] = asBool(pref_autocomplete_installed)
 
   def autocompleteCustom: Option[Boolean] = asBool(pref_autocomplete_custom)
+}
+
+object FocusEventPing {
+  def apply(message: Message): FocusEventPing = {
+    implicit val formats = DefaultFormats
+
+    val ping = Ping.messageToPing(message, List(), eventLocations)
+    ping.extract[FocusEventPing]
+  }
+
+  val eventLocations = List("events" :: Nil)
 }

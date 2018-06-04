@@ -10,7 +10,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Request
-import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
+import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, RequestPatternBuilder, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.pings.SendsToAmplitude
 import org.apache.spark.sql.streaming.StreamingQueryListener
@@ -25,9 +25,10 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   val Port = 9876
   val Host = "localhost"
   val ConfigFileName = "/testConfigFile.json"
+  val MainEventsConfigFile = "/testMainPingConfigFile.json"
 
   val apiKey = "test-api-key"
-  var wireMockServer: WireMockServer = _
+  private val wireMockServer = new WireMockServer(wireMockConfig().port(Port))
 
   implicit val formats = DefaultFormats
 
@@ -36,8 +37,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   // mocked server pieces
   val path = "/httpapi"
 
-  // present in all events
-  val sharedEventsJson = s"""{
+  // present in all focus events
+  private val focusPingJson = s"""{
     "app_version": "1.1",
     "os_name": "Android",
     "os_version": "23",
@@ -59,23 +60,73 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       "pref_autocomplete_custom": false}
     }}"""
 
+  private val mainPingJson = s"""
+    |  {
+    |    "device_id": "client1",
+    |    "session_id": "sample-session-id",
+    |    "app_version": "42.0",
+    |    "os_name": "Linux",
+    |    "os_version": "42",
+    |    "country": "IT"
+    |  }
+    """.stripMargin
+
   // these keys are present in all events, but values differ
-  val requiredKeys = "session_id" :: "insert_id" :: "time" :: Nil
+  private val requiredKeys = "session_id" :: "insert_id" :: "time" :: Nil
 
   // specific events we expect to see
-  val eventsJson =
-    s"""{ "event_type": "m_foc - AppOpen" }""" ::
-    s"""{ "event_type": "m_foc - Erase", "event_properties": { "erase_object": "erase_home" }}""" ::
-    s"""{ "event_type": "m_foc - AppClose", "event_properties": { "session_length": "1000" }}""" :: Nil
+  private def eventsJson(eventGroup: String) =
+    s"""{ "event_type": "$eventGroup - AppOpen" }""" ::
+    s"""{ "event_type": "$eventGroup - Erase", "event_properties": { "erase_object": "erase_home" }}""" ::
+    s"""{ "event_type": "$eventGroup - AppClose", "event_properties": { "session_length": "1000" }}""" :: Nil
 
-  val jsonMatch = JArray(
-      eventsJson.map{
-        e => parse(e) merge parse(sharedEventsJson)
+  private val focusEventJsonMatch = JArray(
+      eventsJson("m_foc").map{
+        e => parse(e) merge parse(focusPingJson)
       }
     )
 
+  private val mainPingJsonMatch = JArray(
+    eventsJson("main_ping").map {
+      e => parse(e) merge parse(mainPingJson)
+    }
+  )
+
+  private def createMatcher(jsonPattern: JValue): RequestPatternBuilder = {
+    requestMadeFor(new ValueMatcher[Request] {
+      // scalastyle:off methodName
+      def `match`(request: Request): MatchResult = {
+        val params = request
+          .getBodyAsString()
+          .split("&")
+          .map(v => {
+            val m = v.split("=")
+            m(0) -> URLDecoder.decode(m(1), "UTF-8")
+          }).toMap
+
+        MatchResult.of(
+          request.getUrl.startsWith(path) &&
+            params("api_key") == apiKey &&
+            parse(params("event")).asInstanceOf[JArray].arr.flatMap(e => requiredKeys.map(k => e.has(k))).reduce(_ & _) &&
+            (new EqualToJsonPattern(compact(jsonPattern), true, true))
+              .`match`(params("event"))
+              .isExactMatch()
+        )
+      }
+
+      // scalastyle:on methodName
+    })
+  }
+
+  def setUpWireMockServer: Unit = {
+    wireMockServer.start()
+    WireMock.configureFor(Host, Port)
+
+    stubFor(post(urlMatching(path))
+    .willReturn(aResponse().withStatus(200)))
+  }
+
   override def beforeEach {
-    wireMockServer = new WireMockServer(wireMockConfig().port(Port))
     wireMockServer.start()
     WireMock.configureFor(Host, Port)
 
@@ -88,40 +139,16 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   override def afterEach {
-    verify(expectedTotalMsgs,
-      requestMadeFor(new ValueMatcher[Request] {
-        // scalastyle:off methodName
-        def `match`(request: Request): MatchResult = {
-          val params = request
-            .getBodyAsString()
-            .split("&")
-            .map( v => {
-              val m = v.split("=")
-              m(0) -> URLDecoder.decode(m(1), "UTF-8")
-            }).toMap
-
-          MatchResult.of(
-            request.getUrl.startsWith(path) &&
-            params("api_key") == apiKey &&
-            parse(params("event")).asInstanceOf[JArray].arr.flatMap(e => requiredKeys.map(k => e.has(k))).reduce(_ & _) &&
-            (new EqualToJsonPattern(compact(jsonMatch), true, true))
-              .`match`(params("event"))
-              .isExactMatch()
-          )
-        }
-        // scalastyle:on methodName
-      })
-    )
-
+    WireMock.reset()
     wireMockServer.stop()
   }
 
-  private def configFilePath: String = {
-    getClass.getResource(ConfigFileName).getPath
+  private def configFilePath(filename: String): String = {
+    getClass.getResource(filename: String).getPath
   }
 
-  "HTTPSink" should "send events correctly" in {
-    val config = EventsToAmplitude.readConfigFile(configFilePath)
+  "HTTPSink" should "send focus events correctly" in {
+    val config = EventsToAmplitude.readConfigFile(configFilePath(ConfigFileName))
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
@@ -130,8 +157,18 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
   }
 
-  "Events to Amplitude" should "send events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
+  "HTTPSink" should "send main ping events correctly" in {
+    val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
+    val msgs = TestUtils.generateMainMessages(expectedTotalMsgs,
+      customPayload=TestEventsToAmplitude.CustomMainPingPayload)
+    val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
+    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
+
+    verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
+  }
+
+  "Events to Amplitude" should "send focus events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
     Kafka.createTopic(EventsToAmplitude.kafkaTopic)
     val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
 
@@ -139,8 +176,10 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
     }
 
+    // should ignore main messages
     val messages = (TestUtils.generateFocusEventMessages(expectedTotalMsgs)
-      ++ TestUtils.generateMainMessages(expectedTotalMsgs)).map(_.toByteArray) // should ignore main messages
+      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=TestEventsToAmplitude.CustomMainPingPayload))
+      .map(_.toByteArray)
 
     val listener = new StreamingQueryListener {
       var messagesSeen = 0L
@@ -171,7 +210,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       "--kafkaBroker", Kafka.kafkaBrokers,
       "--startingOffsets", "latest",
       "--url", s"http://$Host:$Port$path",
-      "--config-file-path", configFilePath,
+      "--config-file-path", configFilePath(ConfigFileName),
       "--raise-on-error")
     val opts = new EventsToAmplitude.Opts(args)
 
@@ -179,5 +218,100 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
     kafkaProducer.close
     spark.streams.removeListener(listener)
+
+    verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
   }
+
+  "Events to Amplitude" should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
+    Kafka.createTopic(EventsToAmplitude.kafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
+
+    def send(rs: Seq[Array[Byte]]): Unit = {
+      rs.foreach{ kafkaProducer.send(_, synchronous = true) }
+    }
+
+    val messages = (TestUtils.generateFocusEventMessages(expectedTotalMsgs)
+      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=TestEventsToAmplitude.CustomMainPingPayload))
+      .map(_.toByteArray) // should ignore focus event messages
+
+    val listener = new StreamingQueryListener {
+      var messagesSeen = 0L
+      var sentMessages = false
+
+      override def onQueryStarted(event: StreamingQueryListener.QueryStartedEvent): Unit = {}
+
+      override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {}
+
+      override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {
+        messagesSeen += event.progress.numInputRows
+
+        if(!sentMessages){
+          send(messages)
+          sentMessages = true
+        }
+
+        if(messagesSeen == 2 * expectedTotalMsgs){
+          spark.streams.active.foreach(_.processAllAvailable)
+          spark.streams.active.foreach(_.stop)
+        }
+      }
+    }
+
+    spark.streams.addListener(listener)
+
+    val args = Array(
+      "--kafka-broker", Kafka.kafkaBrokers,
+      "--starting-offsets", "latest",
+      "--url", s"http://$Host:$Port$path",
+      "--config-file-path", configFilePath(MainEventsConfigFile),
+      "--raise-on-error")
+    val opts = new EventsToAmplitude.Opts(args)
+
+    EventsToAmplitude.process(opts, apiKey)
+
+    kafkaProducer.close
+    spark.streams.removeListener(listener)
+    verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
+  }
+}
+
+object TestEventsToAmplitude {
+  val CustomMainPingPayload = Some(
+    """
+      |    "processes": {
+      |      "parent": {
+      |        "events": [
+      |          [
+      |            176078022,
+      |            "action",
+      |            "foreground",
+      |            "app"
+      |          ],[
+      |            176127806,
+      |            "action",
+      |            "type_query",
+      |            "search_bar"
+      |          ],[
+      |            176151285,
+      |            "action",
+      |            "click",
+      |            "back_button",
+      |            "erase_home"
+      |          ]
+      |        ]
+      |      },
+      |      "content": {
+      |        "events": [
+      |          [
+      |            176151591,
+      |            "action",
+      |            "background",
+      |            "app",
+      |            "",
+      |            { "sessionLength": "1000" }
+      |          ]
+      |        ]
+      |      }
+      |    }
+    """.stripMargin)
 }
