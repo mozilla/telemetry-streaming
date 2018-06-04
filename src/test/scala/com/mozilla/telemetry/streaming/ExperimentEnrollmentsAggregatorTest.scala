@@ -40,9 +40,9 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("set of main pings with experiment enrollment events")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customProcesses = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k, customProcesses = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
-        ++ TestUtils.generateMainMessages(k, customProcesses = enrollmentEventJson(ExperimentB, Some("one"), enroll = true))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), enroll = true))
       ).map(_.toByteArray).seq
     val pingsDf = spark.createDataset(mainPings).toDF()
 
@@ -72,9 +72,9 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("set of main pings with experiment enrollment events and some unenroll events without the branch")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customProcesses = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k / 2, customProcesses = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
-        ++ TestUtils.generateMainMessages(k / 2, customProcesses = enrollmentEventJson(ExperimentA, None, enroll = false))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
+        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, None, enroll = false))
       ).map(_.toByteArray).seq
     val pingsDf = spark.createDataset(mainPings).toDF()
 
@@ -91,8 +91,8 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("a main ping with experiment enrollment events, main pings without events and a crash ping")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customProcesses = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k, customProcesses = Some(""" "dynamic": {"events": []} """))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+        ++ TestUtils.generateMainMessages(k, customPayload = Some(""" "dynamic": {"events": []} """))
         ++ TestUtils.generateMainMessages(k)
         ++ TestUtils.generateCrashMessages(k)
       ).map(_.toByteArray).seq
@@ -110,10 +110,12 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
     val branchKv = experimentBranch.map(b => s""" "branch": "$b" """).getOrElse("")
     Some(
       s"""
-         |"dynamic": {
-         |  "events": [
-         |    [554879, "normandy", "${if (enroll) "enroll" else "unenroll"}", "preference_study", "$experiment_id", {$branchKv}]
-         |  ]
+         |"processes": {
+         |  "dynamic": {
+         |    "events": [
+         |      [554879, "normandy", "${if (enroll) "enroll" else "unenroll"}", "preference_study", "$experiment_id", {$branchKv}]
+         |    ]
+         |  }
          |}
       """.stripMargin)
   }
