@@ -300,7 +300,7 @@ trait SendsToAmplitude {
       ("city" -> meta.geoCity)
   }
 
-  def getAmplitudeEvents(config: Config): String = {
+  def getAmplitudeEvents(config: Config): Option[String] = {
     implicit val formats = DefaultFormats
 
     val factory = JsonSchemaFactory.byDefault
@@ -316,7 +316,11 @@ trait SendsToAmplitude {
       .map{ case(e, em) => e -> em.head._2 } // take the first match (head._1 is the bool)
       .map{ case(e, (gn, es)) => eventToAmplitudeEvent(gn, e, es) }
 
-    compact(render(eventsList))
+    if (eventsList.isEmpty) {
+      None
+    } else {
+      Some(compact(render(eventsList)))
+    }
   }
 
   def getFullEventName(groupName: String, eventName: String): String = groupName + " - " + eventName

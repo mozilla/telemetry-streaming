@@ -137,7 +137,7 @@ object EventsToAmplitude extends StreamingJobBase {
         case true =>
           SendsToAmplitude(message) match {
             case p if !p.includePing(sample, config) => emptyReturn
-            case p => Array(p.getAmplitudeEvents(config))
+            case p => p.getAmplitudeEvents(config).map(Array(_)).getOrElse(emptyReturn)
           }
       }
   }
