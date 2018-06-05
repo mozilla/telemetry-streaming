@@ -1,0 +1,968 @@
+{
+  "filters": {
+    "docType": [
+      "main"
+    ],
+    "appName": [
+      "Firefox"
+    ]
+  },
+  "eventGroups": [
+    {
+      "eventGroupName": "dt",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "entrypoint": "extra.entrypoint",
+            "first_panel": "extra.first_panel",
+            "splitconsole": "extra.splitconsole"
+          },
+          "description": "",
+          "name": "open",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "open"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "tools"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {},
+          "description": "",
+          "name": "close",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "close"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "tools"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_webconsole",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "message_count": "extra.message_count"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_inspector",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "start_state": "extra.start_state"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "inspector"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "inspector"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_jsdebugger",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "start_state": "extra.start_state"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "jsdebugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "jsdebugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_styleeditor",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "start_state": "extra.start_state"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "styleeditor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "styleeditor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_netmonitor",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "start_state": "extra.start_state"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_storage",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "start_state": "extra.start_state"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "storage"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "storage"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_other",
+      "events": [
+        {
+          "amplitudeProperties": {
+            "cold": "extra.cold",
+            "panel_name": "extra.panel_name"
+          },
+          "description": "",
+          "name": "enter",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "enter"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "other"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "next_panel": "extra.next_panel",
+            "reason": "extra.reason"
+          },
+          "description": "",
+          "name": "exit",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "exit"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "other"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_responsive_design",
+      "events": [
+        {
+          "amplitudeProperties": {},
+          "description": "",
+          "name": "activate",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "activate"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "responsive_design"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {},
+          "description": "",
+          "name": "deactivate",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "deactivate"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "responsive_design"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    },
+    {
+      "eventGroupName": "dt_split_console",
+      "events": [
+        {
+          "amplitudeProperties": {},
+          "description": "",
+          "name": "activate",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "activate"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "split_console"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {},
+          "description": "",
+          "name": "deactivate",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "deactivate"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "split_console"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "host": "extra.host",
+            "width": "extra.width"
+          }
+        }
+      ]
+    }
+  ]
+}
