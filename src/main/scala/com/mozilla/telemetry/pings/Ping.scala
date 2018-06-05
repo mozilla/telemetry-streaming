@@ -276,7 +276,6 @@ trait SendsToAmplitude {
 
   def getClientId: Option[String]
   def sessionStart: Long
-  def getSessionId: Option[String]
   def getOsName: Option[String]
   def getOsVersion: Option[String]
   def getCreated: Option[Long]
@@ -286,9 +285,8 @@ trait SendsToAmplitude {
 
   def eventToAmplitudeEvent(eventGroup: String, e: Event, es: AmplitudeEvent): JObject = {
     pingAmplitudeProperties merge
-    ("device_id" -> getClientId) ~
-      ("session_id" -> getSessionId) ~
-      ("insert_id" -> (getClientId.getOrElse("None") + getSessionId.getOrElse("None") + e.getAmplitudeId)) ~
+      ("session_id" -> sessionStart) ~
+      ("insert_id" -> (getClientId.getOrElse("None") + sessionStart.toString + e.getAmplitudeId)) ~
       ("event_type" -> getFullEventName(eventGroup, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
       ("event_properties" -> e.getProperties(es.amplitudeProperties)) ~
