@@ -115,9 +115,6 @@ case class MainPing(application: Application,
 
   override def getClientId: Option[String] = meta.clientId
 
-  // As a fallback, we use the Focus ping sessionId strategy
-  override def getSessionId: Option[String] = Some(sessionId.getOrElse(events.map(_.timestamp).max.toString))
-
   override def getCreated: Option[Long] = meta.creationTimestamp.map(t => (t / 1e9).toLong)
 
   def sessionStart: Long = meta.`payload.info` \ "sessionStartDate" match {
@@ -137,8 +134,8 @@ case class MainPing(application: Application,
       ("app_build_id" -> meta.appBuildId) ~
       ("locale" -> meta.`environment.settings`.map(_.locale)) ~
       ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
-      ("experiments" -> experimentsArray)
-    )
+      ("experiments" -> experimentsArray)) ~
+      ("user_id" -> getClientId)
   }
 }
 
