@@ -76,6 +76,11 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 
 parallelExecution in Test := false
 
+scalacOptions ++= Seq(
+  "-Ywarn-unused",
+  "-Ywarn-unused-import"
+)
+
 assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", xs @ _*) => MergeStrategy.last
   case x =>
