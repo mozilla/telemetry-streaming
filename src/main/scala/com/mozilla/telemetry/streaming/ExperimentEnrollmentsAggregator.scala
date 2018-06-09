@@ -100,23 +100,25 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
     import spark.sql.functions._
 
     val events: Dataset[ExperimentEnrollmentEvent] = messages.flatMap(v => {
-      val m = Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]])
-      val fields = m.fieldsAsMap
-      val docType = fields.getOrElse("docType", "").asInstanceOf[String]
-      if (!allowedDocTypes.contains(docType)) {
-        Array.empty[ExperimentEnrollmentEvent]
-      } else {
-        try {
+      try {
+        val m = Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]])
+        val fields = m.fieldsAsMap
+        // TODO: we can get a double here?
+        // https://dbc-caf9527b-e073.cloud.databricks.com/#setting/sparkui/0605-205051-amid13/driver-logs
+        val docType = fields.getOrElse("docType", "").asInstanceOf[String]
+        if (!allowedDocTypes.contains(docType)) {
+          Array.empty[ExperimentEnrollmentEvent]
+        } else {
           val mainPing = MainPing(m)
           mainPing.getNormandyEvents.map { e =>
             val timestamp = mainPing.meta.normalizedTimestamp()
             val submissionDate = timestampToDateString(mainPing.meta.normalizedTimestamp())
             ExperimentEnrollmentEvent(e.method, e.value, e.extra.flatMap(m => m.get("branch")), e.`object`, timestamp, submissionDate)
           }
-        } catch {
-          // TODO: track parse errors
-          case _: Throwable => Array.empty[ExperimentEnrollmentEvent]
         }
+      } catch {
+        // TODO: track parse errors
+        case _: Throwable => Array.empty[ExperimentEnrollmentEvent]
       }
     })
 
