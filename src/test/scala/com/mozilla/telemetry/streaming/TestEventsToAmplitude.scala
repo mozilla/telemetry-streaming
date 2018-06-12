@@ -21,6 +21,8 @@ import org.scalatest._
 class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with DataFrameSuiteBase {
 
   object DockerEventsTag extends Tag("DockerEventsTag")
+  object DockerFocusEvents extends Tag("DockerFocusEvents")
+  object DockerMainEvents extends Tag("DockerMainEvents")
 
   val Port = 9876
   val Host = "localhost"
@@ -130,7 +132,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     WireMock.configureFor(Host, Port)
 
     stubFor(post(urlMatching(path))
-    .willReturn(aResponse().withStatus(200)))
+      .willReturn(aResponse().withStatus(200)))
   }
 
   override def beforeEach {
@@ -177,7 +179,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
   }
 
-  "Events to Amplitude" should "send focus events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
+  "Events to Amplitude" should "send focus events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerFocusEvents) in {
     Kafka.createTopic(EventsToAmplitude.kafkaTopic)
     val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
 
@@ -231,7 +233,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
   }
 
-  "Events to Amplitude" should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
+  "Events to Amplitude" should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
     Kafka.createTopic(EventsToAmplitude.kafkaTopic)
     val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
 
@@ -283,7 +285,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
   }
 
-  "Events to Amplitude" should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
+  "Events to Amplitude" should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
     Kafka.createTopic(EventsToAmplitude.kafkaTopic)
     val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
 

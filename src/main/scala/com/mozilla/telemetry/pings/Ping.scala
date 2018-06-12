@@ -333,7 +333,7 @@ trait SendsToAmplitude {
     }
 
     config.nonTopLevelFilters.map{ case(prop, allowedVals) =>
-      allowedVals.contains(filterProperties.getOrElse(prop, allowedVals.head))
+      allowedVals.contains(filterProperties(prop))
     }.foldLeft(true)(_ & _)
   }
 }
@@ -341,12 +341,8 @@ trait SendsToAmplitude {
 object SendsToAmplitude {
   def apply(message: Message): SendsToAmplitude = {
     implicit val formats = DefaultFormats
-    val jsonFieldNames = List()
     message.fieldsAsMap.get("docType") match {
-      case Some("focus-event") => {
-        val ping = Ping.messageToPing(message, jsonFieldNames, List("events" :: Nil))
-        ping.extract[FocusEventPing]
-      }
+      case Some("focus-event") => FocusEventPing(message)
       case Some("main") => MainPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
       case _ => throw new IllegalArgumentException(s"No doctype found")
@@ -368,7 +364,7 @@ case class Event(timestamp: Int,
         case "category" => category
         case "method" => method
         case "object" => `object`
-        case "value" => value.getOrElse("") // TODO - log if empty
+        case "value" => value.getOrElse("")
         case e if e.startsWith("extra") => extra.getOrElse(Map.empty).getOrElse(e.stripPrefix("extra."), "")
         case _ => ""
       })

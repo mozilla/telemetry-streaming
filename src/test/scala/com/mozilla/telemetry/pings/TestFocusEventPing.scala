@@ -36,9 +36,9 @@ class TestFocusEventPing extends FlatSpec with Matchers{
     ping.includePing(1.0, included) should be (true)
   }
 
-  it can "ignore non-existent properties in filter" in {
+  it can "throw on non-existent properties in filter" in {
     val included = Config(Map("nonexistent" -> List("Android")), Nil)
-    ping.includePing(1.0, included) should be (true)
+    an [NoSuchElementException] should be thrownBy ping.includePing(1.0, included) // scalastyle:ignore
   }
 
   it can "filter on non-string properties" in {
