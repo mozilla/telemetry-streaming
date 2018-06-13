@@ -6,6 +6,7 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -31,7 +32,9 @@ class TestExperimentsErrorAggregator extends FlatSpec with Matchers with DataFra
         ++ contentCrashes
         ++ TestUtils.generateMainMessages(k)).map(_.toByteArray).seq
 
-    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true)
+    val df = ErrorAggregator.aggregate(spark.sqlContext.createDataset(messages).toDF, raiseOnError = true,
+      ExperimentsErrorAggregator.defaultDimensionsSchema, ExperimentsErrorAggregator.defaultMetricsSchema,
+      ExperimentsErrorAggregator.defaultCountHistogramErrorsSchema)
 
     // 1 for each experiment (there are 2), and one for a null experiment
     df.count() should be (3)
