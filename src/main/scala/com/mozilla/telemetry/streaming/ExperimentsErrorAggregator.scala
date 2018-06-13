@@ -3,19 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import java.sql.Timestamp
-
+import java.sql.{Date, Timestamp}
 import com.mozilla.telemetry.timeseries.SchemaBuilder
-import org.apache.spark.sql.types.StructType
 
-object ExperimentsErrorAggregator extends ErrorAggregatorBase {
-  override val outputPrefix = "experiment_error_aggregates/v1"
-  override val queryName = "experiment_error_aggregates"
+object ExperimentsErrorAggregator {
+  val outputPrefix = "experiment_error_aggregates/v1"
+  val queryName = "experiment_error_aggregates"
 
-  override val countHistogramErrorsSchema: StructType = new SchemaBuilder().build
+  val defaultCountHistogramErrorsSchema = (new SchemaBuilder()).build
+  val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
 
-  override val dimensionsSchema: StructType = new SchemaBuilder()
-    .add[Timestamp]("timestamp") // Windowed
+  val defaultDimensionsSchema = new SchemaBuilder()
+    .add[Timestamp]("timestamp")  // Windowed
     .add[String]("submission_date_s3")
     .add[String]("channel")
     .add[String]("version")
@@ -25,7 +24,7 @@ object ExperimentsErrorAggregator extends ErrorAggregatorBase {
     .add[String]("experiment_branch")
     .build
 
-  override val metricsSchema: StructType = new SchemaBuilder()
+  val defaultMetricsSchema = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("main_crashes")
@@ -36,4 +35,14 @@ object ExperimentsErrorAggregator extends ErrorAggregatorBase {
     .add[Int]("gmplugin_crashes")
     .add[Int]("content_shutdown_crashes")
     .build
+
+  def main(args: Array[String]): Unit = {
+    ErrorAggregator.setPrefix(outputPrefix)
+    ErrorAggregator.setQueryName(queryName)
+
+    ErrorAggregator.run(args,
+      defaultDimensionsSchema,
+      defaultMetricsSchema,
+      defaultCountHistogramErrorsSchema)
+  }
 }
