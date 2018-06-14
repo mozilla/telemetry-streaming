@@ -10,8 +10,6 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class StreamingJobBaseTest extends FlatSpec with Matchers {
   private val base = new StreamingJobBase {
-    override val queryName = ""
-    override val outputPrefix = ""
     override val clock: Clock = Clock.fixed(
       LocalDate.of(2018, 4, 5).atStartOfDay(ZoneId.of("UTC")).toInstant, ZoneId.of("UTC"))
   }

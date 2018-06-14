@@ -4,7 +4,7 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
-
+import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import com.mozilla.telemetry.heka.{Dataset, Message}
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.timeseries._
@@ -20,13 +20,12 @@ object ErrorAggregator {
   private val dateFormat = "yyyyMMdd"
   private val dateFormatter = format.DateTimeFormat.forPattern(dateFormat)
 
-  private val defaultQueryName = "error_aggregator"
   private val defaultOutputPrefix = "error_aggregator/v2"
+  private val defaultAppName = "Error Aggregator"
 
-  var queryName = defaultQueryName
   var outputPrefix = defaultOutputPrefix
+  var appName = defaultAppName
 
-  val kafkaTopic = "telemetry"
   val defaultNumFiles = 60
 
   //TODO: make relationships visible here - we're adding crash/Fennec and core/Fennec/Android
@@ -295,7 +294,7 @@ object ErrorAggregator {
       .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
-      .option("subscribe", kafkaTopic)
+      .option("subscribe", TelemetryKafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
       .load()
 
@@ -304,7 +303,7 @@ object ErrorAggregator {
     aggregate(pings.select("value"), raiseOnError = opts.raiseOnError(), dimensions, metrics, countHistograms)
       .repartition(1)
       .writeStream
-      .queryName(queryName)
+      .queryName("main_query")
       .format("parquet")
       .option("path", s"${outputPath}/${outputPrefix}")
       .option("checkpointLocation", opts.checkpointPath())
@@ -360,15 +359,15 @@ object ErrorAggregator {
     ErrorAggregator.outputPrefix = prefix
   }
 
-  def setQueryName(name: String): Unit = {
-    ErrorAggregator.queryName = name
+  def setAppName(name: String): Unit = {
+    ErrorAggregator.appName = name
   }
 
   def run(args: Array[String], dimensions: StructType, metrics: StructType, countHistograms: StructType): Unit = {
     val opts = new Opts(args)
 
     val spark = SparkSession.builder()
-      .appName("Error Aggregates")
+      .appName(appName)
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
       .getOrCreate()
