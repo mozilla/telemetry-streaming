@@ -6,7 +6,6 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import org.apache.spark.sql.SparkSession
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers}
 

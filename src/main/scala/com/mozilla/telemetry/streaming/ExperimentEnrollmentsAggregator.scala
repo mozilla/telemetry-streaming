@@ -7,13 +7,12 @@ import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.{Message, Dataset => MozDataset}
 import com.mozilla.telemetry.pings.MainPing
-import com.mozilla.telemetry.streaming.ErrorAggregator._
+import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.rogach.scallop.ScallopOption
 
 object ExperimentEnrollmentsAggregator extends StreamingJobBase {
-  override val queryName = "experiment_enrollments"
   override val outputPrefix = "experiment_enrollments/v1"
 
   val kafkaCacheMaxCapacity = 100
@@ -46,7 +45,7 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
       .option("failOnDataLoss", opts.failOnDataLoss())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
-      .option("subscribe", kafkaTopic)
+      .option("subscribe", TelemetryKafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
       .load()
 
@@ -55,7 +54,7 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
     aggregate(pings.select("value"))
       .repartition(1)
       .writeStream
-      .queryName(queryName)
+      .queryName(QueryName)
       .format("parquet")
       .option("path", s"${outputPath}/${outputPrefix}")
       .option("checkpointLocation", opts.checkpointPath())
@@ -157,7 +156,7 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
       "numParquetFiles",
       descr = "Number of parquet files per submission_date_s3 (batch mode only)",
       required = false,
-      default = Some(defaultNumFiles)
+      default = Some(60)
     )
 
     conflicts(kafkaBroker, List(from, to, numParquetFiles))

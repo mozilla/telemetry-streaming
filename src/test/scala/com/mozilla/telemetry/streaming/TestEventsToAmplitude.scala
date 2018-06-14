@@ -180,8 +180,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   "Events to Amplitude" should "send focus events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerFocusEvents) in {
-    Kafka.createTopic(EventsToAmplitude.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
+    Kafka.createTopic(StreamingJobBase.TelemetryKafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(StreamingJobBase.TelemetryKafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
@@ -234,8 +234,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   "Events to Amplitude" should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
-    Kafka.createTopic(EventsToAmplitude.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
+    Kafka.createTopic(StreamingJobBase.TelemetryKafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(StreamingJobBase.TelemetryKafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }

@@ -3,12 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import java.sql.{Date, Timestamp}
+import java.sql.Timestamp
+
 import com.mozilla.telemetry.timeseries.SchemaBuilder
 
 object ExperimentsErrorAggregator {
+
   val outputPrefix = "experiment_error_aggregates/v1"
-  val queryName = "experiment_error_aggregates"
+  val appName = "Experiments Error Aggregates"
 
   val defaultCountHistogramErrorsSchema = (new SchemaBuilder()).build
   val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
@@ -38,7 +40,7 @@ object ExperimentsErrorAggregator {
 
   def main(args: Array[String]): Unit = {
     ErrorAggregator.setPrefix(outputPrefix)
-    ErrorAggregator.setQueryName(queryName)
+    ErrorAggregator.setAppName(appName)
 
     ErrorAggregator.run(args,
       defaultDimensionsSchema,

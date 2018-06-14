@@ -15,7 +15,11 @@ import org.rogach.scallop.{ScallopConf, ScallopOption}
   * Base class for streaming jobs that read data from Kafka
   */
 abstract class StreamingJobBase extends Serializable {
-  val queryName: String
+
+  /**
+    * Generic query name for easy monitoring of production jobs
+    */
+  val QueryName: String = "main_query"
 
   /**
     * S3 output prefix with version number
@@ -88,4 +92,6 @@ object StreamingJobBase {
     */
   val DateFormat = "yyyyMMdd"
   val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DateFormat)
+
+  val TelemetryKafkaTopic = "telemetry"
 }

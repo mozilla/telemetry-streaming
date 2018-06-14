@@ -282,8 +282,8 @@ class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase
   it should "correctly read from kafka" taggedAs(Kafka.DockerComposeTag, DockerErrorAggregatorTag) in {
     spark.sparkContext.setLogLevel("WARN")
 
-    Kafka.createTopic(ErrorAggregator.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(ErrorAggregator.kafkaTopic)
+    Kafka.createTopic(StreamingJobBase.TelemetryKafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(StreamingJobBase.TelemetryKafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
