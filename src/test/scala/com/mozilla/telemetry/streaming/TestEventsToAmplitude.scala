@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, RequestPatternBuilder, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.pings.SendsToAmplitude
+import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
@@ -286,8 +287,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   "Events to Amplitude" should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
-    Kafka.createTopic(EventsToAmplitude.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
+    Kafka.createTopic(TelemetryKafkaTopic)
+    val kafkaProducer = Kafka.makeProducer(TelemetryKafkaTopic)
 
     def send(rs: Seq[Array[Byte]]): Unit = {
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
