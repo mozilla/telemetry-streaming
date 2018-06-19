@@ -40,7 +40,7 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 before_deploy:
-  - wget https://raw.githubusercontent.com/mozilla/telemetry-batch-view/master/deploy.sh
+  - wget https://raw.githubusercontent.com/mozilla/telemetry-batch-view/spark-2.3.0/deploy.sh
   - export JAR="target/scala-2.11/telemetry-streaming-assembly-0.1-SNAPSHOT.jar"
   - sbt assembly
   - git config --local user.name "Auto Deployer"
