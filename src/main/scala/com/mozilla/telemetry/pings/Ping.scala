@@ -187,7 +187,7 @@ case class OS(name: Option[String], version: Option[String]) {
   val normalizedVersion: String = {
     version match {
       case Some(v) =>
-        val versionRegex(normalized, b, c) = v
+        val versionRegex(normalized, _, _) = v
         normalized
       case None =>
         null
