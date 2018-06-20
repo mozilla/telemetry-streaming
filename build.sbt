@@ -94,7 +94,7 @@ assemblyShadeRules in assembly := Seq(
   ShadeRule.rename("com.trueaccord.scalapb.**" -> "shadescalapb.@1").inAll
 )
 
-addCommandAlias("ci", ";clean ;compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")
+addCommandAlias("ci", ";clean ;compile ;test:compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")
 
 val scalaStyleConfigUrl = Some(url("https://raw.githubusercontent.com/mozilla/moztelemetry/master/scalastyle-config.xml"))
 (scalastyleConfigUrl in Compile) := scalaStyleConfigUrl
