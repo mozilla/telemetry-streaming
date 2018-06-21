@@ -25,7 +25,7 @@ class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   val delay = 1
   val timeout = 100
 
-  val httpSink = new HttpSink(s"http://$Host:$Port$Path", Map.empty, maxAttempts, delay, timeout)
+  val httpSink = new HttpSink(s"http://$Host:$Port$Path", Map.empty, maxAttempts, delay, timeout)()
 
   var scenario = "Response Codes Scenario"
   var event = """{"event": "test event, please ignore"}"""

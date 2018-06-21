@@ -11,6 +11,9 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
+                      (httpSendMethod: (HttpRequest, String) => HttpRequest =
+                       (req: HttpRequest, event: String) =>
+                         req.postForm(("event" -> event.toString) :: data.toList.map { case (a, b) => a.toString -> b.toString }))
   extends ForeachWriter[String] {
 
   // codes to retry a request on - allow retries on timeouts
@@ -38,8 +41,7 @@ class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int 
 
   def process(event: String): Unit = {
     attempt(
-      Http(url.toString)
-        .postForm(("event" -> event.toString) :: data.toList.map{ case(a, b) => a.toString -> b.toString })
+      httpSendMethod(Http(url.toString), event)
         .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = ReadTimeout))
   }
 

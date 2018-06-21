@@ -7,18 +7,16 @@ import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneOffset}
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import com.mozilla.telemetry.streaming.EnrollmentEvents.{ExperimentA, ExperimentB, enrollmentEventJson}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types._
 import org.scalatest.{FlatSpec, GivenWhenThen, Matchers}
-
 class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with GivenWhenThen with DataFrameSuiteBase {
 
   val k = 10 //
   val checkedColumns = Array("window_start", "window_end", "object", "experiment_id", "branch_id", "enroll_count", "unenroll_count")
   val ExpectedWindowStart = new Timestamp(LocalDateTime.parse("2016-04-07T13:35:00").toInstant(ZoneOffset.UTC).toEpochMilli)
   val ExpectedWindowEnd = new Timestamp(LocalDateTime.parse("2016-04-07T13:40:00").toInstant(ZoneOffset.UTC).toEpochMilli)
-  private val ExperimentA = "pref-flip-timer-speed-up-60-1443940"
-  private val ExperimentB = "pref-flip-search-composition-57-release-1413565"
 
   override def assertDataFrameEquals(expected: DataFrame, result: DataFrame): Unit = {
     def prepare(df: DataFrame) =
@@ -105,8 +103,13 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
     val expected = prepareExpectedAggregate((ExperimentA, "six", k, 0))
     assertDataFrameEquals(aggregates, expected)
   }
+}
 
-  private def enrollmentEventJson(experiment_id: String, experimentBranch: Option[String], enroll: Boolean): Option[String] = {
+object EnrollmentEvents {
+  val ExperimentA = "pref-flip-timer-speed-up-60-1443940"
+  val ExperimentB = "pref-flip-search-composition-57-release-1413565"
+
+  def enrollmentEventJson(experiment_id: String, experimentBranch: Option[String], enroll: Boolean): Option[String] = {
     val branchKv = experimentBranch.map(b => s""" "branch": "$b" """).getOrElse("")
     Some(
       s"""

@@ -176,7 +176,7 @@ object EventsToAmplitude extends StreamingJobBase {
 
   def sendStreamingEvents(spark: SparkSession, opts: Opts, apiKey: String): Unit = {
     val config = readConfigFile(opts.configFilePath())
-    val httpSink = new HttpSink(opts.url(), Map("api_key" -> apiKey))
+    val httpSink = new HttpSink(opts.url(), Map("api_key" -> apiKey))()
 
     val pings = spark
       .readStream
@@ -230,7 +230,7 @@ object EventsToAmplitude extends StreamingJobBase {
       getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
         .repartition(maxParallelRequests)
         .foreachPartition{ it: Iterator[String] =>
-          val httpSink = new HttpSink(url, Map("api_key" -> apiKey))
+          val httpSink = new HttpSink(url, Map("api_key" -> apiKey))()
           it.foreach{ event =>
             httpSink.process(event)
             java.lang.Thread.sleep(minDelay)
