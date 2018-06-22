@@ -485,6 +485,80 @@ object TestUtils {
     }
   }
 
+  def generateFrecencyUpdateMessages(size: Int,
+                                     fieldsOverride: Option[Map[String, Any]] = None,
+                                     timestamp: Option[Long] = None): Seq[Message] = {
+    val defaultMap = Map(
+      "clientId" -> "client1",
+      "docType" -> "frecency-update",
+      "documentId" -> "an_id",
+      "normalizedChannel" -> defaultFirefoxApplication.channel,
+      "appName" -> defaultFirefoxApplication.name,
+      "appVersion" -> defaultFirefoxApplication.version.toDouble,
+      "displayVersion" -> defaultFirefoxApplication.displayVersion.orNull,
+      "appBuildId" -> defaultFirefoxApplication.buildId,
+      "geoCountry" -> "IT",
+      "os" -> "Linux",
+      "submissionDate" -> "20170101"
+    )
+    val outputMap = fieldsOverride match {
+      case Some(m) => defaultMap ++ m
+      case _ => defaultMap
+    }
+    val applicationJson = compact(render(Extraction.decompose(defaultFirefoxApplication)))
+    val payload =
+      s"""
+         |    "frecency_scores": [
+         |      38223,
+         |      3933.4,
+         |      304933.3,
+         |      21
+         |    ],
+         |    "loss": 291989.21,
+         |    "model_version": 3,
+         |    "num_chars_typed": 5,
+         |    "num_suggestions_displayed": 6,
+         |    "rank_selected": 2,
+         |    "study_variation": "treatment",
+         |    "update": [
+         |      1.2,
+         |      3.2,
+         |      -3.1,
+         |      4.4,
+         |      0.5,
+         |      0.234,
+         |      -0.98,
+         |      0.33,
+         |      0.34,
+         |      0.28,
+         |      0.302,
+         |      0.4,
+         |      -0.8,
+         |      0.25,
+         |      0.9,
+         |      -0.8,
+         |      0.29,
+         |      0.42,
+         |      0.89,
+         |      0.39,
+         |      0.54,
+         |      0.78
+         |    ]
+       """.stripMargin
+    1.to(size) map { index =>
+      RichMessage(s"event-$index",
+        outputMap,
+        Some(
+          s"""
+             |{
+             |  "payload": { $payload },
+             |  "application": $applicationJson
+             |}""".stripMargin),
+        timestamp = timestamp.getOrElse(testTimestampNano)
+      )
+    }
+  }
+
   abstract class AppType
   case object Firefox extends AppType
   case object Fennec extends AppType
