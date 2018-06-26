@@ -159,7 +159,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
-    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
+    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
     verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
@@ -171,7 +171,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
       customPayload=TestEventsToAmplitude.CustomMainPingPayload)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
-    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
+    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
@@ -281,57 +281,6 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     kafkaProducer.close
     spark.streams.removeListener(listener)
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
-  }
-
-  "Events to Amplitude" should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
-    Kafka.createTopic(EventsToAmplitude.kafkaTopic)
-    val kafkaProducer = Kafka.makeProducer(EventsToAmplitude.kafkaTopic)
-
-    def send(rs: Seq[Array[Byte]]): Unit = {
-      rs.foreach{ kafkaProducer.send(_, synchronous = true) }
-    }
-
-    val messages = (TestUtils.generateMainMessages(expectedTotalMsgs))
-      .map(_.toByteArray)
-
-    val listener = new StreamingQueryListener {
-      var messagesSeen = 0L
-      var sentMessages = false
-
-      override def onQueryStarted(event: StreamingQueryListener.QueryStartedEvent): Unit = {}
-
-      override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {}
-
-      override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {
-        messagesSeen += event.progress.numInputRows
-
-        if(!sentMessages){
-          send(messages)
-          sentMessages = true
-        }
-
-        if(messagesSeen == expectedTotalMsgs){
-          spark.streams.active.foreach(_.processAllAvailable)
-          spark.streams.active.foreach(_.stop)
-        }
-      }
-    }
-
-    spark.streams.addListener(listener)
-
-    val args = Array(
-      "--kafka-broker", Kafka.kafkaBrokers,
-      "--starting-offsets", "latest",
-      "--url", s"http://$Host:$Port$path",
-      "--config-file-path", configFilePath(MainEventsConfigFile),
-      "--raise-on-error")
-    val opts = new EventsToAmplitude.Opts(args)
-
-    EventsToAmplitude.process(opts, apiKey)
-
-    kafkaProducer.close
-    spark.streams.removeListener(listener)
-    verify(0, postRequestedFor(urlMatching(path)))
   }
 }
 
