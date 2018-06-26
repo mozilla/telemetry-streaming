@@ -100,11 +100,11 @@ object EventsToAmplitude extends StreamingJobBase {
     userProperties: Option[Map[String, String]],
     schema: JValue)
 
-  case class AmplitudeEventGroup(eventGroupName: String, events: List[AmplitudeEvent])
-
   case class Config(
+    eventGroupName: String,
     filters: Map[String, List[String]],
-    eventGroups: Seq[AmplitudeEventGroup]) {
+    events: List[AmplitudeEvent]){
+
     def getBatchFilters: Map[String, List[String]] = {
       filters.map{ case(k, v) => k ->
         (k match {

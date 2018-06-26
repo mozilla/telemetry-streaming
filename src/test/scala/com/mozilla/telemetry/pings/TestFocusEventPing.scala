@@ -18,7 +18,7 @@ class TestFocusEventPing extends FlatSpec with Matchers{
   }
 
   it can "correctly sample itself" in {
-    val noFilters = Config(Map.empty, Nil)
+    val noFilters = Config("name", Map.empty, Nil)
 
     ping.includePing(0.0, noFilters) should be (false)
     ping.includePing(0.72, noFilters) should be (false)
@@ -27,22 +27,22 @@ class TestFocusEventPing extends FlatSpec with Matchers{
   }
 
   it can "correctly filter itself" in {
-    val notIncluded = Config(Map("os" -> List("iOS")), Nil)
+    val notIncluded = Config("name", Map("os" -> List("iOS")), Nil)
     ping.includePing(1.0, notIncluded) should be (false)
   }
 
   it can "correctly include itself" in {
-    val included = Config(Map("os" -> List("Android")), Nil)
+    val included = Config("name", Map("os" -> List("Android")), Nil)
     ping.includePing(1.0, included) should be (true)
   }
 
   it can "ignore non-existent properties in filter" in {
-    val included = Config(Map("nonexistent" -> List("Android")), Nil)
+    val included = Config("name", Map("nonexistent" -> List("Android")), Nil)
     ping.includePing(1.0, included) should be (true)
   }
 
   it can "filter on non-string properties" in {
-    val included = Config(Map("created" -> List("1506024685632")), Nil)
+    val included = Config("name", Map("created" -> List("1506024685632")), Nil)
     ping.includePing(1.0, included) should be (true)
   }
 }

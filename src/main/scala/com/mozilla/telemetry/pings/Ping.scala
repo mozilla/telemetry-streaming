@@ -284,12 +284,12 @@ trait SendsToAmplitude {
 
   def pingAmplitudeProperties: JObject = JObject()
 
-  def eventToAmplitudeEvent(eventGroup: String, e: Event, es: AmplitudeEvent): JObject = {
+  def eventToAmplitudeEvent(config: Config, e: Event, es: AmplitudeEvent): JObject = {
     pingAmplitudeProperties merge
     ("device_id" -> getClientId) ~
       ("session_id" -> getSessionId) ~
       ("insert_id" -> (getClientId.getOrElse("None") + getSessionId.getOrElse("None") + e.getAmplitudeId)) ~
-      ("event_type" -> getFullEventName(eventGroup, es.name)) ~
+      ("event_type" -> getFullEventName(config.eventGroupName, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
       ("event_properties" -> e.getProperties(es.amplitudeProperties)) ~
       ("user_properties" -> e.getProperties(es.userProperties)) ~
@@ -304,17 +304,17 @@ trait SendsToAmplitude {
     implicit val formats = DefaultFormats
 
     val factory = JsonSchemaFactory.byDefault
-    val schemas = config.eventGroups.flatMap(g => g.events.map(e => factory.getJsonSchema(asJsonNode(e.schema))))
+    val schemas = config.events.map(e => factory.getJsonSchema(asJsonNode(e.schema)))
 
     val eventsList = events.map{ e => e -> asJsonNode(Extraction.decompose(e)): (Event, JsonNode) }
       .map{ case(e, es) => // for each event, try each schema
         e -> schemas.map( ts => ts.validateUnchecked(es).isSuccess )
-          .zip(config.eventGroups.flatMap(g => g.events.map((g.eventGroupName, _))))
+          .zip(config.events)
           .filter(_._1)
       }
-      .filter{ case(_, em) => !em.isEmpty } // only keep those with a match
-      .map{ case(e, em) => e -> em.head._2 } // take the first match (head._1 is the bool)
-      .map{ case(e, (gn, es)) => eventToAmplitudeEvent(gn, e, es) }
+      .filter{ case(e, es) => !es.isEmpty } // only keep those with a match
+      .map{ case(e, es) => e -> es.head._2 } // take the first match (head._1 is the bool)
+      .map{ case(e, es) => eventToAmplitudeEvent(config, e, es) }
 
     compact(render(eventsList))
   }

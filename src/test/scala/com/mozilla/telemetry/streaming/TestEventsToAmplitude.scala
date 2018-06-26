@@ -85,7 +85,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   private def eventsJson(eventGroup: String) =
     s"""{ "event_type": "$eventGroup - AppOpen" }""" ::
     s"""{ "event_type": "$eventGroup - Erase", "event_properties": { "erase_object": "erase_home" }, "user_properties": { "host": "side" }}""" ::
-    s"""{ "event_type": "second_event_group - AppClose", "event_properties": { "session_length": "1000" }}""" :: Nil
+    s"""{ "event_type": "$eventGroup - AppClose", "event_properties": { "session_length": "1000" }}""" :: Nil
 
   private val focusEventJsonMatch = JArray(
       eventsJson("m_foc").map{
@@ -162,7 +162,6 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
-    verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
   }
 
   "HTTPSink" should "send main ping events correctly" in {
@@ -174,7 +173,6 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
-    verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
   }
 
   "Events to Amplitude" should "send focus events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag) in {
