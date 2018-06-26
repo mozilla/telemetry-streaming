@@ -30,7 +30,8 @@ case class FocusEventPing(clientId: String,
 
   def getCreated: Option[Long] = Some(created)
 
-  override def pingAmplitudeProperties: JObject = {
+  override def eventToAmplitudeEvent(config: Config, e: Event, es: AmplitudeEvent): JObject = {
+    super.eventToAmplitudeEvent(config, e, es) ~
       ("user_properties" ->
         ("pref_privacy_block_ads" -> settings.blockAds) ~
           ("pref_locale" -> settings.pref_locale) ~

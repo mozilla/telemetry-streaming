@@ -81,28 +81,6 @@
           "description": {
             "type": "string"
           },
-          "userProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "timestamp",
-                    "category",
-                    "object",
-                    "method",
-                    "value"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "pattern": "^extra"
-                }
-              ]
-            },
-            "uniqueItems": true
-          },
           "amplitudeProperties": {
             "type": "object",
             "additionalProperties": {
