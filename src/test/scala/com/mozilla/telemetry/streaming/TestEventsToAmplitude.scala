@@ -12,7 +12,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.mozilla.telemetry.pings.SendsToAmplitude
+import com.mozilla.telemetry.pings.FocusEventPing
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
@@ -125,7 +125,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))
 
-    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config)))
+    msgs.foreach(m => sink.process(FocusEventPing(m).getEvents(config)))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
   }
