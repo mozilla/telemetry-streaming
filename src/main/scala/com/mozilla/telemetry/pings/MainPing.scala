@@ -3,11 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.pings
 
-import java.time.OffsetDateTime
-
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Ping.{SecondsPerHour, messageToPing}
-import com.mozilla.telemetry.pings.main.Processes
 import org.json4s.{DefaultFormats, JNothing, JValue, _}
 
 import scala.util.{Success, Try}
@@ -17,7 +14,7 @@ case class MainPing(application: Application,
                     // Environment omitted because it's mostly available under meta
                     meta: Meta,
                     payload: MainPingPayload
-                   ) extends Ping with HasEnvironment with HasApplication with SendsToAmplitude {
+                   ) extends Ping with HasEnvironment with HasApplication {
   def getCountHistogramValue(histogram_name: String): Option[Int] = {
     try {
       this.meta.`payload.histograms` \ histogram_name \ "values" \ "0" match {
@@ -105,28 +102,14 @@ case class MainPing(application: Application,
   def getNormandyEvents: Seq[Event] = {
     implicit val formats = org.json4s.DefaultFormats
 
-    val dynamicProcessEvents = Ping.extractEvents(this.payload.processes, List("dynamic" :: "events" :: Nil))
+    val dynamicProcessEvents = (this.payload.processes \ "dynamic" \ "events").extract[Seq[Event]]
     dynamicProcessEvents.filter(_.category == "normandy")
-  }
-
-  // Make events lazy so we don't extract them in error aggregates, which doesn't use them
-  lazy val events: Seq[Event] = Ping.extractEvents(payload.processes, MainPing.eventLocations())
-
-  override def getClientId: Option[String] = meta.clientId
-
-  // As a fallback, we use the Focus ping sessionId strategy
-  override def getSessionId: Option[String] = Some(sessionId.getOrElse(events.map(_.timestamp).max.toString))
-
-  override def getCreated: Option[Long] = meta.creationTimestamp.map(t => (t / 1e9).toLong)
-
-  def sessionStart: Long = meta.`payload.info` \ "sessionStartDate" match {
-    case JString(d) => OffsetDateTime.parse(d).toEpochSecond * 1000
-    // sessionStartDate is truncated to the hour anyway, so we just want to get somewhere near the correct timeframe
-    case _ => ((meta.Timestamp / 1e9) - events.map(_.timestamp).max).toLong
   }
 }
 
 object MainPing {
+
+  val processTypes = ("main", "content")
 
   def apply(message: Message): MainPing = {
     implicit val formats = DefaultFormats
@@ -142,13 +125,8 @@ object MainPing {
       "payload.histograms",
       "payload.info"
     )
-
-    val ping = messageToPing(message, jsonFieldNames)
+    val ping = messageToPing(message, jsonFieldNames, List("payload" :: "processes" :: "dynamic" :: "events" :: Nil))
     ping.extract[MainPing]
-  }
-
-  def eventLocations(prefix: List[String] = List()): List[List[String]] = {
-    Processes.names.map(prefix ++ List(_, "events")).toList
   }
 }
 

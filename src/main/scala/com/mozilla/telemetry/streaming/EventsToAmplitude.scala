@@ -112,14 +112,6 @@ object EventsToAmplitude extends StreamingJobBase {
         })
       }
     }
-
-    val topLevelFilters = filters.filter {
-      case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
-    }
-
-    val nonTopLevelFilters = filters.filter {
-      case(name, _) => !TOP_LEVEL_PING_FIELDS.contains(name)
-    }
   }
 
   def parsePing(message: Message, sample: Double, config: Config): Array[String] = {
@@ -128,17 +120,18 @@ object EventsToAmplitude extends StreamingJobBase {
     val emptyReturn = Array[String]()
     val fields = message.fieldsAsMap
 
-    config.topLevelFilters
-      .map{ case(name, allowedVals) =>
-        allowedVals.contains(fields.getOrElse(name, "").asInstanceOf[String])
-      }.reduce(_ & _) match {
-        case false => emptyReturn
-        case true =>
-          SendsToAmplitude(message) match {
-            case p if !p.includePing(sample, config) => emptyReturn
-            case p => Array(p.getAmplitudeEvents(config))
-          }
-      }
+    config.filters.filter{
+      case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
+    }.map{ case(name, allowedVals) =>
+      allowedVals.contains(fields.getOrElse(name, "").asInstanceOf[String])
+    }.reduce(_ & _) match {
+      case false => emptyReturn
+      case true =>
+        SendsToAmplitude(message) match {
+          case p if !p.includePing(sample, config) => emptyReturn
+          case p => Array(p.getAmplitudeEvents(config))
+        }
+    }
   }
 
   def getEvents(config: Config, pings: DataFrame, sample: Double, raiseOnError: Boolean): Dataset[String] = {
@@ -201,6 +194,7 @@ object EventsToAmplitude extends StreamingJobBase {
   def sendBatchEvents(spark: SparkSession, opts: Opts): Unit = {
     val config = readConfigFile(opts.configFilePath())
 
+    val filters = config.getBatchFilters
     val maxParallelRequests = opts.maxParallelRequests()
 
     implicit val sc = spark.sparkContext
@@ -209,7 +203,7 @@ object EventsToAmplitude extends StreamingJobBase {
       val dataset = com.mozilla.telemetry.heka.Dataset("telemetry")
 
       val pings = config.getBatchFilters.filter{
-          case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
+          case(name, av) => TOP_LEVEL_PING_FIELDS.contains(name)
         }.foldLeft(dataset){
           case(d, (key, values)) => d.where(key) {
             case v if values.contains(v) => true

@@ -6,31 +6,12 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.pings._
-import com.mozilla.telemetry.streaming.TestEventsToAmplitude.CustomMainPingPayload
 import org.scalatest.{FlatSpec, Matchers}
 
 
 class TestPings extends FlatSpec with Matchers{
 
-  val ContentHistogramPayload = Some(
-    """
-      |"processes": {
-      |  "content": {
-      |    "histograms": {
-      |      "INPUT_EVENT_RESPONSE_COALESCED_MS": {
-      |        "values": {
-      |          "1": 1,
-      |          "150": 1,
-      |          "250": 1,
-      |          "2500": 1,
-      |          "10000": 1
-      |        }
-      |      }
-      |    }
-      |  }
-      |}
-    """.stripMargin)
-  val message = TestUtils.generateMainMessages(1, customPayload = ContentHistogramPayload).head
+  val message = TestUtils.generateMainMessages(1).head
   val mainPing = MainPing(message)
   val ts = TestUtils.testTimestampMillis
 
@@ -97,13 +78,5 @@ class TestPings extends FlatSpec with Matchers{
     OS(Some("linux"), Some("1ignore")).normalizedVersion should be ("1")
     OS(Some("linux"), Some("non-numeric")).normalizedVersion should be (null)
     OS(Some("linux"), Some("nonnumeric1.1")).normalizedVersion should be (null)
-  }
-
-  "Main Ping" can "read events" in {
-    val message = TestUtils.generateMainMessages(1, customPayload=CustomMainPingPayload).head
-    val eventedPing = MainPing(message)
-    eventedPing.events should contain (Event(176078022, "action", "foreground", "app", None, None))
-    // this is a content process event
-    eventedPing.events should contain (Event(176151591, "action", "background", "app", Some(""), Some(Map("sessionLength" -> "1000"))))
   }
 }

@@ -78,26 +78,11 @@ object Ping {
     * converts each array to a json event that can be extracted.
     */
   private[this] def replaceEvents(json: JValue, eventPaths: List[List[String]]): JValue = {
-    reshapeEvents(json, eventPaths)
-      .foldLeft(json) {
-        case (currentJson, (path, newEvents)) =>
-          currentJson.replace(path, newEvents)
-      }
-  }
-
-  private[pings] def extractEvents(json: JValue, eventPaths: List[List[String]]): Seq[Event] = {
-    implicit val formats = DefaultFormats
-    reshapeEvents(json, eventPaths)
-      .flatMap {
-        case (_, events) => events.extract[Seq[Event]]
-      }
-  }
-
-  private[this] def reshapeEvents(json: JValue, eventPaths: List[List[String]]): List[(List[String], JValue)] = {
-    eventPaths.map { path: List[String] =>
-      val eventValue = path.foldLeft(json)(_ \ _)
-      val newEvents = eventValue match {
-        case JArray(x) => JArray(x.map {
+    eventPaths.foldLeft(json) {
+      case (currentJson, path) =>
+        val currentEvents = path.foldLeft(currentJson)(_ \ _)
+        val newEvents = currentEvents match {
+          case JArray(x) => JArray(x.map {
             case JArray(event) =>
               JObject(
                 JField("timestamp", event(0)) ::
@@ -110,14 +95,15 @@ object Ping {
 
             case o => throw new java.io.InvalidObjectException(
               s"Expected JArray for event at ${path.mkString("\\")}, got ${o.getClass}")
-        })
-        case JNothing => JNothing
+          })
 
-        case o => throw new java.io.InvalidObjectException(
-          s"Expected JArray for events container at ${path.mkString("\\")}, got ${o.getClass}")
-      }
+          case JNothing => JNothing
 
-      (path, newEvents)
+          case o => throw new java.io.InvalidObjectException(
+            s"Expected JArray for events container at ${path.mkString("\\")}, got ${o.getClass}")
+        }
+
+        currentJson.replace(path, newEvents)
     }
   }
 }
@@ -268,29 +254,27 @@ case class Application(architecture: String,
                        version: String,
                        displayVersion: Option[String],
                        xpcomAbi: String)
-
-
 trait SendsToAmplitude {
+  val clientId: String
   val events: Seq[Event]
   val meta: Meta
 
-  def getClientId: Option[String]
   def sessionStart: Long
-  def getSessionId: Option[String]
-  def getOsName: Option[String]
-  def getOsVersion: Option[String]
-  def getCreated: Option[Long]
-  private def filterProperties = Map("os" -> getOsName.getOrElse(""), "created" -> getCreated.getOrElse(0).toString)
+  def getSessionId: String
+  def getOs: String
+  def getOsVersion: String
 
   def eventToAmplitudeEvent(config: Config, e: Event, es: AmplitudeEvent): JObject = {
-    ("device_id" -> getClientId) ~
-      ("session_id" -> getSessionId) ~
-      ("insert_id" -> (getClientId.getOrElse("None") + getSessionId.getOrElse("None") + e.getAmplitudeId)) ~
+    val sessionId = getSessionId
+
+    ("device_id" -> clientId) ~
+      ("session_id" -> sessionId) ~
+      ("insert_id" -> (clientId + sessionId.toString + e.getId)) ~
       ("event_type" -> getFullEventName(config.eventGroupName, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
       ("event_properties" -> e.getProperties(es.amplitudeProperties)) ~
       ("app_version" -> meta.appVersion) ~
-      ("os_name" -> getOsName) ~
+      ("os_name" -> getOs) ~
       ("os_version" -> getOsVersion) ~
       ("country" -> meta.geoCountry) ~
       ("city" -> meta.geoCity)
@@ -317,7 +301,6 @@ trait SendsToAmplitude {
 
   def getFullEventName(groupName: String, eventName: String): String = groupName + " - " + eventName
 
-
   def includePing(sample: Double, config: Config): Boolean = {
     val keepClient = meta.sampleId.getOrElse(sample * 100) < (sample * 100)
 
@@ -326,8 +309,14 @@ trait SendsToAmplitude {
       return false // scalastyle:ignore
     }
 
-    config.nonTopLevelFilters.map{ case(prop, allowedVals) =>
-      allowedVals.contains(filterProperties.getOrElse(prop, allowedVals.head))
+    val currentProps = this.getClass
+      .getDeclaredFields.map{ e =>
+      e.setAccessible(true)
+      e.getName -> e.get(this).toString
+    }.toMap
+
+    config.filters.map{ case(prop, allowedVals) =>
+      allowedVals.contains(currentProps.getOrElse(prop, allowedVals.head))
     }.foldLeft(true)(_ & _)
   }
 }
@@ -341,33 +330,8 @@ object SendsToAmplitude {
         val ping = Ping.messageToPing(message, jsonFieldNames, List("events" :: Nil))
         ping.extract[FocusEventPing]
       }
-      case Some("main") => MainPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
       case _ => throw new IllegalArgumentException(s"No doctype found")
     }
   }
-}
-
-case class Event(timestamp: Int,
-                 category: String,
-                 method: String,
-                 `object`: String,
-                 value: Option[String],
-                 extra: Option[Map[String, String]]) {
-
-  def getProperties(properties: Option[Map[String, String]]): JObject = {
-    properties.getOrElse(Map.empty).map { case (k, v) =>
-      k -> (v match {
-        case "timestamp" => timestamp.toString
-        case "category" => category
-        case "method" => method
-        case "object" => `object`
-        case "value" => value.getOrElse("") // TODO - log if empty
-        case e if e.startsWith("extra") => extra.getOrElse(Map.empty).getOrElse(e.stripPrefix("extra."), "")
-        case _ => ""
-      })
-    }.foldLeft(JObject())(_ ~ _)
-  }
-
-  def getAmplitudeId: String = timestamp.toString + category + method + `object`
 }
