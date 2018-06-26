@@ -67,14 +67,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     |    "app_version": "42.0",
     |    "os_name": "Linux",
     |    "os_version": "42",
-    |    "country": "IT",
-    |    "user_properties": {
-    |      "channel": "release",
-    |      "app_build_id": "20170101000000",
-    |      "locale": "it_IT",
-    |      "is_default_browser": true,
-    |      "experiments": ["experiment1_control", "experiment2_chaos"]
-    |    }
+    |    "country": "IT"
     |  }
     """.stripMargin
 

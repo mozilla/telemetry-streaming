@@ -9,7 +9,6 @@ import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Ping.{SecondsPerHour, messageToPing}
 import com.mozilla.telemetry.pings.main.Processes
 import org.json4s.{DefaultFormats, JNothing, JValue, _}
-import org.json4s.JsonDSL._
 
 import scala.util.{Success, Try}
 
@@ -124,21 +123,6 @@ case class MainPing(application: Application,
     case JString(d) => OffsetDateTime.parse(d).toEpochSecond * 1000
     // sessionStartDate is truncated to the hour anyway, so we just want to get somewhere near the correct timeframe
     case _ => ((meta.Timestamp / 1e9) - events.map(_.timestamp).max).toLong
-  }
-
-  override def pingAmplitudeProperties: JObject = {
-    val experimentsArray = getExperiments.flatMap {
-      case (Some(exp), Some(branch)) => Some(s"${exp}_$branch")
-      case _ => None
-    }.toSeq
-
-    ("user_properties" ->
-      ("channel" -> meta.normalizedChannel) ~
-      ("app_build_id" -> meta.appBuildId) ~
-      ("locale" -> meta.`environment.settings`.map(_.locale)) ~
-      ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
-      ("experiments" -> experimentsArray)
-    )
   }
 }
 

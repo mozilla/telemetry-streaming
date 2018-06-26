@@ -4,6 +4,7 @@
 package com.mozilla.telemetry.pings
 
 import com.mozilla.telemetry.heka.Message
+import com.mozilla.telemetry.streaming.EventsToAmplitude.{AmplitudeEvent, Config}
 import org.json4s.JsonDSL._
 import org.json4s._
 
