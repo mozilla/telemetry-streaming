@@ -269,8 +269,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     spark.streams.addListener(listener)
 
     val args = Array(
-      "--kafkaBroker", Kafka.kafkaBrokers,
-      "--startingOffsets", "latest",
+      "--kafka-broker", Kafka.kafkaBrokers,
+      "--starting-offsets", "latest",
       "--url", s"http://$Host:$Port$path",
       "--config-file-path", configFilePath(MainEventsConfigFile),
       "--raise-on-error")
@@ -320,8 +320,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     spark.streams.addListener(listener)
 
     val args = Array(
-      "--kafkaBroker", Kafka.kafkaBrokers,
-      "--startingOffsets", "latest",
+      "--kafka-broker", Kafka.kafkaBrokers,
+      "--starting-offsets", "latest",
       "--url", s"http://$Host:$Port$path",
       "--config-file-path", configFilePath(MainEventsConfigFile),
       "--raise-on-error")
