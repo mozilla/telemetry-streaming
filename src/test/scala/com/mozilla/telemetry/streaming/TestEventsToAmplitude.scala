@@ -62,8 +62,8 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
   private val mainPingJson = s"""
     |  {
-    |    "user_id": "client1",
-    |    "session_id": 1527696000000,
+    |    "device_id": "client1",
+    |    "session_id": "sample-session-id",
     |    "app_version": "42.0",
     |    "os_name": "Linux",
     |    "os_version": "42",

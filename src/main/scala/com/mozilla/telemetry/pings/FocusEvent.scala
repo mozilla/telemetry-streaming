@@ -30,20 +30,19 @@ case class FocusEventPing(clientId: String,
   def getCreated: Option[Long] = Some(created)
 
   override def pingAmplitudeProperties: JObject = {
-    ("device_id" -> getClientId) ~
-    ("user_properties" ->
-      ("pref_privacy_block_ads" -> settings.blockAds) ~
-      ("pref_locale" -> settings.pref_locale) ~
-      ("pref_privacy_block_social" -> settings.blockSocial) ~
-      ("pref_secure" -> settings.secure) ~
-      ("pref_privacy_block_analytics" -> settings.blockAnalytics) ~
-      ("pref_search_engine" -> settings.pref_search_engine) ~
-      ("pref_privacy_block_other" -> settings.blockOther) ~
-      ("pref_default_browser" -> settings.defaultBrowser) ~
-      ("pref_performance_block_webfonts" -> settings.blockWebfonts) ~
-      ("pref_performance_block_images" -> settings.blockImages) ~
-      ("pref_autocomplete_installed" -> settings.autocompleteInstalled) ~
-      ("pref_autocomplete_custom" -> settings.autocompleteCustom))
+      ("user_properties" ->
+        ("pref_privacy_block_ads" -> settings.blockAds) ~
+          ("pref_locale" -> settings.pref_locale) ~
+          ("pref_privacy_block_social" -> settings.blockSocial) ~
+          ("pref_secure" -> settings.secure) ~
+          ("pref_privacy_block_analytics" -> settings.blockAnalytics) ~
+          ("pref_search_engine" -> settings.pref_search_engine) ~
+          ("pref_privacy_block_other" -> settings.blockOther) ~
+          ("pref_default_browser" -> settings.defaultBrowser) ~
+          ("pref_performance_block_webfonts" -> settings.blockWebfonts) ~
+          ("pref_performance_block_images" -> settings.blockImages) ~
+          ("pref_autocomplete_installed" -> settings.autocompleteInstalled) ~
+          ("pref_autocomplete_custom" -> settings.autocompleteCustom))
   }
 }
 
