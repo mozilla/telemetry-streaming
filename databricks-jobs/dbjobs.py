@@ -6,11 +6,12 @@ import os
 from polling import TimeoutException, poll
 import requests
 
-DOMAIN = 'dbc-caf9527b-e073.cloud.databricks.com'
+DOMAIN = os.getenv('DATABRICKS_URL', 'dbc-caf9527b-e073.cloud.databricks.com')
 JOBS_BASE_URL = 'https://%s/api/2.0/jobs/' % (DOMAIN)
 RUNS_BASE_URL = 'https://%s/api/2.0/jobs/runs/' % (DOMAIN)
 JENKINS_USER = 'dataops+databrick_jenkins@mozilla.com'
 DATABRICKS_TOKEN = os.environ['DATABRICKS_TOKEN']
+
 
 def jobs_rpc(action, jsonstring):
     """ A helper function to make the JOBS API POST request, request/response is encoded/decoded as JSON
@@ -25,10 +26,11 @@ def jobs_rpc(action, jsonstring):
     """
     response = requests.post(
         JOBS_BASE_URL + action,
-        headers = {"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
-        data = jsonstring
+        headers={"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
+        data=jsonstring
     )
     return response.json()
+
 
 def runs_rpc(action, jsonstring):
     """ A helper function to make the job RUNS API GET request, request/response is encoded/decoded as JSON
@@ -43,13 +45,14 @@ def runs_rpc(action, jsonstring):
     """
     response = requests.get(
         RUNS_BASE_URL + action,
-        headers = {"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
-        data = jsonstring
+        headers={"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
+        data=jsonstring
     )
     return response.json()
 
+
 def reset_config(jobid, jsonfile):
-    """ Resets job config for jobid to contents of jsonfile 
+    """ Resets job config for jobid to contents of jsonfile
 
     Args:
         jobid: The id of job to modify
@@ -64,6 +67,7 @@ def reset_config(jobid, jsonfile):
     json_string = json.dumps(data)
     print('Attempting to update jobid {} with settings {}'.format(jobid, json_string))
     jobs_rpc('reset', json_string)
+
 
 def create_job(jsonfile):
     """ Creates a new job
@@ -80,6 +84,7 @@ def create_job(jsonfile):
     job_settings_string = json.dumps(job_settings_map)
     response_json = jobs_rpc('create', job_settings_string)
     return response_json['job_id']
+
 
 def stop_job(job_id):
     """ Stops all runs of a job, polls until stopped
@@ -112,8 +117,8 @@ def stop_job(job_id):
 
         response = requests.post(
             RUNS_BASE_URL + 'cancel',
-            headers = {"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
-            data = request_string
+            headers={"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)},
+            data=request_string
             )
 
         response_dict = response.json()
@@ -126,8 +131,8 @@ def stop_job(job_id):
         try:
             poll(
                 lambda: poll_job_completed(request_string) == True,
-                step = 10,
-                timeout = 300
+                step=10,
+                timeout=300
                 )
             print('Run_id {} is in a terminal state'.format(runid))
         except TimeoutException:
@@ -136,13 +141,10 @@ def stop_job(job_id):
 
 def poll_job_completed(request_string):
     """ Helper function for polling until the job is in a terminal state """
+    terminal_state = ['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR']
     response_json = runs_rpc('get', request_string)
-    if (response_json['state']['life_cycle_state'] == "TERMINATED" or
-        response_json['state']['life_cycle_state'] == "SKIPPED" or
-        response_json['state']['life_cycle_state'] == "INTERNAL_ERROR"):
-        return True
-    else:
-        return False
+    return True if (response_json['state']['life_cycle_state'] in terminal_state) else False
+
 
 def start_job(job_id):
     """ Starts a stopped job
@@ -163,13 +165,14 @@ def start_job(job_id):
         return -1
     return response_json['run_id']
 
+
 def get_jobid(jobname, env, jarname, version):
     """ Gets the job id of a databricks job deployed given its jobname and env, jarname and version custom tags
 
     Custom tags are not viewable from the databricks UI. Can be seen in the job json or from the API.
 
     Args:
-        jobname: The custom tag "TelemetryJobName" defined in the job json 
+        jobname: The custom tag "TelemetryJobName" defined in the job json
         env:     The custom tag "Env" defined in the job json
         jarname: The custom tag "Jar" defined in the job json
         version: The custom tag "DatasetVersion" defined in the job json
@@ -181,7 +184,7 @@ def get_jobid(jobname, env, jarname, version):
     job_ids = []
     response = requests.get(
         JOBS_BASE_URL + 'list',
-        headers = {"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)}
+        headers={"Authorization": "Basic " + base64.standard_b64encode("token:" + DATABRICKS_TOKEN)}
     )
     jobs_list = response.json()
 
@@ -209,5 +212,3 @@ def get_jobid(jobname, env, jarname, version):
         print('GetJobId found more than 1 jobs matching env: {}, jarname: {}, version: {}'.format(env, jarname, version))
         print "Jobs found were: " + str(job_ids)
         return -1
-
-
