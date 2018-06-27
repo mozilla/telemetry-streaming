@@ -367,6 +367,124 @@ object TestUtils {
   }
   // scalastyle:on methodLength
 
+  def generateEventMessages(size: Int,
+                            fieldsOverride: Option[Map[String, Any]] = None,
+                            timestamp: Option[Long] = None): Seq[Message] = {
+    val defaultMap = Map(
+      "clientId" -> "client1",
+      "docType" -> "event",
+      "documentId" -> "an_id",
+      "normalizedChannel" -> defaultFirefoxApplication.channel,
+      "appName" -> defaultFirefoxApplication.name,
+      "appVersion" -> defaultFirefoxApplication.version.toDouble,
+      "displayVersion" -> defaultFirefoxApplication.displayVersion.orNull,
+      "appBuildId" -> defaultFirefoxApplication.buildId,
+      "geoCountry" -> "IT",
+      "os" -> "Linux",
+      "submissionDate" -> "20170101",
+      "environment.build" ->
+        s"""
+           |{
+           |  "architecture": "${defaultFirefoxApplication.architecture}",
+           |  "buildId": "${defaultFirefoxApplication.buildId}",
+           |  "version": "${defaultFirefoxApplication.version}"
+           |}""".stripMargin,
+      "environment.system" ->
+        """
+          |{
+          | "os": {"name": "Linux", "version": "42"}
+          |}""".stripMargin,
+      "environment.addons" ->
+        """
+          |{
+          | "activeExperiment": {"id": "experiment1", "branch": "control"},
+          | "activeAddons": {"my-addon": {"isSystem": true}},
+          | "theme": {"id": "firefox-compact-dark@mozilla.org"}
+          |}""".stripMargin,
+      "environment.profile" ->
+        s"""
+           |{
+           | "creationDate": ${todayDays-70}
+           | }""".stripMargin,
+      "environment.experiments" ->
+        """
+          |{
+          |  "experiment2": {"branch": "chaos"}
+          |}""".stripMargin
+    )
+    val outputMap = fieldsOverride match {
+      case Some(m) => defaultMap ++ m
+      case _ => defaultMap
+    }
+    val applicationJson = compact(render(Extraction.decompose(defaultFirefoxApplication)))
+    val payload =
+      s"""
+         |    "reason": "periodic",
+         |    "processStartTimestamp": 1530291900000,
+         |    "sessionId": "dd302e9d-569b-4058-b7e8-02b2ff83522c",
+         |    "subsessionId": "79a2728f-af12-4ed3-b56d-0531a03c2f26",
+         |    "lostEventsCount": 0,
+         |    "events": {
+         |      "parent": [
+         |        [
+         |          4118829,
+         |          "activity_stream",
+         |          "end",
+         |          "session",
+         |          "909",
+         |          {
+         |            "addon_version": "2018.06.22.1337-8d599e17",
+         |            "user_prefs": "63",
+         |            "session_id": "{78fe2428-15fb-4448-b517-cbb85f22def0}",
+         |            "page": "about:newtab"
+         |          }
+         |        ],
+         |        [
+         |          4203540,
+         |          "normandy",
+         |          "enroll",
+         |          "preference_study",
+         |          "awesome-experiment",
+         |          {
+         |            "branch": "control",
+         |            "experimentType": "exp"
+         |          }
+         |        ]
+         |      ],
+         |      "dynamic": [
+         |        [
+         |          4203541,
+         |          "test",
+         |          "no",
+         |          "string_value",
+         |          null,
+         |          {
+         |            "hello": "world"
+         |          }
+         |        ],
+         |        [
+         |          4203542,
+         |          "test",
+         |          "no",
+         |          "extras"
+         |        ]
+         |      ]
+         |    }
+       """.stripMargin
+    1.to(size) map { index =>
+      RichMessage(s"event-$index",
+        outputMap,
+        Some(
+          s"""
+             |{
+             |  "payload": { $payload },
+             |  "application": $applicationJson
+             |}""".stripMargin),
+        timestamp=timestamp.getOrElse(testTimestampNano)
+      )
+    }
+  }
+
   abstract class AppType
   case object Firefox extends AppType
   case object Fennec extends AppType
