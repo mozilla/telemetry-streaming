@@ -61,9 +61,12 @@ def reset_config(jobid, jsonfile):
     """
     with open(jsonfile) as f:
         job_settings_map = json.load(f)
-    data = {}
-    data['job_id'] = jobid
-    data['new_settings'] = job_settings_map
+
+    data = {
+        'job_id': jobid,
+        'new_settings': job_settings_map
+    }
+
     json_string = json.dumps(data)
     print('Attempting to update jobid {} with settings {}'.format(jobid, json_string))
     jobs_rpc('reset', json_string)
@@ -93,11 +96,12 @@ def stop_job(job_id):
         job_id: The id of the job to stop all runs for
 
     """
-    data = {}
-    data['active_only'] = 'true'
-    data['job_id'] = job_id
-    # 0 specifies a maximum limit of runs to return
-    data['limit'] = 0
+    data = {
+        'active_only': 'true',
+        'job_id': job_id,
+        'limit': 0
+    }
+
     json_string = json.dumps(data)
     response_json = runs_rpc('list', json_string)
 
@@ -156,8 +160,10 @@ def start_job(job_id):
         run_id: The id of the new job run, or -1 if it failed
 
     """
-    data = {}
-    data['job_id'] = job_id
+    data = {
+        'job_id': job_id
+    }
+
     data_string = json.dumps(data)
     response_json = jobs_rpc('run-now', data_string)
     if 'run_id' not in response_json:
