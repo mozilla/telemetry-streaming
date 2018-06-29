@@ -4,7 +4,7 @@ import dbjobs
 import time
 
 # Json specification for a databricks job
-# See cloudops-deployment/projects/databricks/jsonnet for examples and README
+# See cloudops-deployment/projects/databricks/templates for examples and README
 JOB_CONF = 'YOUR-JOB-CONFIG.json'
 
 # Create a new job from json config file
