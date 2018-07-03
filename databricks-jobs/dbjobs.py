@@ -9,7 +9,7 @@ import requests
 DOMAIN = os.getenv('DATABRICKS_URL', 'dbc-caf9527b-e073.cloud.databricks.com')
 JOBS_BASE_URL = 'https://%s/api/2.0/jobs/' % (DOMAIN)
 RUNS_BASE_URL = 'https://%s/api/2.0/jobs/runs/' % (DOMAIN)
-JENKINS_USER = 'dataops+databrick_jenkins@mozilla.com'
+JENKINS_USER = os.getenv('JENKINS_USER', 'dataops+databrick_jenkins@mozilla.com')
 DATABRICKS_TOKEN = os.environ['DATABRICKS_TOKEN']
 
 
