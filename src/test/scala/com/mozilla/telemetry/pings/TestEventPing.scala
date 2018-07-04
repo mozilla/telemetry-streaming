@@ -19,7 +19,7 @@ class TestEventPing extends FlatSpec with Matchers {
   }
 
   "EventPing" should "parse events correctly" in {
-    eventPing.events should be(Seq(
+    eventPing.events should contain theSameElementsAs Seq(
       Event(4118829, "activity_stream", "end", "session", Some("909"),
         Some(Map("addon_version" -> "2018.06.22.1337-8d599e17", "user_prefs" -> "63",
           "session_id" -> "{78fe2428-15fb-4448-b517-cbb85f22def0}", "page" -> "about:newtab"))),
@@ -27,6 +27,6 @@ class TestEventPing extends FlatSpec with Matchers {
         Some(Map("branch" -> "control", "experimentType" -> "exp"))),
         Event(4203541, "test", "no", "string_value", None, Some(Map("hello" -> "world"))),
         Event(4203542, "test", "no", "extras", None, None)
-    ))
+    )
   }
 }
