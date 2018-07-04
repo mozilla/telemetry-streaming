@@ -160,7 +160,7 @@ case class Meta(Host: Option[String],
   // This class contains only extractor methods for common fields, sent with all pings
 
   /**
-    * Returns a java Timestamp obj with microseconds resolution.
+    * Returns a java Timestamp obj with millisecond resolution.
     * The source Timestamp field has nanoseconds resolution
     */
   def normalizedTimestamp(): Timestamp = {
