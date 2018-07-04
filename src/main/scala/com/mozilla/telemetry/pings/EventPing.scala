@@ -4,17 +4,11 @@
 package com.mozilla.telemetry.pings
 
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings.main.Processes
 import com.mozilla.telemetry.pings.Ping.messageToPing
+import com.mozilla.telemetry.pings.main.Processes
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JNothing, JValue}
 
-case class EventPingPayload(events: Map[String, JValue],
-                            lostEventsCount: Int,
-                            processStartTimestamp: Long,
-                            reason: String,
-                            sessionId: String,
-                            subsessionId: String)
 
 case class EventPing(application: Application,
                      meta: Meta,
@@ -39,13 +33,17 @@ case class EventPing(application: Application,
     experimentsArray.length match {
       case 0 => None
       case _ => Some(experimentsArray.flatMap {
-          case(Some(exp), Some(branch)) => Some(exp -> branch)
-          case _ =>  None
-        }.toMap)
+        case (Some(exp), Some(branch)) => Some(exp -> branch)
+        case _ => None
+      }.toMap)
     }
   }
-}
 
+  def getNormandyEvents: Seq[Event] = {
+    val dynamicProcessEvents = processEventMap.getOrElse("dynamic", Seq.empty[Event])
+    dynamicProcessEvents.filter(_.category == "normandy")
+  }
+}
 
 object EventPing {
   def apply(message: Message): EventPing = {
@@ -64,3 +62,9 @@ object EventPing {
   }
 }
 
+case class EventPingPayload(events: Map[String, JValue],
+                            lostEventsCount: Int,
+                            processStartTimestamp: Long,
+                            reason: String,
+                            sessionId: String,
+                            subsessionId: String)

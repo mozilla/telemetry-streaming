@@ -6,7 +6,7 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings.MainPing
+import com.mozilla.telemetry.pings.{EventPing, MainPing}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import com.mozilla.telemetry.streaming.sinks.HttpSink
 import org.apache.spark
@@ -24,8 +24,7 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
 
   val kafkaCacheMaxCapacity = 100
 
-  private val allowedDocTypes = List("main")
-  private val allowedAppNames = List("Firefox")
+  private val allowedDocTypes = List("main", "event")
 
   def main(args: Array[String]): Unit = {
     val opts = new Opts(args)
@@ -50,15 +49,16 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
       .load()
       .select("value")
 
-    aggregateAndSend(pings, httpSink)
+    aggregateAndSend(pings, httpSink, opts.checkpointPath())
       .awaitTermination()
   }
 
-  def aggregateAndSend(pings: DataFrame, httpSink: HttpSink[String]): StreamingQuery = {
+  def aggregateAndSend(pings: DataFrame, httpSink: HttpSink[String], checkpointPath: String): StreamingQuery = {
     aggregate(pings)
       .coalesce(MaxParalellRequests)
       .writeStream
       .queryName(QueryName)
+      .option("checkpointLocation", checkpointPath)
       .foreach(httpSink)
       .start()
   }
@@ -76,10 +76,20 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
         if (!allowedDocTypes.contains(docType)) {
           Array.empty[ExperimentEnrollmentEvent]
         } else {
-          val mainPing = MainPing(m)
-          mainPing.getNormandyEvents.map { e =>
-            val timestamp = mainPing.meta.normalizedTimestamp()
-            val submissionDate = timestampToDateString(mainPing.meta.normalizedTimestamp())
+          val (timestamp, normandyEvents) = {
+            if (docType == "main") {
+              val mainPing = MainPing(m)
+              val timestamp = mainPing.meta.normalizedTimestamp()
+              (timestamp, mainPing.getNormandyEvents)
+            } else {
+              val eventPing = EventPing(m)
+              val timestamp = eventPing.meta.normalizedTimestamp()
+              (timestamp, eventPing.getNormandyEvents)
+            }
+          }
+
+          val submissionDate = timestampToDateString(timestamp)
+          normandyEvents.map { e =>
             ExperimentEnrollmentEvent(e.method, e.value, e.extra.flatMap(m => m.get("branch")), e.`object`, timestamp, submissionDate)
           }
         }
@@ -112,10 +122,6 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
       }
   }
 
-  private def shouldStopContextAtEnd(spark: SparkSession): Boolean = {
-    !spark.conf.get("spark.home").startsWith("/databricks")
-  }
-
   case class ExperimentEnrollmentEvent(method: String, // enroll/unenroll
                                        experiment_id: Option[String],
                                        branch_id: Option[String],
@@ -134,5 +140,4 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
     requireOne(kafkaBroker)
     verify()
   }
-
 }

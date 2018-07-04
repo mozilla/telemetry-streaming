@@ -438,17 +438,6 @@ object TestUtils {
          |            "session_id": "{78fe2428-15fb-4448-b517-cbb85f22def0}",
          |            "page": "about:newtab"
          |          }
-         |        ],
-         |        [
-         |          4203540,
-         |          "normandy",
-         |          "enroll",
-         |          "preference_study",
-         |          "awesome-experiment",
-         |          {
-         |            "branch": "control",
-         |            "experimentType": "exp"
-         |          }
          |        ]
          |      ],
          |      "dynamic": [
@@ -467,6 +456,17 @@ object TestUtils {
          |          "test",
          |          "no",
          |          "extras"
+         |        ],
+         |        [
+         |          4203540,
+         |          "normandy",
+         |          "enroll",
+         |          "preference_study",
+         |          "awesome-experiment",
+         |          {
+         |            "branch": "control",
+         |            "experimentType": "exp"
+         |          }
          |        ]
          |      ]
          |    }
