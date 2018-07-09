@@ -13,7 +13,7 @@ import org.json4s.JsonAST.{JNothing, JValue}
 case class EventPing(application: Application,
                      meta: Meta,
                      payload: EventPingPayload)
-  extends Ping with HasEnvironment with HasApplication with SendsToAmplitude {
+  extends Ping with HasEnvironment with HasApplication with SendsToAmplitudeWithEnvironment {
   val processEventMap: Map[String, Seq[Event]] = Processes.names.map(
     p => p -> Ping.extractEvents(payload.events.getOrElse(p, JNothing), List(Nil))
   ).toMap

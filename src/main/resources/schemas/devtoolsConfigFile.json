@@ -1,7 +1,8 @@
 {
   "filters": {
     "docType": [
-      "main"
+      "main",
+      "event"
     ],
     "appName": [
       "Firefox"
