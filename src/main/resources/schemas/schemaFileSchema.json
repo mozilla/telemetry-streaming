@@ -144,6 +144,9 @@
                 },
                 "schema": {
                   "type": "object"
+                },
+                "sessionIdOffset": {
+                  "type": "string"
                 }
               }
             },

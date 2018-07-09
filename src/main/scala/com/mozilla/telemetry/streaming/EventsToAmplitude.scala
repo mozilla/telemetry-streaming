@@ -94,6 +94,7 @@ object EventsToAmplitude extends StreamingJobBase {
   case class AmplitudeEvent(
     name: String,
     description: String,
+    sessionIdOffset: Option[String],
     amplitudeProperties: Option[Map[String, String]],
     userProperties: Option[Map[String, String]],
     schema: JValue)
