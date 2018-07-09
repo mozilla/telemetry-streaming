@@ -336,6 +336,19 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     spark.streams.removeListener(listener)
     verify(0, postRequestedFor(urlMatching(path)))
   }
+
+  "Session Id offset field" should "be added to session id when present" in {
+    val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
+    val msg = TestUtils.generateMainMessages(1,
+      customPayload=TestEventsToAmplitude.sessionIdOffsetPayload).head
+
+    val res = for {
+      JObject(l) <- parse(SendsToAmplitude(msg).getAmplitudeEvents(config).get) \\ "session_id"
+      JField("session_id", JInt(session_id)) <- l
+    } yield session_id
+
+    res should contain only (1527696000000L, 1527696002000L)
+  }
 }
 
 object TestEventsToAmplitude {
@@ -373,6 +386,32 @@ object TestEventsToAmplitude {
       |            "app",
       |            "",
       |            { "sessionLength": "1000" }
+      |          ]
+      |        ]
+      |      }
+      |    }
+    """.stripMargin)
+
+  val sessionIdOffsetPayload = Some(
+    """
+      |    "processes": {
+      |      "content": {
+      |        "events": [
+      |          [
+      |            176151591,
+      |            "action",
+      |            "background",
+      |            "app",
+      |            "",
+      |            { "sessionLength": "1000" }
+      |          ],
+      |          [
+      |            176151591,
+      |            "action",
+      |            "background",
+      |            "app",
+      |            "",
+      |            { "sessionLength": "1000", "session_id": "2000" }
       |          ]
       |        ]
       |      }

@@ -17,6 +17,8 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{parse, _}
 import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
 
+import scala.util.Try
+
 trait Ping {
   val meta: Meta
 
@@ -284,8 +286,10 @@ trait SendsToAmplitude {
   def pingAmplitudeProperties: JObject = JObject()
 
   def eventToAmplitudeEvent(eventGroup: String, e: Event, es: AmplitudeEvent): JObject = {
+    val sessionIdOffset = Try(es.sessionIdOffset.map(o => e.getField(o).toLong).getOrElse(0L)).getOrElse(0L)
+
     pingAmplitudeProperties merge
-      ("session_id" -> sessionStart) ~
+      ("session_id" -> (sessionStart + sessionIdOffset)) ~
       ("insert_id" -> (getClientId.getOrElse("None") + sessionStart.toString + e.getAmplitudeId)) ~
       ("event_type" -> getFullEventName(eventGroup, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
@@ -378,18 +382,18 @@ case class Event(timestamp: Int,
                  value: Option[String],
                  extra: Option[Map[String, String]]) {
 
+  def getField(field: String): String = field match {
+    case "timestamp" => timestamp.toString
+    case "category" => category
+    case "method" => method
+    case "object" => `object`
+    case "value" => value.getOrElse ("")
+    case e if e.startsWith ("extra") => extra.getOrElse (Map.empty).getOrElse (e.stripPrefix ("extra."), "")
+    case _ => ""
+  }
+
   def getProperties(properties: Option[Map[String, String]]): JObject = {
-    properties.getOrElse(Map.empty).map { case (k, v) =>
-      k -> (v match {
-        case "timestamp" => timestamp.toString
-        case "category" => category
-        case "method" => method
-        case "object" => `object`
-        case "value" => value.getOrElse("")
-        case e if e.startsWith("extra") => extra.getOrElse(Map.empty).getOrElse(e.stripPrefix("extra."), "")
-        case _ => ""
-      })
-    }.foldLeft(JObject())(_ ~ _)
+    properties.getOrElse(Map.empty).map { case (k, v) => k -> getField(v) }.foldLeft(JObject())(_ ~ _)
   }
 
   def getAmplitudeId: String = timestamp.toString + category + method + `object`
