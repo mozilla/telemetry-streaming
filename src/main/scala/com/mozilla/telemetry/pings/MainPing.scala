@@ -104,8 +104,6 @@ case class MainPing(application: Application,
   }
 
   def getNormandyEvents: Seq[Event] = {
-    implicit val formats = org.json4s.DefaultFormats
-
     val dynamicProcessEvents = Ping.extractEvents(this.payload.processes, List("dynamic" :: "events" :: Nil))
     dynamicProcessEvents.filter(_.category == "normandy")
   }

@@ -340,7 +340,6 @@ trait SendsToAmplitude {
 
 object SendsToAmplitude {
   def apply(message: Message): SendsToAmplitude = {
-    implicit val formats = DefaultFormats
     message.fieldsAsMap.get("docType") match {
       case Some("focus-event") => FocusEventPing(message)
       case Some("main") => MainPing(message)
