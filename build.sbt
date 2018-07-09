@@ -77,8 +77,10 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 parallelExecution in Test := false
 
 scalacOptions ++= Seq(
+  "-feature",
   "-Ywarn-unused",
-  "-Ywarn-unused-import"
+  "-Ywarn-unused-import",
+  "-Xfatal-warnings"
 )
 
 assemblyMergeStrategy in assembly := {
