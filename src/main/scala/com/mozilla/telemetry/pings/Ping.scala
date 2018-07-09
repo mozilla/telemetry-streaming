@@ -343,9 +343,31 @@ object SendsToAmplitude {
     message.fieldsAsMap.get("docType") match {
       case Some("focus-event") => FocusEventPing(message)
       case Some("main") => MainPing(message)
+      case Some("event") => EventPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
       case _ => throw new IllegalArgumentException(s"No doctype found")
     }
+  }
+}
+
+trait SendsToAmplitudeWithEnvironment extends SendsToAmplitude {
+  def getExperiments: Array[(Option[String], Option[String])]
+  val meta: Meta
+  def getClientId: Option[String]
+
+  override def pingAmplitudeProperties: JObject = {
+    val experimentsArray = getExperiments.flatMap {
+      case (Some(exp), Some(branch)) => Some(s"${exp}_$branch")
+      case _ => None
+    }.toSeq
+
+    ("user_properties" ->
+      ("channel" -> meta.normalizedChannel) ~
+        ("app_build_id" -> meta.appBuildId) ~
+        ("locale" -> meta.`environment.settings`.map(_.locale)) ~
+        ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
+        ("experiments" -> experimentsArray)) ~
+      ("user_id" -> getClientId)
   }
 }
 
