@@ -122,8 +122,6 @@ object EventsToAmplitude extends StreamingJobBase {
   }
 
   def parsePing(message: Message, sample: Double, config: Config): Array[String] = {
-    implicit val formats = DefaultFormats
-
     val emptyReturn = Array[String]()
     val fields = message.fieldsAsMap
 
