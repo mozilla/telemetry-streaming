@@ -7,7 +7,7 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.{FlatSpec, Matchers}
 
 
-class TestEventPingEvents extends FlatSpec with Matchers with DataFrameSuiteBase {
+class EventPingEventsTest extends FlatSpec with Matchers with DataFrameSuiteBase {
   "Event Ping Events" can "explode events into dataset" in {
     import spark.implicits._
 

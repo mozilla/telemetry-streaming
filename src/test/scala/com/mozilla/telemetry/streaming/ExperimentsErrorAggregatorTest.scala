@@ -9,7 +9,7 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestExperimentsErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase {
+class ExperimentsErrorAggregatorTest extends FlatSpec with Matchers with DataFrameSuiteBase {
 
   implicit val formats = DefaultFormats
   val k = TestUtils.scalarValue

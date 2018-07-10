@@ -8,7 +8,7 @@ import com.mozilla.telemetry.streaming.EventsToAmplitude.Config
 import org.scalatest.{FlatSpec, Matchers}
 
 
-class TestFocusEventPing extends FlatSpec with Matchers{
+class FocusEventPingTest extends FlatSpec with Matchers{
   val message = TestUtils.generateFocusEventMessages(1).head
   val ping = SendsToAmplitude(message)
   val ts = TestUtils.testTimestampMillis

@@ -6,11 +6,11 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.pings._
-import com.mozilla.telemetry.streaming.TestEventsToAmplitude.CustomMainPingPayload
+import com.mozilla.telemetry.streaming.EventsToAmplitudeTest.CustomMainPingPayload
 import org.scalatest.{FlatSpec, Matchers}
 
 
-class TestPings extends FlatSpec with Matchers{
+class PingsTest extends FlatSpec with Matchers{
 
   val ContentHistogramPayload = Some(
     """
