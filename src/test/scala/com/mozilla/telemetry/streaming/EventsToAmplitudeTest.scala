@@ -19,7 +19,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
 import org.scalatest._
 
-class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with DataFrameSuiteBase {
+class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with DataFrameSuiteBase {
 
   object DockerEventsTag extends Tag("DockerEventsTag")
   object DockerFocusEvents extends Tag("DockerFocusEvents")
@@ -171,7 +171,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   "HTTPSink" should "send main ping events correctly" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
     val msgs = TestUtils.generateMainMessages(expectedTotalMsgs,
-      customPayload=TestEventsToAmplitude.CustomMainPingPayload)
+      customPayload=EventsToAmplitudeTest.CustomMainPingPayload)
     val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))()
 
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
@@ -190,7 +190,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
 
     // should ignore main messages
     val messages = (TestUtils.generateFocusEventMessages(expectedTotalMsgs)
-      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=TestEventsToAmplitude.CustomMainPingPayload))
+      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=EventsToAmplitudeTest.CustomMainPingPayload))
       .map(_.toByteArray)
 
     val listener = new StreamingQueryListener {
@@ -243,7 +243,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
     }
 
     val messages = (TestUtils.generateFocusEventMessages(expectedTotalMsgs)
-      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=TestEventsToAmplitude.CustomMainPingPayload))
+      ++ TestUtils.generateMainMessages(expectedTotalMsgs, customPayload=EventsToAmplitudeTest.CustomMainPingPayload))
       .map(_.toByteArray) // should ignore focus event messages
 
     val listener = new StreamingQueryListener {
@@ -340,7 +340,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   "Session Id offset field" should "be added to session id when present" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
     val msg = TestUtils.generateMainMessages(1,
-      customPayload=TestEventsToAmplitude.sessionIdOffsetPayload).head
+      customPayload=EventsToAmplitudeTest.sessionIdOffsetPayload).head
 
     val res = for {
       JObject(l) <- parse(SendsToAmplitude(msg).getAmplitudeEvents(config).get) \\ "session_id"
@@ -351,7 +351,7 @@ class TestEventsToAmplitude extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 }
 
-object TestEventsToAmplitude {
+object EventsToAmplitudeTest {
   val CustomMainPingPayload = Some(
     """
       |    "processes": {

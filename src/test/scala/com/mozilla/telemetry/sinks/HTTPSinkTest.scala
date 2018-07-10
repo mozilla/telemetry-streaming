@@ -14,7 +14,7 @@ import org.scalatest._
 
 import scala.annotation.tailrec
 
-class TestHTTPSink extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+class HTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
   val Port = 9876
   val Host = "localhost"
   val Path = "/httpapi"

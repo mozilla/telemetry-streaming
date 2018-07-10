@@ -13,7 +13,7 @@ import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.DefaultFormats
 import org.scalatest.{FlatSpec, Matchers, Tag}
 
-class TestErrorAggregator extends FlatSpec with Matchers with DataFrameSuiteBase {
+class ErrorAggregatorTest extends FlatSpec with Matchers with DataFrameSuiteBase {
 
   object DockerErrorAggregatorTag extends Tag("DockerErrorAggregatorTag")
 

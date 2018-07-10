@@ -6,7 +6,7 @@ package com.mozilla.telemetry.pings
 import com.mozilla.telemetry.streaming.TestUtils
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestEventPing extends FlatSpec with Matchers {
+class EventPingTest extends FlatSpec with Matchers {
   val message = TestUtils.generateEventMessages(1).head
   val eventPing = EventPing(message)
 
