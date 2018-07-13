@@ -3,16 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
+import java.io.{BufferedWriter, File, FileWriter}
+
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings.CrashPing
+import com.mozilla.telemetry.pings.{CrashPayload, CrashPing}
 import com.mozilla.telemetry.sinks.BatchHttpSink
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
+import org.json4s.DefaultFormats
+import org.json4s.jackson.Serialization
 import org.rogach.scallop.ScallopOption
 
 import scala.collection.immutable.ListMap
+import scala.concurrent.{Await, Future, TimeoutException}
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
+import sys.process._
 
 abstract class CrashPingStreamingBase extends StreamingJobBase {
 
@@ -57,8 +66,12 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
       "httpBatchSize",
       descr = "Max number of crashes to send to influx in one http request",
       required = false,
-      default = Some(1)
-    )
+      default = Some(1))
+    val getCrashSignature: ScallopOption[Boolean] = opt[Boolean](
+      "getCrashSignature",
+      descr = "Use symbolication api and siggen library to get crash signature",
+      required = false,
+      default = Some(false))
 
     conflicts(kafkaBroker, List(from, to, fileLimit, maxParallelRequests))
 
@@ -79,7 +92,9 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
   }
 
   def sendStreamCrashes(spark: SparkSession, opts: Opts): Unit = {
-    val httpSink = getHttpSink(opts.url(), opts.httpBatchSize())
+    val httpSink = getHttpSink(opts.url(), maxBatchSize = opts.httpBatchSize())
+
+    val usingDatabricks = !shouldStopContextAtEnd(spark)
 
     val pings = spark
       .readStream
@@ -93,9 +108,11 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
       .load()
 
     getParsedPings(pings.select("value"), opts.raiseOnError(),
-      opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames())
+      opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames(),
+      opts.getCrashSignature(), usingDatabricks)
       .writeStream
       .queryName(QueryName)
+      .option("checkpointLocation", opts.checkpointPath())
       .foreach(httpSink)
       .start()
       .awaitTermination()
@@ -104,6 +121,8 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
   def sendBatchCrashes(spark: SparkSession, opts: Opts): Unit = {
     val maxParallelRequests = opts.maxParallelRequests()
     val httpBatchSize = opts.httpBatchSize()
+
+    val usingDatabricks = !shouldStopContextAtEnd(spark)
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val pings = getPingsForDate(spark, opts.acceptedChannels(), opts.acceptedAppNames(),
@@ -117,7 +136,8 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
       val url = opts.url()
 
       getParsedPings(pingsDataFrame, opts.raiseOnError(),
-        opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames())
+        opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames(),
+        opts.getCrashSignature(), usingDatabricks)
         .repartition(maxParallelRequests)
         .foreachPartition{ it: Iterator[String] =>
           val httpSink = getHttpSink(url, httpBatchSize)
@@ -151,12 +171,14 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
 
   def getParsedPings(pings: DataFrame, raiseOnError: Boolean, measurementName: String,
                      channels: List[String] = defaultChannels,
-                     appNames: List[String] = defaultAppNames): Dataset[String] = {
+                     appNames: List[String] = defaultAppNames,
+                     getSignature: Boolean = false, usingDatabricks: Boolean = false): Dataset[String] = {
     import pings.sparkSession.implicits._
 
     pings.flatMap( v => {
       try {
-        parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]), channels, appNames, measurementName)
+        parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]),
+          channels, appNames, measurementName, getSignature, usingDatabricks)
       } catch {
         case _: Throwable if !raiseOnError => None
       }
@@ -164,7 +186,7 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
   }
 
   def parsePing(message: Message, channels: List[String], appNames: List[String],
-                measurementName: String): Option[String] = {
+                measurementName: String, getSignature: Boolean, usingDatabricks: Boolean): Option[String] = {
     val fields = message.fieldsAsMap
 
     if (!fields.get("docType").contains("crash")) {
@@ -178,6 +200,9 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
       } else {
         val timestamp = metadata.Timestamp
 
+        val isWindows = ping.getOsName.contains("Windows_NT")
+        val crashSignature = if (getSignature) getCrashSignature(ping.payload, isWindows, usingDatabricks) else ""
+
         val buildId = ping.getNormalizedBuildId.getOrElse(metadata.appBuildId)
 
         val tags = ListMap(
@@ -187,9 +212,10 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
           "displayVersion" -> ping.getDisplayVersion.getOrElse(""),
           "channel" -> metadata.normalizedChannel,
           "country" -> metadata.geoCountry,
-          "osName" -> metadata.os.getOrElse(""),
+          "osName" -> ping.getOsName.getOrElse(""),
           "osVersion" -> ping.getOsVersion.getOrElse(""),
-          "architecture" -> ping.getArchitecture.getOrElse("")
+          "architecture" -> ping.getArchitecture.getOrElse(""),
+          "crashSignature" -> crashSignature
         ).filter{ case (k, v) => v.nonEmpty }
 
         Some(buildOutputString(measurementName, timestamp, buildId, tags))
@@ -203,4 +229,52 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
   def getHttpSink(url: String, maxBatchSize: Int): BatchHttpSink = {
     new BatchHttpSink(url, maxBatchSize = maxBatchSize)
   }
+
+  def formatCrashSignature(signature: String): String = signature
+
+  def getCrashSignature(payload: CrashPayload, isWindows: Boolean, usingDatabricks: Boolean, tries: Int = 0): String = {
+    try {
+      implicit val formats = DefaultFormats
+      val payloadJson = Serialization.write(payload)
+
+      // TODO: Is there a more robust way of doing this?
+
+      // attempt to get crash signature with exponential timeout
+      val response = Await.result(
+        Future(getSignatureFromExternalCommand(payloadJson, isWindows, usingDatabricks)),
+        (Math.pow(2, tries) * 30).seconds
+      )
+
+      // TODO: may be worth adding notes from response to pings
+      val signature = Serialization.read[CrashSignature](response)
+
+      formatCrashSignature(signature.signature)
+    } catch {
+      case _: TimeoutException => {
+        if (tries > 2) {
+          "fx-crash-sig\\ timed\\ out"
+        } else {
+          getCrashSignature(payload, isWindows, usingDatabricks, tries + 1)
+        }
+      }
+      case _: Throwable => "" // TODO: real error checking maybe
+    }
+  }
+
+  def getSignatureFromExternalCommand(payload: String, isWindows: Boolean, usingDatabricks: Boolean): String = {
+    val commandPath = if (usingDatabricks) "/databricks/python/bin/fx-crash-sig" else "fx-crash-sig"
+
+    val file = File.createTempFile("CrashesToInflux", ".json", new File("/tmp"))
+
+    try {
+      val bw = new BufferedWriter(new FileWriter(file))
+      bw.write(payload)
+      bw.close()
+      s"cat ${file.getPath}" #| s"$commandPath -v ${if (isWindows) "-w" else ""}" !!
+    } finally {
+      file.delete()
+    }
+  }
 }
+
+case class CrashSignature(notes: Option[List[String]], proto_signature: Option[String], signature: String)

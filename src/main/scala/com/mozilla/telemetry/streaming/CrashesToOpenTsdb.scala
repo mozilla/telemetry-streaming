@@ -26,6 +26,17 @@ object CrashesToOpenTsdb extends CrashPingStreamingBase {
   }
 
   override def getHttpSink(url: String, maxBatchSize: Int): BatchHttpSink = {
-    new BatchHttpSink(url, maxBatchSize, prefix = "[", sep = ",", suffix = "]")
+    new BatchHttpSink(url, maxBatchSize = maxBatchSize,
+      prefix = "[", sep = ",", suffix = "]", successCode = 204)
+  }
+
+  // characters from:
+  // http://opentsdb.net/docs/build/html/user_guide/writing.html#metrics-and-tags
+  override def formatCrashSignature(signature: String): String = {
+    signature
+      .replace(" | ", ".")
+      .replace("::", "-")
+      .replace(" ", "_")
+      .replaceAll("[^a-zA-Z0-9_./-]", "/")
   }
 }

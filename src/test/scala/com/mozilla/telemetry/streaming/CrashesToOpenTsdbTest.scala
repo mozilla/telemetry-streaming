@@ -29,4 +29,24 @@ class CrashesToOpenTsdbTest extends FlatSpec with Matchers with BeforeAndAfterEa
       raiseOnError = true, defaultMeasurementName)
     parsedPings.collect.count(isJsonObject) should be (k)
   }
+
+  "Crash signature formatter" should "replace spaces, colons, and pipes with the correct replacements" in {
+    val crashSignature =
+      """mozilla::widget::WinUtils::WaitForMessage | nsAppShell::ProcessNextNative Event"""
+
+    val expected =
+      """mozilla-widget-WinUtils-WaitForMessage.nsAppShell-ProcessNextNative_Event"""
+
+    assert(CrashesToOpenTsdb.formatCrashSignature(crashSignature) == expected)
+  }
+
+  it should "replace non-acceptable characters with forward slash" in {
+    val crashSignature =
+      """abcxyz01239ABCXYZ-.-_//@:||([])=+/.@"""
+
+    val expected =
+      """abcxyz01239ABCXYZ-.-_/////////////./"""
+
+    assert(CrashesToOpenTsdb.formatCrashSignature(crashSignature) == expected)
+  }
 }

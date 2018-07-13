@@ -19,4 +19,14 @@ class CrashesToInfluxTest extends FlatSpec with Matchers with DataFrameSuiteBase
       raiseOnError = true,  defaultMeasurementName)
     parsedPings.collect.count(_.startsWith(defaultMeasurementName)) should be (k)
   }
+
+  "Crash signature formatter" should "add a single backslash InfluxDB special characters" in {
+    val crashSignature =
+      """OOM | unknown | js::AutoEnterOOMUnsafeRegion::crash | F\\a,,k\e=Tr== ",a ce" | js::jit::ExceptionHandlerBailout"""
+
+    val expected =
+      """OOM\ |\ unknown\ |\ js::AutoEnterOOMUnsafeRegion::crash\ |\ F\\a\,\,k\e\=Tr\=\=\ \"\,a\ ce\"\ |\ js::jit::ExceptionHandlerBailout"""
+
+    assert(CrashesToInflux.formatCrashSignature(crashSignature) == expected)
+  }
 }
