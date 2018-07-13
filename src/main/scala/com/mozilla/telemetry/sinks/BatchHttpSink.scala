@@ -13,14 +13,14 @@ import scala.util.{Failure, Success, Try}
 
 class BatchHttpSink(url: String, maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000,
                     prefix: String = "", sep: String = "\n", suffix: String = "", maxBatchSize: Int = 1,
-                    retryCodes: List[Int] = List.empty[Int])
+                    retryCodes: List[Int] = List.empty[Int], successCode: Int = 200)
   extends ForeachWriter[String] {
 
   val TimeoutPseudoCode = -1
   val ErrorPseudoCode = -2
 
   val RetryCodes = TimeoutPseudoCode :: Nil ++ retryCodes
-  val OK = 200
+  val OK = successCode
 
   // timeouts in ms
   val ReadTimeout = 5000
