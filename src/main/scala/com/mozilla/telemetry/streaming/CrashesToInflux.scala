@@ -4,15 +4,24 @@
 package com.mozilla.telemetry.streaming
 
 import com.mozilla.telemetry.heka.Message
-import com.mozilla.telemetry.pings.CrashPing
+import com.mozilla.telemetry.pings.{CrashPayload, CrashPing}
 import com.mozilla.telemetry.sinks.BatchHttpSink
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql._
+import org.json4s.DefaultFormats
+import org.json4s.jackson.Serialization
 import org.rogach.scallop.ScallopOption
 
+import java.io.{File, BufferedWriter, FileWriter}
+
 import scala.collection.immutable.ListMap
+import scala.language.postfixOps
+import sys.process._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
+import scala.concurrent.duration._
 
 object CrashesToInflux extends StreamingJobBase {
 
@@ -55,8 +64,17 @@ object CrashesToInflux extends StreamingJobBase {
       "httpBatchSize",
       descr = "Max number of crashes to send to influx in one http request",
       required = false,
-      default = Some(1)
-    )
+      default = Some(1))
+    val getCrashSignature: ScallopOption[Boolean] = opt[Boolean](
+      "getCrashSignature",
+      descr = "Use symbolication api and siggen library to get crash signature",
+      required = false,
+      default = Some(false))
+    val httpSuccessCode: ScallopOption[Int] = opt[Int](
+      "httpSuccessCode",
+      descr = "Code that denotes an http success",
+      required = false,
+      default = Some(200))
 
     conflicts(kafkaBroker, List(from, to, fileLimit, maxParallelRequests))
 
@@ -77,7 +95,10 @@ object CrashesToInflux extends StreamingJobBase {
   }
 
   def sendStreamCrashes(spark: SparkSession, opts: Opts): Unit = {
-    val httpSink = new BatchHttpSink(opts.url(), maxBatchSize = opts.httpBatchSize())
+    val httpSink = new BatchHttpSink(opts.url(), maxBatchSize = opts.httpBatchSize(),
+      successCode = opts.httpSuccessCode())
+
+    val usingDatabricks = spark.conf.getOption("spark.home").getOrElse("").startsWith("/databricks")
 
     val pings = spark
       .readStream
@@ -91,9 +112,11 @@ object CrashesToInflux extends StreamingJobBase {
       .load()
 
     getParsedPings(pings.select("value"), opts.raiseOnError(),
-      opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames())
+      opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames(),
+      opts.getCrashSignature(), usingDatabricks)
       .writeStream
       .queryName(QueryName)
+      .option("checkpointLocation", opts.checkpointPath())
       .foreach(httpSink)
       .start()
       .awaitTermination()
@@ -102,6 +125,8 @@ object CrashesToInflux extends StreamingJobBase {
   def sendBatchCrashes(spark: SparkSession, opts: Opts): Unit = {
     val maxParallelRequests = opts.maxParallelRequests()
     val httpBatchSize = opts.httpBatchSize()
+
+    val usingDatabricks = spark.conf.getOption("spark.home").getOrElse("").startsWith("/databricks")
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val pings = getPingsForDate(spark, opts.acceptedChannels(), opts.acceptedAppNames(),
@@ -115,7 +140,8 @@ object CrashesToInflux extends StreamingJobBase {
       val url = opts.url()
 
       getParsedPings(pingsDataFrame, opts.raiseOnError(),
-        opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames())
+        opts.measurementName(), opts.acceptedChannels(), opts.acceptedAppNames(),
+        opts.getCrashSignature(), usingDatabricks)
         .repartition(maxParallelRequests)
         .foreachPartition{ it: Iterator[String] =>
           val httpSink = new BatchHttpSink(url, maxBatchSize = httpBatchSize)
@@ -149,12 +175,14 @@ object CrashesToInflux extends StreamingJobBase {
 
   def getParsedPings(pings: DataFrame, raiseOnError: Boolean, measurementName: String,
                      channels: List[String] = defaultChannels,
-                     appNames: List[String] = defaultAppNames): Dataset[String] = {
+                     appNames: List[String] = defaultAppNames,
+                     getSignature: Boolean = false, usingDatabricks: Boolean = false): Dataset[String] = {
     import pings.sparkSession.implicits._
 
     pings.flatMap( v => {
       try {
-        parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]), channels, appNames, measurementName)
+        parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]),
+          channels, appNames, measurementName, getSignature, usingDatabricks)
       } catch {
         case _: Throwable if !raiseOnError => None
       }
@@ -162,7 +190,7 @@ object CrashesToInflux extends StreamingJobBase {
   }
 
   def parsePing(message: Message, channels: List[String], appNames: List[String],
-                measurementName: String): Option[String] = {
+                measurementName: String, getSignature: Boolean, usingDatabricks: Boolean): Option[String] = {
     val fields = message.fieldsAsMap
 
     if (!fields.get("docType").contains("crash")) {
@@ -176,6 +204,10 @@ object CrashesToInflux extends StreamingJobBase {
       } else {
         val timestamp = metadata.Timestamp
 
+        val isWindows = ping.getOsName.contains("Windows_NT")
+
+        val crashSignature = if (getSignature) getCrashSignature(ping.payload, isWindows, usingDatabricks) else ""
+
         val influxFields = ListMap(
           "buildId" -> ping.getNormalizedBuildId.getOrElse(metadata.appBuildId)
         )
@@ -187,17 +219,61 @@ object CrashesToInflux extends StreamingJobBase {
           "displayVersion" -> ping.getDisplayVersion.getOrElse(""),
           "channel" -> metadata.normalizedChannel,
           "country" -> metadata.geoCountry,
-          "osName" -> metadata.os.getOrElse(""),
+          "osName" -> ping.getOsName.getOrElse(""),
           "osVersion" -> ping.getOsVersion.getOrElse(""),
           "architecture" -> ping.getArchitecture.getOrElse("")
-        )
+        ).filter{ case (k, v) => v.nonEmpty }
 
-        Some(measurementName +
+        val outputString = measurementName +
           influxTags.map { case (k, v) => s"$k=$v" }.mkString(",", ",", "") +
-          influxFields.map { case (k, v) => s"$k=$v" }.mkString(" ", ",", "") +
-          " " +
-          timestamp)
+          (if (crashSignature.nonEmpty) s",crashSignature=$crashSignature" else "") +
+          influxFields.map { case (k, v) => s"$k=$v" }.mkString(" ", ",", " ") +
+          timestamp
+
+        Some(outputString)
       }
+    }
+  }
+
+  case class CrashSignature(notes: Option[List[String]], proto_signature: Option[String], signature: String)
+
+  def getCrashSignature(payload: CrashPayload, isWindows: Boolean, usingDatabricks: Boolean): String = {
+    try {
+      implicit val formats = DefaultFormats
+      val payloadJson = Serialization.write(payload)
+
+      // TODO: Do this in a non-stupid way?
+
+      val response = Await.result(
+        Future(getSignatureFromExternalCommand(payloadJson, isWindows, usingDatabricks)),
+        2.minutes
+      )
+
+      val signature = Serialization.read[CrashSignature](response)
+
+      signature.signature // special characters in influxdb
+        .replace(" ", "\\ ")
+        .replace(",", "\\,")
+        .replace("=", "\\=")
+        .replace("'", "`")
+    } catch {
+      case _: TimeoutException => "fx-crash-sig\\ timed\\ out"
+      case _: Throwable => "" // TODO: real error checking maybe
+    }
+  }
+
+  def getSignatureFromExternalCommand(payload: String, isWindows: Boolean, usingDatabricks: Boolean): String = {
+    val commandPath = if (usingDatabricks) "/databricks/python/bin/fx-crash-sig" else "fx-crash-sig"
+
+    val file = File.createTempFile("CrashesToInflux", ".json", new File("/tmp"))
+
+    try {
+      val bw = new BufferedWriter(new FileWriter(file))
+      bw.write(payload)
+      bw.close()
+      s"cat ${file.getPath}" #| s"$commandPath -v ${if (isWindows) "-w" else ""}" !!
+    } finally {
+      file.delete()
     }
   }
 }

@@ -5,7 +5,7 @@ package com.mozilla.telemetry.pings
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Ping.messageToPing
-import org.json4s.DefaultFormats
+import org.json4s.{DefaultFormats, JValue}
 
 case class CrashPing(application: Application,
                      clientId: Option[String],
@@ -61,7 +61,12 @@ case class CrashPayload(crashDate: String,
                         processType: Option[String],
                         hasCrashEnvironment: Option[Boolean],
                         metadata: CrashMetadata,
-                        version: Option[Int])
+                        version: Option[Int],
+                        stackTraces: JValue)
 
 case class CrashMetadata(StartupCrash: Option[String],
-                         ipc_channel_error: Option[String])
+                         ipc_channel_error: Option[String],
+                         MozCrashReason: Option[String],
+                         OOMAllocationSize: Option[String],
+                         ShutdownProgress: Option[String],
+                         AsyncShutdownTimeout: JValue)
