@@ -56,13 +56,16 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
         val docType = fields.getOrElse("docType", "").asInstanceOf[String]
         if ("frecency-update" == docType) {
           val ping = FrecencyUpdatePing(m)
-          Option(FrecencyUpdate(
-            ping.meta.normalizedTimestamp(),
-            ping.payload.model_version,
-            ping.payload.study_variation,
-            ping.payload.loss,
-            ping.payload.update)
-          )
+          if (ping.payload.study_variation == "treatment") {
+            Option(FrecencyUpdate(
+              ping.meta.normalizedTimestamp(),
+              ping.payload.model_version,
+              ping.payload.loss,
+              ping.payload.update)
+            )
+          } else {
+            None
+          }
         } else {
           None
         }
@@ -74,8 +77,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     frecencyUpdates.withWatermark("ts", "1 minute")
       .groupBy(
         window($"ts", "30 minutes", "30 minutes", "28 minutes"),
-        $"modelVersion",
-        $"studyVariation")
+        $"modelVersion")
       .agg(
         avg($"loss").as("avgLoss"),
         count("*").as("count"),
@@ -84,7 +86,8 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .as[FrecencyUpdateAggregate]
   }
 
-  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String]): StreamingQuery = {
+  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], modelOutputPath: String,
+                   stateCheckpointPath: String, stateBootstrapFilePath: Option[String]): StreamingQuery = {
     val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
       .option("modelOutputPath", modelOutputPath)
@@ -115,9 +118,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 }
 
-case class FrecencyUpdate(ts: Timestamp, modelVersion: Long, studyVariation: String, loss: Double, updates: Array[Double])
+case class FrecencyUpdate(ts: Timestamp, modelVersion: Long, loss: Double, updates: Array[Double])
 
-case class FrecencyUpdateAggregate(window: Window, modelVersion: Long, studyVariation: String, avgLoss: Double, avgUpdates: Array[Double], count: Long)
+case class FrecencyUpdateAggregate(window: Window, modelVersion: Long, avgLoss: Double, avgUpdates: Array[Double], count: Long)
 
 object FrecencyUpdateAggregate {
   def apply(row: Row): FrecencyUpdateAggregate = {
@@ -126,7 +129,6 @@ object FrecencyUpdateAggregate {
         row.getAs[Row]("window").getAs[Timestamp]("start"),
         row.getAs[Row]("window").getAs[Timestamp]("end")),
       row.getAs[Long]("modelVersion"),
-      row.getAs[String]("studyVariation"),
       row.getAs[Double]("avgLoss"),
       row.getAs[mutable.WrappedArray[Double]]("avgUpdates").toArray,
       row.getAs[Long]("count")

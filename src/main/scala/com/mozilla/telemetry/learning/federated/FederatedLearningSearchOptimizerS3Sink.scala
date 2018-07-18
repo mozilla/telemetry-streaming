@@ -34,7 +34,7 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
     val iteration: Long = state.iteration
 
     val ord = Ordering.by((_: FrecencyUpdateAggregate).modelVersion)
-    aggregates.filter(_.studyVariation == "treatment").filter(_.modelVersion.toLong >= iteration).reduceOption(ord.min) match {
+    aggregates.filter(_.modelVersion >= iteration).reduceOption(ord.min) match {
       case None =>
       // no relevant updates, do nothing
       case Some(aggregate) =>
