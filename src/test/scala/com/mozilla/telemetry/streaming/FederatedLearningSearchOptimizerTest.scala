@@ -5,9 +5,11 @@ package com.mozilla.telemetry.streaming
 
 import java.io.File
 import java.nio.file.{Files, Paths}
+import java.time.{LocalDate, ZoneId}
 import java.util.concurrent.TimeUnit
 
 import com.holdenkarau.spark.testing.StructuredStreamingBase
+import com.mozilla.telemetry.util.ManualClock
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, GivenWhenThen, Matchers}
@@ -19,6 +21,11 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
   val OutputPath = "/tmp/output"
   val CheckpointPath = "/tmp/state-checkpoint"
 
+  val clock = new ManualClock(
+    LocalDate.of(2018, 4, 5).atStartOfDay(ZoneId.of("UTC")).toInstant,
+    ZoneId.of("UTC")
+  )
+
   "Federated learning Optimizer" should "aggregate pings" in {
     import spark.implicits._
 
@@ -28,10 +35,12 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're aggregated")
-    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF())
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock)
       .writeStream.format("memory").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
+
+    clock.advance(TimeUnit.MINUTES.toNanos(45))
 
     pingsStream.addData(TestUtils.generateFrecencyUpdateMessages(5,
       timestamp = Some(TestUtils.testTimestampNano + TimeUnit.MINUTES.toNanos(45))).map(_.toByteArray).seq)
@@ -56,9 +65,11 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're processed")
-    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputPath, CheckpointPath)
+    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputPath, CheckpointPath, None, clock)
     pingsStream.addData(pings)
     query.processAllAvailable()
+
+    clock.advance(TimeUnit.MINUTES.toNanos(45))
 
     pingsStream.addData(TestUtils.generateFrecencyUpdateMessages(5,
       timestamp = Some(TestUtils.testTimestampNano + TimeUnit.MINUTES.toNanos(45))).map(_.toByteArray).seq)
@@ -80,6 +91,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
   override protected def afterEach(): Unit = {
     super.afterEach()
     cleanupTestDirectories()
+    clock.reset()
   }
 
   private def cleanupTestDirectories(): Unit = {

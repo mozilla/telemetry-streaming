@@ -4,6 +4,7 @@
 package com.mozilla.telemetry.streaming
 
 import java.sql.Timestamp
+import java.time.Clock
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.FrecencyUpdatePing
@@ -42,12 +43,13 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   def optimize(pings: DataFrame, checkpointPath: String,
-               modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None): StreamingQuery = {
-    val aggregates = aggregate(pings)
+               modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
+               clock: Clock = Clock.systemUTC()): StreamingQuery = {
+    val aggregates = aggregate(pings, clock)
     writeUpdates(aggregates, checkpointPath, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 
-  def aggregate(pings: DataFrame): Dataset[FrecencyUpdateAggregate] = {
+  def aggregate(pings: DataFrame, clock: Clock = Clock.systemUTC()): Dataset[FrecencyUpdateAggregate] = {
     import pings.sparkSession.implicits._
 
     val frecencyUpdates: Dataset[FrecencyUpdate] = pings.flatMap { v =>
@@ -59,7 +61,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
           val ping = FrecencyUpdatePing(m)
           if (ping.payload.study_variation == "treatment") {
             Option(FrecencyUpdate(
-              ping.meta.normalizedTimestamp(),
+              new Timestamp(clock.millis()),
               ping.payload.model_version,
               ping.payload.loss,
               ping.payload.update)
