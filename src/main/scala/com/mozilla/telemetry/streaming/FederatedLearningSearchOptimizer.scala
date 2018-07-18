@@ -36,14 +36,15 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .load()
       .select("value")
 
-    val query = optimize(pings, opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get)
+    val query = optimize(pings, opts.checkpointPath(), opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get)
 
     query.awaitTermination()
   }
 
-  def optimize(pings: DataFrame, modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None): StreamingQuery = {
+  def optimize(pings: DataFrame, checkpointPath: String,
+               modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None): StreamingQuery = {
     val aggregates = aggregate(pings)
-    writeUpdates(aggregates, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
+    writeUpdates(aggregates, checkpointPath, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 
   def aggregate(pings: DataFrame): Dataset[FrecencyUpdateAggregate] = {
@@ -86,10 +87,11 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .as[FrecencyUpdateAggregate]
   }
 
-  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], modelOutputPath: String,
+  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], checkpointPath: String, modelOutputPath: String,
                    stateCheckpointPath: String, stateBootstrapFilePath: Option[String]): StreamingQuery = {
     val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
+      .option("checkpointLocation", checkpointPath)
       .option("modelOutputPath", modelOutputPath)
 
     val writerWithStateConf = stateBootstrapFilePath match {
