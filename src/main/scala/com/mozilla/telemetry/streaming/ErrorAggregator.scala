@@ -52,6 +52,10 @@ object ErrorAggregator {
       "fileLimit",
       descr = "Max number of files to retrieve (batch mode only). Default: All files",
       required = false)
+    val channel: ScallopOption[String] = opt[String](
+      "channel",
+      descr = "Only process data from the given channel",
+      required = false)
     val outputPath: ScallopOption[String] = opt[String](
       "outputPath",
       descr = "Output path",
@@ -322,6 +326,7 @@ object ErrorAggregator {
 
     for (offset <- 0 to Days.daysBetween(from, to).getDays) {
       val currentDate = from.plusDays(offset)
+      val filterChannel = opts.channel.get
 
       val pings = Dataset("telemetry")
         .where("sourceName") {
@@ -332,7 +337,9 @@ object ErrorAggregator {
           case appName if allowedAppNames.contains(appName) => true
         }.where("submissionDate") {
           case date if date == currentDate.toString(dateFormat) => true
-        }.records(opts.fileLimit.get)
+        }.where("appUpdateChannel") {
+          case channel => filterChannel.isEmpty || channel == filterChannel.get
+        }.records(opts.fileLimit.get, Some(sc.defaultParallelism * 4))
         .map(m => Row(m.toByteArray))
 
       val schema = StructType(List(
