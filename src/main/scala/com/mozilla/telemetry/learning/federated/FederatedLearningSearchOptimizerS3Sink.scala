@@ -22,7 +22,7 @@ object FederatedLearningSearchOptimizerConstants {
   val StartingLearningRate: Int = 2
 }
 
-class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpointPath: String) extends Sink {
+class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None) extends Sink {
 
   val log = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
 
@@ -105,25 +105,35 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
       fs.mkdirs(checkpointPath)
     }
 
-    val statuses = fs.listStatus(checkpointPath)
-    val latestFileOpt = if (statuses != null) {
-      val paths = statuses.map(_.getPath)
-      val sorted = paths.sortWith { case (p1, p2) => p1.getName > p2.getName }
-      sorted.headOption
-    } else {
-      None
-    }
     try {
-      latestFileOpt match {
-        case Some(latestFile) =>
-          val fis = fs.open(latestFile)
-          val fileContents: String = IOUtils.toString(fis)
+      stateBootstrapFilePath match {
+        case Some(bootstrapStatePath) =>
+          val fis = fs.open(new Path(bootstrapStatePath))
+          val rawState: String = IOUtils.toString(fis)
           fis.close()
-
           implicit val formats = DefaultFormats
-          Serialization.read[OptimisationState](fileContents)
+          Serialization.read[OptimisationState](rawState)
+
         case None =>
-          OptimisationState(0, StartingWeights, Array.fill(NumberOfFeatures)(StartingLearningRate), None)
+          val statuses = fs.listStatus(checkpointPath)
+          val latestFileOpt = if (statuses != null) {
+            val paths = statuses.map(_.getPath)
+            val sorted = paths.sortWith { case (p1, p2) => p1.getName > p2.getName }
+            sorted.headOption
+          } else {
+            None
+          }
+          latestFileOpt match {
+            case Some(latestFile) =>
+              val fis = fs.open(latestFile)
+              val fileContents: String = IOUtils.toString(fis)
+              fis.close()
+
+              implicit val formats = DefaultFormats
+              Serialization.read[OptimisationState](fileContents)
+            case None =>
+              OptimisationState(0, StartingWeights, Array.fill(NumberOfFeatures)(StartingLearningRate), None)
+          }
       }
     } finally {
       fs.close()
@@ -143,8 +153,9 @@ class FederatedLearningSearchOptimizerS3SinkProvider extends StreamSinkProvider 
 
     val outputPath = parameters("modelOutputPath")
     val stateCheckpointPath = parameters("stateCheckpointPath")
+    val stateBootstrapFilePath = parameters.get("stateBootstrapFilePath")
 
-    new FederatedLearningSearchOptimizerS3Sink(outputPath, stateCheckpointPath)
+    new FederatedLearningSearchOptimizerS3Sink(outputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 }
 

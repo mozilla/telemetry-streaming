@@ -36,14 +36,14 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .load()
       .select("value")
 
-    val query = optimize(pings, opts.modelOutputPath(), opts.stateCheckpointPath())
+    val query = optimize(pings, opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get)
 
     query.awaitTermination()
   }
 
-  def optimize(pings: DataFrame, modelOutputPath: String, stateCheckpointPath: String): StreamingQuery = {
+  def optimize(pings: DataFrame, modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None): StreamingQuery = {
     val aggregates = aggregate(pings)
-    writeUpdates(aggregates, modelOutputPath: String, stateCheckpointPath: String)
+    writeUpdates(aggregates, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 
   def aggregate(pings: DataFrame): Dataset[FrecencyUpdateAggregate] = {
@@ -84,11 +84,17 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .as[FrecencyUpdateAggregate]
   }
 
-  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], modelOutputPath: String, stateCheckpointPath: String): StreamingQuery = {
-    aggregates.writeStream
+  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String]): StreamingQuery = {
+    val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
       .option("modelOutputPath", modelOutputPath)
-      .option("stateCheckpointPath", stateCheckpointPath)
+
+    val writerWithStateConf = stateBootstrapFilePath match {
+      case Some(path) => writer.option("stateBootstrapFilePath", path)
+      case None => writer
+    }
+
+    writerWithStateConf.option("stateCheckpointPath", stateCheckpointPath)
       .queryName("FederatedLearning")
       .start()
   }
@@ -100,6 +106,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     val stateCheckpointPath: ScallopOption[String] = opt[String](
       descr = "Location to save model optimizer state",
       required = true)
+    val stateBootstrapFilePath: ScallopOption[String] = opt[String](
+      descr = "Path to a file with initial optimizer state",
+      required = false)
 
     requireOne(kafkaBroker)
     verify()

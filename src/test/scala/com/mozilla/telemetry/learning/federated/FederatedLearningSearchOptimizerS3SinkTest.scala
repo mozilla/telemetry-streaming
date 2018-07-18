@@ -23,6 +23,19 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
     sink.state.iteration shouldBe 0
   }
 
+  it should "initialize optimisation state from provided bootstrap file" in {
+    FileUtils.writeStringToFile(
+      new File(CheckpointPath + "/bootstrap.json"),
+      """{"iteration":3,"weights":[1.5],"learningRates":[1.1],"gradient":[2.6]}""")
+
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath, Some(CheckpointPath + "/bootstrap.json"))
+
+    sink.state.iteration shouldBe 3
+    sink.state.weights should contain theSameElementsAs Seq(1.5)
+    sink.state.learningRates should contain theSameElementsAs Seq(1.1)
+    sink.state.gradient.get should contain theSameElementsAs Seq(2.6)
+  }
+
   it should "read and write optimisation state" in {
     Given("empty state directory and a sink")
     val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath)
@@ -63,13 +76,13 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
     cleanupTestDirectories()
   }
 
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-    cleanupTestDirectories()
-  }
-
   private def cleanupTestDirectories(): Unit = {
     FileUtils.deleteDirectory(new File(OutputPath))
     FileUtils.deleteDirectory(new File(CheckpointPath))
+  }
+
+  override protected def afterEach(): Unit = {
+    super.afterEach()
+    cleanupTestDirectories()
   }
 }
