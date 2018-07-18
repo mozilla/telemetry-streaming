@@ -104,12 +104,15 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
 
   private class Opts(args: Array[String]) extends BaseOpts(args) {
     val modelOutputPath: ScallopOption[String] = opt[String](
+      name = "modelOutputPath",
       descr = "Location to save updated model iterations",
       required = true)
     val stateCheckpointPath: ScallopOption[String] = opt[String](
+      name = "stateCheckpointPath",
       descr = "Location to save model optimizer state",
       required = true)
     val stateBootstrapFilePath: ScallopOption[String] = opt[String](
+      name = "stateBootstrapFilePath",
       descr = "Path to a file with initial optimizer state",
       required = false)
 
