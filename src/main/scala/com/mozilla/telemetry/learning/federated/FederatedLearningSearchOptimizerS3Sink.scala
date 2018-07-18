@@ -36,9 +36,10 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
     val ord = Ordering.by((_: FrecencyUpdateAggregate).modelVersion)
     aggregates.filter(_.modelVersion >= iteration).reduceOption(ord.min) match {
       case None =>
-      // no relevant updates, do nothing
-      case Some(aggregate) =>
+        val aggMsg = if (aggregates.isEmpty) "empty" else aggregates.mkString(",")
+        log.info(s"No updates for iteration $iteration, aggregates are $aggMsg")
 
+      case Some(aggregate) =>
         val lastWeights: Array[Double] = state.weights
         val learningRates: Array[Double] = state.learningRates
         val previousGradient: Option[Array[Double]] = state.gradient
