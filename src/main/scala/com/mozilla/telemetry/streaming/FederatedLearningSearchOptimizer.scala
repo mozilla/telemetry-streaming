@@ -99,7 +99,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     }
 
     writerWithStateConf.option("stateCheckpointPath", stateCheckpointPath)
-      .queryName("FederatedLearning")
+      .queryName(QueryName)
       .start()
   }
 
