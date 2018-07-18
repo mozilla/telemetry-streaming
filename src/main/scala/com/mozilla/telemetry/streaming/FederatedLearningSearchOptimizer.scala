@@ -37,19 +37,21 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .load()
       .select("value")
 
-    val query = optimize(pings, opts.checkpointPath(), opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get)
+    val query = optimize(pings,
+      opts.checkpointPath(), opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get,
+      Clock.systemUTC(), opts.windowOffsetMinutes())
 
     query.awaitTermination()
   }
 
   def optimize(pings: DataFrame, checkpointPath: String,
                modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
-               clock: Clock = Clock.systemUTC()): StreamingQuery = {
-    val aggregates = aggregate(pings, clock)
+               clock: Clock, windowOffsetMin: Int): StreamingQuery = {
+    val aggregates = aggregate(pings, clock, windowOffsetMin)
     writeUpdates(aggregates, checkpointPath, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 
-  def aggregate(pings: DataFrame, clock: Clock = Clock.systemUTC()): Dataset[FrecencyUpdateAggregate] = {
+  def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int): Dataset[FrecencyUpdateAggregate] = {
     import pings.sparkSession.implicits._
 
     val frecencyUpdates: Dataset[FrecencyUpdate] = pings.flatMap { v =>
@@ -79,7 +81,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     val NumberOfWeights = 22
     frecencyUpdates.withWatermark("ts", "1 minute")
       .groupBy(
-        window($"ts", "30 minutes", "30 minutes", "28 minutes"),
+        window($"ts", "30 minutes", "30 minutes", s"$windowOffsetMin minutes"),
         $"modelVersion")
       .agg(
         avg($"loss").as("avgLoss"),
@@ -118,6 +120,11 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       name = "stateBootstrapFilePath",
       descr = "Path to a file with initial optimizer state",
       required = false)
+    val windowOffsetMinutes: ScallopOption[Int] = opt[Int](
+      name = "windowOffsetMinutes",
+      descr = "Offset for processing windows",
+      required = false,
+      default = Some(28))
 
     requireOne(kafkaBroker)
     verify()

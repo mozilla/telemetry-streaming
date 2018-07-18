@@ -35,7 +35,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're aggregated")
-    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock)
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
       .writeStream.format("memory").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
@@ -65,7 +65,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're processed")
-    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputPath, CheckpointPath, None, clock)
+    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputPath, CheckpointPath, None, clock, 28)
     pingsStream.addData(pings)
     query.processAllAvailable()
 
