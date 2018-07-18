@@ -3,10 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.learning.federated
 
+import java.util
+
 import com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerConstants.{NumberOfFeatures, StartingLearningRate, StartingWeights}
 import com.mozilla.telemetry.streaming.FrecencyUpdateAggregate
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.permission.{AclEntry, FsAction}
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.sql.execution.streaming.Sink
 import org.apache.spark.sql.sources.StreamSinkProvider
@@ -14,6 +17,8 @@ import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
+
+import scala.util.Try
 
 object FederatedLearningSearchOptimizerConstants {
   // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
@@ -71,10 +76,12 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
       fs.mkdirs(modelOutputPath)
     }
 
-
-    val latestStream = fs.create(new Path(outputPath + "/" + "latest.json"))
+    val latestModelPath = new Path(outputPath + "/" + "latest.json")
+    val latestStream = fs.create(latestModelPath)
     latestStream.writeBytes(jsonModel)
     latestStream.close()
+    // local filesystem doesn't support ACLs
+    Try(fs.setAcl(latestModelPath, util.Arrays.asList(new AclEntry.Builder().setPermission(FsAction.READ).build())))
 
     val versionedStream = fs.create(new Path(outputPath + "/" + modelOutput.iteration + ".json"))
     versionedStream.writeBytes(jsonModel)
