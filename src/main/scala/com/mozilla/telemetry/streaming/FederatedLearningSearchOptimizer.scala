@@ -83,7 +83,6 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
         avg($"loss").as("avgLoss"),
         count("*").as("count"),
         array((0 until NumberOfWeights) map (i => avg($"updates" (i))): _*).alias("avgUpdates"))
-      .coalesce(1)
       .as[FrecencyUpdateAggregate]
   }
 
