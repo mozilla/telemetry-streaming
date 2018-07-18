@@ -16,13 +16,15 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
 
 object FederatedLearningSearchOptimizerConstants {
-  // https://github.com/florian/federated-learning-addon/blob/master/addon/prefs.js#L26
+  // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
   val StartingWeights: Array[Double] = Array(4, 14, 31, 90, 100, 70, 50, 30, 10, 0, 0, 100, 2000, 75, 0, 0, 0, 25, 0, 140, 200, 0)
   val NumberOfFeatures: Int = StartingWeights.length
   val StartingLearningRate: Int = 2
 }
 
 class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpointPath: String) extends Sink {
+
+  val log = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
 
   private[federated] var state: OptimisationState = initState()
 
@@ -46,7 +48,7 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
 
         val newIteration = iteration + 1
 
-        // val log = Array(OptimisationLogLine(aggregate.window.start, aggregate.modelVersion.toLong, aggregate.avgLoss))
+        log.info(s"Iteration $iteration, average loss: ${aggregate.avgLoss}")
 
         val newState = OptimisationState(newIteration, newWeights, newLearningRates, Option(gradient))
         writeModel(ModelOutput(newWeights.map(math.round(_).toInt), newIteration))
