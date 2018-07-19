@@ -39,19 +39,19 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
 
     val query = optimize(pings,
       opts.checkpointPath(), opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get,
-      Clock.systemUTC(), opts.windowOffsetMinutes())
+      Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError())
 
     query.awaitTermination()
   }
 
   def optimize(pings: DataFrame, checkpointPath: String,
                modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
-               clock: Clock, windowOffsetMin: Int): StreamingQuery = {
-    val aggregates = aggregate(pings, clock, windowOffsetMin)
+               clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): StreamingQuery = {
+    val aggregates = aggregate(pings, clock, windowOffsetMin, raiseOnError)
     writeUpdates(aggregates, checkpointPath, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
   }
 
-  def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int): Dataset[FrecencyUpdateAggregate] = {
+  def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
     import pings.sparkSession.implicits._
 
     val frecencyUpdates: Dataset[FrecencyUpdate] = pings.flatMap { v =>
@@ -75,7 +75,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
           None
         }
       } catch {
-        case _: Exception => None
+        case _: Throwable if !raiseOnError => None
       }
     }
     val NumberOfWeights = 22
@@ -125,6 +125,10 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       descr = "Offset for processing windows",
       required = false,
       default = Some(28))
+    val raiseOnError: ScallopOption[Boolean] = opt[Boolean](
+      name = "raiseOnError",
+      descr = "Whether the program should exit on a data processing error or not.",
+      default = Some(false))
 
     requireOne(kafkaBroker)
     verify()
