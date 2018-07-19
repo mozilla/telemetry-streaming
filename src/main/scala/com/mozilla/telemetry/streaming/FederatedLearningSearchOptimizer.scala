@@ -66,7 +66,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
               new Timestamp(clock.millis()),
               ping.payload.model_version,
               ping.payload.loss,
-              ping.payload.update)
+              ping.payload.update,
+              ping.meta.clientId
+            )
             )
           } else {
             None
@@ -86,7 +88,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .agg(
         avg($"loss").as("avgLoss"),
         count("*").as("count"),
-        array((0 until NumberOfWeights) map (i => avg($"updates" (i))): _*).alias("avgUpdates"))
+        array((0 until NumberOfWeights) map (i => avg($"updates" (i))): _*).alias("avgUpdates"),
+        approx_count_distinct($"client_id", 0.02).as("approxClientCount")
+      )
       .as[FrecencyUpdateAggregate]
   }
 
@@ -135,9 +139,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 }
 
-case class FrecencyUpdate(ts: Timestamp, modelVersion: Long, loss: Double, updates: Array[Double])
+case class FrecencyUpdate(ts: Timestamp, modelVersion: Long, loss: Double, updates: Array[Double], client_id: Option[String])
 
-case class FrecencyUpdateAggregate(window: Window, modelVersion: Long, avgLoss: Double, avgUpdates: Array[Double], count: Long)
+case class FrecencyUpdateAggregate(window: Window, modelVersion: Long, avgLoss: Double, avgUpdates: Array[Double], count: Long, approxClientCount: Long)
 
 object FrecencyUpdateAggregate {
   def apply(row: Row): FrecencyUpdateAggregate = {
@@ -148,7 +152,8 @@ object FrecencyUpdateAggregate {
       row.getAs[Long]("modelVersion"),
       row.getAs[Double]("avgLoss"),
       row.getAs[mutable.WrappedArray[Double]]("avgUpdates").toArray,
-      row.getAs[Long]("count")
+      row.getAs[Long]("count"),
+      row.getAs[Long]("approxClientCount")
     )
   }
 }

@@ -10,6 +10,8 @@ object FederatedLearningRPropOptimizer {
   val MinValue = 1.0
   val MaxValue = 3.0
 
+  val log = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
+
   def fit(weights: Array[Double],
           gradient: Array[Double],
           previousGradient: Option[Array[Double]],
@@ -43,6 +45,7 @@ object FederatedLearningRPropOptimizer {
   }
 
   private def applyConstraints(weights: Array[Double], alignTimeBuckets: Boolean): Array[Double] = {
+    log.info(s"Weights before constraints: $weights")
     val nonNegativeWeights = (weights.min match {
       case min if min < 0 => weights.map(_ - min)
       case _ => weights
@@ -54,7 +57,9 @@ object FederatedLearningRPropOptimizer {
       nonNegativeWeights(3) = math.max(nonNegativeWeights(3), nonNegativeWeights(2) + 1)
     }
 
-    nonNegativeWeights.toArray
+    val result = nonNegativeWeights.toArray
+    log.info(s"Weights after constraints: $result")
+    result
   }
 }
 
