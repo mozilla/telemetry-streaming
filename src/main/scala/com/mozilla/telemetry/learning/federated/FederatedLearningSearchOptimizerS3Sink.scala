@@ -3,13 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.learning.federated
 
-import java.util
-
 import com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerConstants.{NumberOfFeatures, StartingLearningRate, StartingWeights}
 import com.mozilla.telemetry.streaming.FrecencyUpdateAggregate
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
-import org.apache.hadoop.fs.permission.{AclEntry, FsAction}
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.sql.execution.streaming.Sink
 import org.apache.spark.sql.sources.StreamSinkProvider
@@ -17,8 +14,6 @@ import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
-
-import scala.util.Try
 
 object FederatedLearningSearchOptimizerConstants {
   // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
@@ -65,11 +60,17 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
   }
 
   private[federated] def writeModel(modelOutput: ModelOutput): Unit = {
+    log.info(s"Writing model $modelOutput to $outputPath")
     implicit val formats = DefaultFormats
     val jsonModel = Serialization.write(modelOutput)
 
     val conf = SparkHadoopUtil.get.conf
     val modelOutputPath = new Path(outputPath)
+
+    val DefaultAclKey = "fs.s3a.acl.default"
+    val defaultAcl = conf.get(DefaultAclKey)
+    // set default acl to public-read for latest model
+    conf.set(DefaultAclKey, "PublicRead")
 
     val fs = modelOutputPath.getFileSystem(conf)
     if (!fs.exists(modelOutputPath)) {
@@ -80,8 +81,13 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
     val latestStream = fs.create(latestModelPath)
     latestStream.writeBytes(jsonModel)
     latestStream.close()
-    // local filesystem doesn't support ACLs
-    Try(fs.setAcl(latestModelPath, util.Arrays.asList(new AclEntry.Builder().setPermission(FsAction.READ).build())))
+
+    // revert default acl change
+    if (defaultAcl == null) {
+      conf.unset(DefaultAclKey)
+    } else {
+      conf.set(DefaultAclKey, defaultAcl)
+    }
 
     val versionedStream = fs.create(new Path(outputPath + "/" + modelOutput.iteration + ".json"))
     versionedStream.writeBytes(jsonModel)
