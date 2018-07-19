@@ -29,6 +29,8 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
   private[federated] var state: OptimisationState = initState()
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
+    log.info(s"Starting addBatch with starting state $state")
+
     val aggregates = data.collect().map(FrecencyUpdateAggregate(_))
 
     val iteration: Long = state.iteration
@@ -40,6 +42,8 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
         log.info(s"No updates for iteration $iteration, aggregates are $aggMsg")
 
       case Some(aggregate) =>
+        log.info(s"Updating model with data from iteration $iteration, aggregation $aggregate")
+
         val lastWeights: Array[Double] = state.weights
         val learningRates: Array[Double] = state.learningRates
         val previousGradient: Option[Array[Double]] = state.gradient
@@ -49,13 +53,20 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
 
         val newIteration = iteration + 1
 
-        log.info(s"Iteration $iteration, average loss: ${aggregate.avgLoss}")
-
         val newState = OptimisationState(newIteration, newWeights, newLearningRates, Option(gradient))
-        writeModel(ModelOutput(newWeights.map(math.round(_).toInt), newIteration))
+
+        log.info(s"Update results: $newState")
+
+        val rounded = newWeights.map(math.round(_).toInt)
+
+        log.info(s"Weights after rounding: $rounded")
+
+        writeModel(ModelOutput(rounded, newIteration))
 
         writeState(newState)
         state = newState
+
+        log.info(s"New state and model written, new iteration is $newIteration")
     }
   }
 
