@@ -22,7 +22,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     val opts = new Opts(args)
 
     val spark = SparkSession.builder()
-      .appName("Experiment Enrollments to TestTube")
+      .appName("Federated learning - awesomebar optimizer")
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .getOrCreate()
 

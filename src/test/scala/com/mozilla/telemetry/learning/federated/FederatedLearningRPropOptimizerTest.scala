@@ -37,20 +37,21 @@ class FederatedLearningRPropOptimizerTest extends FlatSpec with Matchers {
     // compare weights with +/-1 tolerance
     implicit val intEq = TolerantNumerics.tolerantIntEquality(1)
 
+    val message = new StringBuilder
+    var weightsEqual = true
     optimizedWeights.indices.foreach { i =>
       val expected = weights(i + 1)
       val calculated = optimizedWeights(i)
 
       expected.zip(calculated).foreach { case (e, c) =>
-        assert(e === c)
+        if (!(e === c)) weightsEqual = false
       }
 
-      // scalastyle:off print-ln
-      println(s"Iteration $i")
-      println(" expected: " + expected.mkString(", "))
-      println("optimized: " + calculated.mkString(", "))
-      println()
-      // scalastyle:on print-ln
+      message.append(s"Iteration $i\n")
+      message.append(" expected: " + expected.mkString("", ", ", "\n"))
+      message.append("optimized: " + calculated.mkString("", ", ", "\n\n"))
     }
+
+    assert(weightsEqual, "\nCalculated weights did not match expected, results were: \n" + message)
   }
 }
