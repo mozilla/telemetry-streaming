@@ -79,7 +79,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       }
     }
     val NumberOfWeights = 22
-    frecencyUpdates.withWatermark("ts", "1 minute")
+    frecencyUpdates.withWatermark("ts", "0 minutes")
       .groupBy(
         window($"ts", "30 minutes", "30 minutes", s"$windowOffsetMin minutes"),
         $"modelVersion")
