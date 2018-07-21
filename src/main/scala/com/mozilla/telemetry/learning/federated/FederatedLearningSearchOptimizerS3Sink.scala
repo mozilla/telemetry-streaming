@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.learning.federated
 
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerConstants.{NumberOfFeatures, StartingLearningRate, StartingWeights}
 import com.mozilla.telemetry.streaming.FrecencyUpdateAggregate
 import org.apache.commons.io.IOUtils
@@ -14,6 +15,8 @@ import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, PutObjectResult}
 
 object FederatedLearningSearchOptimizerConstants {
   // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
@@ -22,7 +25,8 @@ object FederatedLearningSearchOptimizerConstants {
   val StartingLearningRate: Int = 2
 }
 
-class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None) extends Sink {
+class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: String, stateCheckpointPath: String,
+                                             stateBootstrapFilePath: Option[String] = None, s3EndpointOverride: Option[String] = None) extends Sink {
 
   val log = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
 
@@ -71,40 +75,13 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
   }
 
   private[federated] def writeModel(modelOutput: ModelOutput): Unit = {
-    log.info(s"Writing model $modelOutput to $outputPath")
+    log.info(s"Writing model $modelOutput to s3://$outputBucket/$outputKey")
     implicit val formats = DefaultFormats
     val jsonModel = Serialization.write(modelOutput)
 
-    val conf = SparkHadoopUtil.get.conf
-    val modelOutputPath = new Path(outputPath)
-
-    val DefaultAclKey = "fs.s3a.acl.default"
-    val defaultAcl = conf.get(DefaultAclKey)
-    // set default acl to public-read for latest model
-    conf.set(DefaultAclKey, "PublicRead")
-
-    val fs = modelOutputPath.getFileSystem(conf)
-    if (!fs.exists(modelOutputPath)) {
-      fs.mkdirs(modelOutputPath)
-    }
-
-    val latestModelPath = new Path(outputPath + "/" + "latest.json")
-    val latestStream = fs.create(latestModelPath)
-    latestStream.writeBytes(jsonModel)
-    latestStream.close()
-
-    // revert default acl change
-    if (defaultAcl == null) {
-      conf.unset(DefaultAclKey)
-    } else {
-      conf.set(DefaultAclKey, defaultAcl)
-    }
-
-    val versionedStream = fs.create(new Path(outputPath + "/" + modelOutput.iteration + ".json"))
-    versionedStream.writeBytes(jsonModel)
-    versionedStream.close()
-
-    fs.close()
+    val client = new S3ClientWrapper(s3EndpointOverride)
+    client.putString(outputBucket, outputKey + "/latest.json", jsonModel)
+    client.putString(outputBucket, outputKey + s"/${modelOutput.iteration}.json", jsonModel)
   }
 
   private[federated] def writeState(state: OptimisationState): Unit = {
@@ -164,6 +141,28 @@ class FederatedLearningSearchOptimizerS3Sink(outputPath: String, stateCheckpoint
       fs.close()
     }
   }
+
+  private[federated] class S3ClientWrapper(endpointOverride: Option[String] = None) {
+    private val builder = AmazonS3ClientBuilder
+      .standard
+      .withPathStyleAccessEnabled(true)
+
+    private val client = endpointOverride.map { ep: String =>
+      val endpoint = new EndpointConfiguration(ep, "us-west-2")
+      builder.withEndpointConfiguration(endpoint)
+    }.getOrElse(builder).build()
+
+    private val metadata = new ObjectMetadata()
+    metadata.setContentType("application/json")
+    metadata.setCacheControl("no-cache, no-store, must-revalidate")
+
+    def putString(bucket: String, key: String, contents: String): PutObjectResult = {
+      val contentStream = new java.io.ByteArrayInputStream(contents.getBytes)
+
+      val request = new PutObjectRequest(bucket, key, contentStream, metadata)
+      client.putObject(request)
+    }
+  }
 }
 
 class FederatedLearningSearchOptimizerS3SinkProvider extends StreamSinkProvider {
@@ -173,14 +172,17 @@ class FederatedLearningSearchOptimizerS3SinkProvider extends StreamSinkProvider 
                           outputMode: OutputMode): Sink = {
 
     val params = parameters.keySet
-    require(params.contains("modelOutputPath"), "modelOutputPath is required")
+    require(params.contains("modelOutputBucket"), "modelOutputBucket is required")
+    require(params.contains("modelOutputKey"), "modelOutputKey is required")
     require(params.contains("stateCheckpointPath"), "stateCheckpointPath is required")
 
-    val outputPath = parameters("modelOutputPath")
+    val outputBucket = parameters("modelOutputBucket")
+    val outputKey = parameters("modelOutputKey")
     val stateCheckpointPath = parameters("stateCheckpointPath")
     val stateBootstrapFilePath = parameters.get("stateBootstrapFilePath")
+    val s3EndpointOverride = parameters.get("s3EndpointOverride")
 
-    new FederatedLearningSearchOptimizerS3Sink(outputPath, stateCheckpointPath, stateBootstrapFilePath)
+    new FederatedLearningSearchOptimizerS3Sink(outputBucket, outputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
   }
 }
 

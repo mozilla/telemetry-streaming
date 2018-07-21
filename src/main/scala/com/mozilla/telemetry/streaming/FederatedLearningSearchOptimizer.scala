@@ -38,17 +38,18 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .select("value")
 
     val query = optimize(pings,
-      opts.checkpointPath(), opts.modelOutputPath(), opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get,
-      Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError())
+      opts.checkpointPath(), opts.modelOutputBucket(), opts.modelOutputKey(), opts.stateCheckpointPath(),
+      opts.stateBootstrapFilePath.get, Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError(),
+      opts.s3EndpointOverride.get)
 
     query.awaitTermination()
   }
 
-  def optimize(pings: DataFrame, checkpointPath: String,
-               modelOutputPath: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
-               clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): StreamingQuery = {
+  def optimize(pings: DataFrame, checkpointPath: String, modelOutputBucket: String, modelOutputKey: String, // scalastyle:ignore
+               stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
+               clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false, s3EndpointOverride: Option[String] = None): StreamingQuery = {
     val aggregates = aggregate(pings, clock, windowOffsetMin, raiseOnError)
-    writeUpdates(aggregates, checkpointPath, modelOutputPath, stateCheckpointPath, stateBootstrapFilePath)
+    writeUpdates(aggregates, checkpointPath, modelOutputBucket, modelOutputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
   }
 
   def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
@@ -94,27 +95,37 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .as[FrecencyUpdateAggregate]
   }
 
-  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], checkpointPath: String, modelOutputPath: String,
-                   stateCheckpointPath: String, stateBootstrapFilePath: Option[String]): StreamingQuery = {
+  def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], checkpointPath: String, modelOutputBucket: String, modelOutputKey: String,
+                   stateCheckpointPath: String, stateBootstrapFilePath: Option[String], s3EndpointOverride: Option[String] = None): StreamingQuery = {
     val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
       .option("checkpointLocation", checkpointPath)
-      .option("modelOutputPath", modelOutputPath)
+      .option("modelOutputBucket", modelOutputBucket)
+      .option("modelOutputKey", modelOutputKey)
 
     val writerWithStateConf = stateBootstrapFilePath match {
       case Some(path) => writer.option("stateBootstrapFilePath", path)
       case None => writer
     }
 
-    writerWithStateConf.option("stateCheckpointPath", stateCheckpointPath)
+    val writerWithEndpointConf = s3EndpointOverride match {
+      case Some(endpoint) => writerWithStateConf.option("s3EndpointOverride", endpoint)
+      case None => writerWithStateConf
+    }
+
+    writerWithEndpointConf.option("stateCheckpointPath", stateCheckpointPath)
       .queryName(QueryName)
       .start()
   }
 
   private class Opts(args: Array[String]) extends BaseOpts(args) {
-    val modelOutputPath: ScallopOption[String] = opt[String](
-      name = "modelOutputPath",
-      descr = "Location to save updated model iterations",
+    val modelOutputBucket: ScallopOption[String] = opt[String](
+      name = "modelOutputBucket",
+      descr = "S3 bucket to save public model iterations",
+      required = true)
+    val modelOutputKey: ScallopOption[String] = opt[String](
+      name = "modelOutputKey",
+      descr = "S3 key to save public model iterations",
       required = true)
     val stateCheckpointPath: ScallopOption[String] = opt[String](
       name = "stateCheckpointPath",
@@ -133,6 +144,10 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       name = "raiseOnError",
       descr = "Whether the program should exit on a data processing error or not.",
       default = Some(false))
+    val s3EndpointOverride: ScallopOption[String] = opt[String](
+      name = "s3EndpointOverride",
+      descr = "Optional endpoint override for s3 client",
+      required = false)
 
     requireOne(kafkaBroker)
     verify()

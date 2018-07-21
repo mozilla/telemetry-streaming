@@ -4,22 +4,22 @@
 package com.mozilla.telemetry.streaming
 
 import java.io.File
-import java.nio.file.{Files, Paths}
 import java.time.{LocalDate, ZoneId}
 import java.util.concurrent.TimeUnit
 
 import com.holdenkarau.spark.testing.StructuredStreamingBase
-import com.mozilla.telemetry.util.ManualClock
+import com.mozilla.telemetry.util.{ManualClock, S3TestUtil}
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, GivenWhenThen, Matchers}
 
-import scala.collection.JavaConversions._
-
 class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with GivenWhenThen with StructuredStreamingBase with BeforeAndAfterEach {
 
-  val OutputPath = "/tmp/output"
+  val OutputBucket = "test-bucket"
+  val OutputKey = "model"
   val CheckpointPath = "/tmp/state-checkpoint"
+  val MockEndpointPort = 8001
+  val MockEndpoint = s"http://localhost:$MockEndpointPort"
 
   val clock = new ManualClock(
     LocalDate.of(2018, 4, 5).atStartOfDay(ZoneId.of("UTC")).toInstant,
@@ -65,7 +65,10 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're processed")
-    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputPath, CheckpointPath, None, clock, 28)
+
+    val s3 = S3TestUtil(MockEndpointPort, Some(OutputBucket))
+    val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputBucket,
+      OutputKey, CheckpointPath, None, clock, 28, s3EndpointOverride = Some(MockEndpoint))
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -79,8 +82,8 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     query.stop()
 
     Then("model is saved to configured location")
-    Files.readAllLines(Paths.get(OutputPath + "/latest.json")).mkString("") should startWith("""{"model":[""")
-    Files.readAllLines(Paths.get(OutputPath + "/1.json")).mkString("") should startWith("""{"model":[""")
+    s3.getObjectAsString(OutputBucket, OutputKey + "/latest.json") should startWith("""{"model":[""")
+    s3.getObjectAsString(OutputBucket, OutputKey + "/1.json") should startWith("""{"model":[""")
   }
 
   override protected def beforeEach(): Unit = {
@@ -95,7 +98,6 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
   }
 
   private def cleanupTestDirectories(): Unit = {
-    FileUtils.deleteDirectory(new File(OutputPath))
     FileUtils.deleteDirectory(new File(CheckpointPath))
   }
 }

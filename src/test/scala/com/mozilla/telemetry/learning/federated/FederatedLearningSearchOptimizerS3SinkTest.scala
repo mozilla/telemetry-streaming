@@ -8,17 +8,21 @@ import java.nio.file.{Files, Paths}
 import java.util.stream.Collectors
 
 import com.holdenkarau.spark.testing.StructuredStreamingBase
+import com.mozilla.telemetry.util.S3TestUtil
 import org.apache.commons.io.FileUtils
 import org.scalatest._
 
 import scala.collection.JavaConversions._
 
 class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers with GivenWhenThen with StructuredStreamingBase with BeforeAndAfterEach {
-  val OutputPath = "/tmp/output"
+  val OutputBucket = "test-bucket"
+  val OutputKey = "model"
   val CheckpointPath = "/tmp/state-checkpoint"
+  val MockEndpointPort = 8001
+  val MockEndpoint = s"http://localhost:$MockEndpointPort"
 
   "Federated Learning Sink" should "initialize optimisation state if checkpoint directory is empty" in {
-    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath)
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath)
 
     sink.state.iteration shouldBe 0
   }
@@ -28,7 +32,7 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
       new File(CheckpointPath + "/bootstrap.json"),
       """{"iteration":3,"weights":[1.5],"learningRates":[1.1],"gradient":[2.6]}""")
 
-    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath, Some(CheckpointPath + "/bootstrap.json"))
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath, Some(CheckpointPath + "/bootstrap.json"), Some(MockEndpoint))
 
     sink.state.iteration shouldBe 3
     sink.state.weights should contain theSameElementsAs Seq(1.5)
@@ -38,7 +42,7 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
 
   it should "read and write optimisation state" in {
     Given("empty state directory and a sink")
-    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath)
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath, s3EndpointOverride = Some(MockEndpoint))
 
     When("it writes new state")
     val newState = OptimisationState(5, Array(0), Array(1), Some(Array(2)))
@@ -51,7 +55,7 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
     Files.readAllLines(savedState).mkString("") shouldBe """{"iteration":5,"weights":[0.0],"learningRates":[1.0],"gradient":[2.0]}"""
 
     When("new sink is created")
-    val sink2 = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath)
+    val sink2 = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath, s3EndpointOverride = Some(MockEndpoint))
 
     Then("it picks up last written state")
     sink2.state.iteration shouldBe newState.iteration
@@ -63,12 +67,16 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
   it should "write model" in {
     val model = ModelOutput(Array(100, 70, 50, 30, 10, 0, 0, 100, 2000, 75, 0, 0, 0, 25, 0, 140, 200, 0), 1)
 
-    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputPath, CheckpointPath)
+    val s3 = S3TestUtil(MockEndpointPort, Some(OutputBucket))
+
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath, s3EndpointOverride = Some(MockEndpoint))
     sink.writeModel(model)
 
     val expectedJson = """{"model":[100,70,50,30,10,0,0,100,2000,75,0,0,0,25,0,140,200,0],"iteration":1}"""
-    Files.readAllLines(Paths.get(OutputPath + "/latest.json")).mkString("") shouldBe expectedJson
-    Files.readAllLines(Paths.get(OutputPath + "/1.json")).mkString("") shouldBe expectedJson
+    s3.getObjectAsString(OutputBucket, OutputKey + "/latest.json") shouldBe expectedJson
+    s3.getObjectAsString(OutputBucket, OutputKey + "/1.json") shouldBe expectedJson
+
+    s3.shutdown
   }
 
   override protected def beforeEach(): Unit = {
@@ -77,7 +85,6 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
   }
 
   private def cleanupTestDirectories(): Unit = {
-    FileUtils.deleteDirectory(new File(OutputPath))
     FileUtils.deleteDirectory(new File(CheckpointPath))
   }
 
