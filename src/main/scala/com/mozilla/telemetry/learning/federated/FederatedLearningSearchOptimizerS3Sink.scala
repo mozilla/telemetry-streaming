@@ -17,6 +17,7 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, PutObjectResult}
+import com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
 import com.mozilla.telemetry.util.PrettyPrint
 
 object FederatedLearningSearchOptimizerConstants {
@@ -160,7 +161,7 @@ class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: St
     def putString(bucket: String, key: String, contents: String): PutObjectResult = {
       val contentStream = new java.io.ByteArrayInputStream(contents.getBytes)
 
-      val request = new PutObjectRequest(bucket, key, contentStream, metadata)
+      val request = new PutObjectRequest(bucket, key, contentStream, metadata).withCannedAcl(PublicRead)
       client.putObject(request)
     }
   }
