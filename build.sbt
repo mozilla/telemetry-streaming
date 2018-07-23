@@ -40,7 +40,8 @@ lazy val root = (project in file(".")).
     libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "2.3.0_0.9.0" % Test,
     libraryDependencies += "org.apache.spark" %% "spark-hive" % "2.3.0" % Test,
     libraryDependencies += "io.findify" %% "s3mock" % "0.2.5" % Test,
-    libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.11.+" % "provided"
+    libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.11.+" % "provided",
+    libraryDependencies += "com.lihaoyi" %% "pprint" % "0.5.3"
   )
 
 // Setup docker task

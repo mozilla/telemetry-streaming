@@ -13,6 +13,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.rogach.scallop.ScallopOption
+import com.mozilla.telemetry.util.PrettyPrint
 
 import scala.collection.mutable
 
@@ -157,6 +158,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
 case class FrecencyUpdate(ts: Timestamp, modelVersion: Long, loss: Double, updates: Array[Double], client_id: Option[String])
 
 case class FrecencyUpdateAggregate(window: Window, modelVersion: Long, avgLoss: Double, avgUpdates: Array[Double], count: Long, approxClientCount: Long)
+  extends PrettyPrint
 
 object FrecencyUpdateAggregate {
   def apply(row: Row): FrecencyUpdateAggregate = {

@@ -17,6 +17,7 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, PutObjectResult}
+import com.mozilla.telemetry.util.PrettyPrint
 
 object FederatedLearningSearchOptimizerConstants {
   // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
@@ -63,7 +64,7 @@ class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: St
 
         val rounded = newWeights.map(math.round(_).toInt)
 
-        log.info(s"Weights after rounding: $rounded")
+        log.info(s"Weights after rounding: ${rounded.mkString(",")}")
 
         writeModel(ModelOutput(rounded, newIteration))
 
@@ -186,6 +187,6 @@ class FederatedLearningSearchOptimizerS3SinkProvider extends StreamSinkProvider 
   }
 }
 
-case class OptimisationState(iteration: Long, weights: Array[Double], learningRates: Array[Double], gradient: Option[Array[Double]])
+case class OptimisationState(iteration: Long, weights: Array[Double], learningRates: Array[Double], gradient: Option[Array[Double]]) extends PrettyPrint
 
-case class ModelOutput(model: Array[Int], iteration: Long)
+case class ModelOutput(model: Array[Int], iteration: Long) extends PrettyPrint

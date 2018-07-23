@@ -45,7 +45,7 @@ object FederatedLearningRPropOptimizer {
   }
 
   private def applyConstraints(weights: Array[Double], alignTimeBuckets: Boolean): Array[Double] = {
-    log.info(s"Weights before constraints: $weights")
+    log.info(s"Weights before constraints: ${weights.mkString(",")}")
     val nonNegativeWeights = (weights.min match {
       case min if min < 0 => weights.map(_ - min)
       case _ => weights
@@ -58,7 +58,7 @@ object FederatedLearningRPropOptimizer {
     }
 
     val result = nonNegativeWeights.toArray
-    log.info(s"Weights after constraints: $result")
+    log.info(s"Weights after constraints: ${result.mkString(",")}")
     result
   }
 }
