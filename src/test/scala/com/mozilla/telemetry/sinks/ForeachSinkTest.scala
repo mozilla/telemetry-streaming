@@ -4,7 +4,7 @@
 package com.mozilla.telemetry.sinks
 
 import java.sql.Timestamp
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
@@ -12,16 +12,14 @@ import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.{FlatSpec, Matchers}
 
-// scalastyle:off
+import scala.collection.mutable.ArrayBuffer
+
 class ForeachSinkTest extends FlatSpec with DataFrameSuiteBase with Matchers {
 
   "ForeachSink" should "receive data in batches" in {
     import org.apache.spark.sql.functions._
     import spark.implicits._
     val input = MemoryStream[Ping]
-
-
-    val formatName = "com.mozilla.telemetry.sinks.CustomSinkProvider"
 
     val query = input.toDS().repartition(2)
       .withWatermark("ts", "1 minute")
@@ -33,51 +31,62 @@ class ForeachSinkTest extends FlatSpec with DataFrameSuiteBase with Matchers {
         count($"version").as("count"))
       .writeStream
       .queryName("ForeachSinkTest")
-      .format(formatName)
+      .format("com.mozilla.telemetry.sinks.CustomSinkProvider")
       .start()
 
-    val inputData = Seq(Ping(ts("10:00:00"), "1", 1.0))
-
-
-    input.addData(inputData)
+    // add data to first window
+    input.addData(Ping(ts("10:00:00"), "1", 1.0))
     query.processAllAvailable()
 
+    // add data to second window, close first window
     input.addData(Ping(ts("10:30:00"), "1", 1.0))
     query.processAllAvailable()
 
+    // add data to second window
     input.addData(Ping(ts("10:35:00"), "1", 1.0))
     query.processAllAvailable()
 
+    // add data to third window (open), close second window
     input.addData(Ping(ts("11:00:00"), "1", 1.0))
     query.processAllAvailable()
 
+    // trigger outputting of second window
     input.addData()
     query.processAllAvailable()
 
-    Counter.c.get() shouldBe 2
-
+    Counters.nonEmptyBatches.get() shouldBe 2 // because two windows were finished
+    Counters.data should contain theSameElementsAs Seq(
+      SinkInputRow(Window("09:58:00, 10:28:00"), "1", 1.0, 1),
+      SinkInputRow(Window("10:28:00, 10:58:00"), "1", 1.0, 2)
+    )
+    Counters.totalBatches.get() shouldBe 5 // because `query.processAllAvailable()` is called 5 times
   }
 
   private def ts(time: String) = {
-    new Timestamp(LocalDateTime.parse(s"2018-07-03T$time").toInstant(ZoneOffset.UTC).toEpochMilli)
+    new Timestamp(LocalDateTime.parse(s"2018-07-03T$time").atZone(ZoneId.systemDefault()).toInstant.toEpochMilli)
   }
 }
 
-case class Ping(ts: Timestamp, version: String, loss: Double)
+case class Ping(ts: Timestamp, version: String, loss: Double, label: String = "test")
 
-object Counter {
-  val c = new AtomicInteger(0)
+object Counters {
+  lazy val data: ArrayBuffer[SinkInputRow] = ArrayBuffer.empty[SinkInputRow]
+  val nonEmptyBatches = new AtomicInteger(0)
+  val totalBatches = new AtomicInteger(0)
 }
 
 class CustomSinkProvider extends ForeachSinkProvider {
   override def f(batchId: Long, df: DataFrame) {
 
-    println("BATCH: " + batchId)
-    df.printSchema()
     val batch = df.collect().map(SinkInputRow(_))
+    Counters.totalBatches.addAndGet(1)
 
-    if (batch.isEmpty) println("EMPTY") else Counter.c.addAndGet(1)
+    if (batch.nonEmpty) Counters.nonEmptyBatches.addAndGet(1)
+
+    // scalastyle:off print-ln
     batch.foreach(println)
+    // scalastyle:on print-ln
+    batch.foreach(Counters.data.append(_))
   }
 }
 
@@ -97,3 +106,13 @@ object SinkInputRow {
 }
 
 case class Window(start: java.sql.Timestamp, end: java.sql.Timestamp)
+
+object Window {
+  def apply(windowString: String): Window = {
+    val range = windowString.split(", ")
+    Window(
+      new Timestamp(LocalDateTime.parse(s"2018-07-03T${range(0)}").atZone(ZoneId.systemDefault()).toInstant.toEpochMilli),
+      new Timestamp(LocalDateTime.parse(s"2018-07-03T${range(1)}").atZone(ZoneId.systemDefault()).toInstant.toEpochMilli)
+    )
+  }
+}
