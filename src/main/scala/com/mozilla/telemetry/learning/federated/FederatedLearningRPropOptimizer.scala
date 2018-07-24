@@ -52,6 +52,7 @@ object FederatedLearningRPropOptimizer {
     }).toBuffer
 
     if (alignTimeBuckets) {
+      nonNegativeWeights(0) = math.max(nonNegativeWeights(0), 1)
       nonNegativeWeights(1) = math.max(nonNegativeWeights(1), nonNegativeWeights(0) + 1)
       nonNegativeWeights(2) = math.max(nonNegativeWeights(2), nonNegativeWeights(1) + 1)
       nonNegativeWeights(3) = math.max(nonNegativeWeights(3), nonNegativeWeights(2) + 1)
