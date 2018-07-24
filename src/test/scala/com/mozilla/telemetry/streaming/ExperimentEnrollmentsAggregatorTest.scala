@@ -84,7 +84,7 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
     assertDataFrameEquals(aggregates, expected)
   }
 
-  it should "ignore non-main pings and main pings without events" in {
+  it should "ignore non -main and -event pings and main pings without events" in {
     import spark.implicits._
 
     Given("a main ping with experiment enrollment events, main pings without events and a crash ping")
@@ -101,6 +101,24 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Then("resulting aggregate contains data from events with events")
     val expected = prepareExpectedAggregate((ExperimentA, "six", k, 0))
+    assertDataFrameEquals(aggregates, expected)
+  }
+
+  it should "read enrollment events from event pings" in {
+    import spark.implicits._
+
+    Given("set of main and event pings with experiment enrollment events")
+    val mainPings = (
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+        ++ TestUtils.generateEventMessages(k)
+      ).map(_.toByteArray).seq
+    val pingsDf = spark.createDataset(mainPings).toDF()
+
+    When("pings are aggregated")
+    val aggregates = ExperimentEnrollmentsAggregator.aggregate(pingsDf)
+
+    And("events are aggregated by experiment name and branch")
+    val expected = prepareExpectedAggregate((ExperimentA, "six", k, 0), ("awesome-experiment", "control", k, 0))
     assertDataFrameEquals(aggregates, expected)
   }
 }
