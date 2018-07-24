@@ -6,7 +6,7 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.heka.{Message, Dataset => MozDataset}
-import com.mozilla.telemetry.pings.MainPing
+import com.mozilla.telemetry.pings.{EventPing, MainPing}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
@@ -17,7 +17,7 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
 
   val kafkaCacheMaxCapacity = 100
 
-  private val allowedDocTypes = List("main")
+  private val allowedDocTypes = List("main", "event")
   private val allowedAppNames = List("Firefox")
 
   def main(args: Array[String]): Unit = {
@@ -108,10 +108,20 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
         if (!allowedDocTypes.contains(docType)) {
           Array.empty[ExperimentEnrollmentEvent]
         } else {
-          val mainPing = MainPing(m)
-          mainPing.getNormandyEvents.map { e =>
-            val timestamp = mainPing.meta.normalizedTimestamp()
-            val submissionDate = timestampToDateString(mainPing.meta.normalizedTimestamp())
+          val (timestamp, normandyEvents) = {
+            if (docType == "main") {
+              val mainPing = MainPing(m)
+              val timestamp = mainPing.meta.normalizedTimestamp()
+              (timestamp, mainPing.getNormandyEvents)
+            } else {
+              val eventPing = EventPing(m)
+              val timestamp = eventPing.meta.normalizedTimestamp()
+              (timestamp, eventPing.getNormandyEvents)
+            }
+          }
+
+          val submissionDate = timestampToDateString(timestamp)
+          normandyEvents.map { e =>
             ExperimentEnrollmentEvent(e.method, e.value, e.extra.flatMap(m => m.get("branch")), e.`object`, timestamp, submissionDate)
           }
         }
