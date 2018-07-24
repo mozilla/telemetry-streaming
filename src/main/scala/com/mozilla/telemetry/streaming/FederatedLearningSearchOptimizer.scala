@@ -9,11 +9,11 @@ import java.time.Clock
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.FrecencyUpdatePing
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
+import com.mozilla.telemetry.util.PrettyPrint
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.rogach.scallop.ScallopOption
-import com.mozilla.telemetry.util.PrettyPrint
 
 import scala.collection.mutable
 
@@ -39,18 +39,17 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .select("value")
 
     val query = optimize(pings,
-      opts.checkpointPath(), opts.modelOutputBucket(), opts.modelOutputKey(), opts.stateCheckpointPath(),
-      opts.stateBootstrapFilePath.get, Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError(),
-      opts.s3EndpointOverride.get)
+      opts.checkpointPath(), opts.modelOutputBucket(), opts.modelOutputKey(), opts.stateCheckpointPath(), opts.startingIteration.get,
+      Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError(), opts.s3EndpointOverride.get)
 
     query.awaitTermination()
   }
 
   def optimize(pings: DataFrame, checkpointPath: String, modelOutputBucket: String, modelOutputKey: String, // scalastyle:ignore
-               stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
+               stateCheckpointPath: String, startingIterationNumber: Option[Long] = None,
                clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false, s3EndpointOverride: Option[String] = None): StreamingQuery = {
     val aggregates = aggregate(pings, clock, windowOffsetMin, raiseOnError)
-    writeUpdates(aggregates, checkpointPath, modelOutputBucket, modelOutputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
+    writeUpdates(aggregates, checkpointPath, modelOutputBucket, modelOutputKey, stateCheckpointPath, startingIterationNumber, s3EndpointOverride)
   }
 
   def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
@@ -97,21 +96,21 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], checkpointPath: String, modelOutputBucket: String, modelOutputKey: String,
-                   stateCheckpointPath: String, stateBootstrapFilePath: Option[String], s3EndpointOverride: Option[String] = None): StreamingQuery = {
+                   stateCheckpointPath: String, startingIterationNumber: Option[Long], s3EndpointOverride: Option[String] = None): StreamingQuery = {
     val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
       .option("checkpointLocation", checkpointPath)
       .option("modelOutputBucket", modelOutputBucket)
       .option("modelOutputKey", modelOutputKey)
 
-    val writerWithStateConf = stateBootstrapFilePath match {
-      case Some(path) => writer.option("stateBootstrapFilePath", path)
+    val writerWithStartingIterationConf = startingIterationNumber match {
+      case Some(i) => writer.option("startingIteration", i)
       case None => writer
     }
 
     val writerWithEndpointConf = s3EndpointOverride match {
-      case Some(endpoint) => writerWithStateConf.option("s3EndpointOverride", endpoint)
-      case None => writerWithStateConf
+      case Some(endpoint) => writerWithStartingIterationConf.option("s3EndpointOverride", endpoint)
+      case None => writerWithStartingIterationConf
     }
 
     writerWithEndpointConf.option("stateCheckpointPath", stateCheckpointPath)
@@ -132,9 +131,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       name = "stateCheckpointPath",
       descr = "Location to save model optimizer state",
       required = true)
-    val stateBootstrapFilePath: ScallopOption[String] = opt[String](
-      name = "stateBootstrapFilePath",
-      descr = "Path to a file with initial optimizer state",
+    val startingIteration: ScallopOption[Long] = opt[Long](
+      name = "startingIteration",
+      descr = "Starting iteration number",
       required = false)
     val windowOffsetMinutes: ScallopOption[Int] = opt[Int](
       name = "windowOffsetMinutes",
