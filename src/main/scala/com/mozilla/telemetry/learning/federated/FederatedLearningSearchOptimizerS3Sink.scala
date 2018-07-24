@@ -4,8 +4,12 @@
 package com.mozilla.telemetry.learning.federated
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, PutObjectResult}
 import com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerConstants.{NumberOfFeatures, StartingLearningRate, StartingWeights}
 import com.mozilla.telemetry.streaming.FrecencyUpdateAggregate
+import com.mozilla.telemetry.util.PrettyPrint
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.deploy.SparkHadoopUtil
@@ -15,10 +19,6 @@ import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, PutObjectResult}
-import com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
-import com.mozilla.telemetry.util.PrettyPrint
 
 object FederatedLearningSearchOptimizerConstants {
   // https://dxr.mozilla.org/mozilla-central/rev/085cdfb90903d4985f0de1dc7786522d9fb45596/browser/app/profile/firefox.js#901
@@ -28,7 +28,8 @@ object FederatedLearningSearchOptimizerConstants {
 }
 
 class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: String, stateCheckpointPath: String,
-                                             stateBootstrapFilePath: Option[String] = None, s3EndpointOverride: Option[String] = None) extends Sink {
+                                             s3EndpointOverride: Option[String] = None,
+                                             startingIteration: Option[Long] = None) extends Sink {
 
   val log = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
 
@@ -110,15 +111,6 @@ class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: St
     }
 
     try {
-      stateBootstrapFilePath match {
-        case Some(bootstrapStatePath) =>
-          val fis = fs.open(new Path(bootstrapStatePath))
-          val rawState: String = IOUtils.toString(fis)
-          fis.close()
-          implicit val formats = DefaultFormats
-          Serialization.read[OptimisationState](rawState)
-
-        case None =>
           val statuses = fs.listStatus(checkpointPath)
           val latestFileOpt = if (statuses != null) {
             val paths = statuses.map(_.getPath)
@@ -136,9 +128,8 @@ class FederatedLearningSearchOptimizerS3Sink(outputBucket: String, outputKey: St
               implicit val formats = DefaultFormats
               Serialization.read[OptimisationState](fileContents)
             case None =>
-              OptimisationState(0, StartingWeights, Array.fill(NumberOfFeatures)(StartingLearningRate), None)
+              OptimisationState(startingIteration.getOrElse(0), StartingWeights, Array.fill(NumberOfFeatures)(StartingLearningRate), None)
           }
-      }
     } finally {
       fs.close()
     }
@@ -181,10 +172,10 @@ class FederatedLearningSearchOptimizerS3SinkProvider extends StreamSinkProvider 
     val outputBucket = parameters("modelOutputBucket")
     val outputKey = parameters("modelOutputKey")
     val stateCheckpointPath = parameters("stateCheckpointPath")
-    val stateBootstrapFilePath = parameters.get("stateBootstrapFilePath")
     val s3EndpointOverride = parameters.get("s3EndpointOverride")
+    val startingIteration = parameters.get("startingIteration").map(_.toLong)
 
-    new FederatedLearningSearchOptimizerS3Sink(outputBucket, outputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
+    new FederatedLearningSearchOptimizerS3Sink(outputBucket, outputKey, stateCheckpointPath, s3EndpointOverride, startingIteration)
   }
 }
 

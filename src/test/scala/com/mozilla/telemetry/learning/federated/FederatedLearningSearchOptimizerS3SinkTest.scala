@@ -27,17 +27,13 @@ class FederatedLearningSearchOptimizerS3SinkTest extends FlatSpec with Matchers 
     sink.state.iteration shouldBe 0
   }
 
-  it should "initialize optimisation state from provided bootstrap file" in {
-    FileUtils.writeStringToFile(
-      new File(CheckpointPath + "/bootstrap.json"),
-      """{"iteration":3,"weights":[1.5],"learningRates":[1.1],"gradient":[2.6]}""")
+  it should "initialize optimisation state with provided iteration number" in {
+    val startingIterationNumber = 9
 
-    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath, Some(CheckpointPath + "/bootstrap.json"), Some(MockEndpoint))
+    val sink = new FederatedLearningSearchOptimizerS3Sink(OutputBucket, OutputKey, CheckpointPath,
+      Some(CheckpointPath + "/bootstrap.json"), Some(startingIterationNumber))
 
-    sink.state.iteration shouldBe 3
-    sink.state.weights should contain theSameElementsAs Seq(1.5)
-    sink.state.learningRates should contain theSameElementsAs Seq(1.1)
-    sink.state.gradient.get should contain theSameElementsAs Seq(2.6)
+    sink.state.iteration shouldBe startingIterationNumber
   }
 
   it should "read and write optimisation state" in {
