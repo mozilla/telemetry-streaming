@@ -55,11 +55,10 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
       .repartition(1)
       .writeStream
       .queryName(QueryName)
-      .format("parquet")
-      .option("path", s"${outputPath}/${outputPrefix}")
+      .format("delta")
       .option("checkpointLocation", opts.checkpointPath())
       .partitionBy("submission_date_s3")
-      .start()
+      .start(outputPath)
       .awaitTermination()
   }
 
