@@ -38,18 +38,28 @@ import scala.io.Source
 object EventsToAmplitude extends StreamingJobBase {
 
   val AMPLITUDE_API_KEY_KEY = "AMPLITUDE_API_KEY"
-  val TOP_LEVEL_PING_FIELDS =
-    "appBuildId" ::
-    "appName" ::
-    "appUpdateChannel" ::
-    "appVersion" ::
-    "clientId" ::
-    "docType" ::
-    "geoCity" ::
-    "geoCountry" ::
-    "normalizedChannel" ::
-    "submissionDate" ::
-    Nil
+
+  // Maps source dataset name to partition fields.
+  val TOP_LEVEL_PING_FIELDS: Map[String, List[String]] = Map(
+    "telemetry" -> (
+      "appBuildId" ::
+      "appName" ::
+      "appUpdateChannel" ::
+      "appVersion" ::
+      "clientId" ::
+      "docType" ::
+      "geoCity" ::
+      "geoCountry" ::
+      "normalizedChannel" ::
+      "submissionDate" ::
+      Nil),
+    "telemetry-cohorts" -> (
+      "submissionDate" ::
+      "docType" ::
+      "experimentId" ::
+      "experimentBranch" ::
+      Nil)
+  )
 
   val MetaJsonFile = "schemaFileSchema.json"
 
@@ -102,8 +112,10 @@ object EventsToAmplitude extends StreamingJobBase {
   case class AmplitudeEventGroup(eventGroupName: String, events: List[AmplitudeEvent])
 
   case class Config(
+    source: String,
     filters: Map[String, List[String]],
     eventGroups: Seq[AmplitudeEventGroup]) {
+
     def getBatchFilters: Map[String, List[String]] = {
       filters.map{ case(k, v) => k ->
         (k match {
@@ -113,12 +125,14 @@ object EventsToAmplitude extends StreamingJobBase {
       }
     }
 
-    val topLevelFilters = filters.filter {
-      case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
+    val topLevelPingFields: Seq[String] = TOP_LEVEL_PING_FIELDS(source)
+
+    val topLevelFilters: Map[String, List[String]] = filters.filter {
+      case(name, _) => topLevelPingFields.contains(name)
     }
 
-    val nonTopLevelFilters = filters.filter {
-      case(name, _) => !TOP_LEVEL_PING_FIELDS.contains(name)
+    val nonTopLevelFilters: Map[String, List[String]] = filters.filter {
+      case(name, _) => !topLevelFilters.contains(name)
     }
   }
 
@@ -204,10 +218,11 @@ object EventsToAmplitude extends StreamingJobBase {
     implicit val sc = spark.sparkContext
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
-      val dataset = com.mozilla.telemetry.heka.Dataset("telemetry")
+      val dataset = com.mozilla.telemetry.heka.Dataset(config.source)
+      val topLevelFields = TOP_LEVEL_PING_FIELDS(config.source)
 
       val pings = config.getBatchFilters.filter{
-          case(name, _) => TOP_LEVEL_PING_FIELDS.contains(name)
+          case(name, _) => topLevelFields.contains(name)
         }.foldLeft(dataset){
           case(d, (key, values)) => d.where(key) {
             case v if values.contains(v) => true

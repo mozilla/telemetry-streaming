@@ -1,4 +1,5 @@
 {
+  "source": "telemetry",
   "filters": {
     "docType": [
       "main",

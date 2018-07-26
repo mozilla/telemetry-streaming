@@ -1,0 +1,1157 @@
+{
+  "source": "telemetry-cohorts",
+  "filters": {
+    "docType": [
+      "main"
+    ],
+    "appName": [
+      "Firefox"
+    ],
+    "experimentId": [
+      "pref-flip-savant-1457226-de-existing-users",
+      "pref-flip-savant-1457226-de-new-users",
+      "pref-flip-savant-1457226-en-existing-users",
+      "pref-flip-savant-1457226-en-new-users"
+    ]
+  },
+  "eventGroups": [
+    {
+      "eventGroupName": "SAVANT",
+      "events": [
+        {
+          "name": "open bookmark",
+          "description": "client opens a bookmark",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.bookmark"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "follow_bookmark"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "save bookmark",
+          "description": "client saves a bookmark",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.bookmark"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "bookmark"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "save"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "remove bookmark",
+          "description": "client removes a bookmark",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.bookmark"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "bookmark"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "open hamburger menu",
+          "description": "client opens the hamburger menu",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "hamburger_menu"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "open library menu",
+          "description": "client opens the library menu",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "library_menu"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "open dotdotdot menu",
+          "description": "client opens the dotdotdot menu",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "dotdotdot_menu"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "on readermode",
+          "description": "Client turns on reader mode",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.readermode"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "readermode"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "on"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "off readermode",
+          "description": "Client turns off reader mode",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.readermode"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "readermode"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "off"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "open tab",
+          "description": "Client opens a new tab",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "tab"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "close tab",
+          "description": "Client closes a new tab",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "tab"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "close"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "select tab",
+          "description": "Client selects a tab",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "tab"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "select"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "follow bookmark url",
+          "description": "Client selects suggestion from URL bar which is a bookmark",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.url_bar"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "follow_urlbar_link"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "bookmark"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "follow history url",
+          "description": "Client selects suggestion from URL bar which is a history",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.url_bar"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "follow_urlbar_link"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "history"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "made search",
+          "description": "Client makes a search",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.navigate",
+            "entrypoint": "object",
+            "type": "value",
+            "engine": "extra.engine"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "search"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method"
+            ]
+          }
+        },
+        {
+          "name": "enable addon",
+          "description": "Client enables an already installed addon",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "enable"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "disable addon",
+          "description": "Client disable an already installed addon",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "disable"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "install addon start",
+          "description": "Client starts installing an addon",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "install_start"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "install addon finish",
+          "description": "Addon client started installing finishes installing",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "install_finish"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "remove addon start",
+          "description": "Client starts removing an addon",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "remove_start"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "remove addon finish",
+          "description": "Addon client started removing finishes un-installing",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
+            "addonid": "value"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "addon"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "remove_finish"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "load login form",
+          "description": "Client loads a page with a login form",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.encounter",
+            "meta-cat-2": "literal.loginform",
+            "can-record-submit": "extra.canRecordSubmit",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "login_form"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "load"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "submit login form",
+          "description": "Client submits credentials to a login form",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.encounter",
+            "meta-cat-2": "literal.loginform",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "login_form"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "submit"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "use pw manager",
+          "description": "client uses pw from the client manager",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "pwmgr_use"
+                ]
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "use"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "object"
+            ]
+          }
+        },
+        {
+          "name": "asked add pw",
+          "description": "browser asks client if they want to save or update a password used",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.popup",
+            "meta-cat-2": "literal.pwmgr",
+            "add-type": "value",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "pwmgr"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "ask"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "value"
+            ]
+          }
+        },
+        {
+          "name": "saved pw",
+          "description": "client saves a password after being prompted",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "pwmgr"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "save"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "value"
+            ]
+          }
+        },
+        {
+          "name": "updated pw",
+          "description": "client updates pw after being prompted",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
+            "flow-id": "extra.flow_id"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "pwmgr"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "update"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method",
+              "value"
+            ]
+          }
+        },
+        {
+          "name": "study ended",
+          "description": "client is unenrolled from the experiment",
+          "amplitudeProperties": {
+            "meta-cat-1": "literal.shield",
+            "reason": "object"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "savant"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "end_study"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
