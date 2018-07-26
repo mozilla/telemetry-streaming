@@ -87,7 +87,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
   // specific events we expect to see
   private def eventsJson(eventGroup: String) =
     s"""{ "event_type": "$eventGroup - AppOpen" }""" ::
-    s"""{ "event_type": "$eventGroup - Erase", "event_properties": { "erase_object": "erase_home" }, "user_properties": { "host": "side" }}""" ::
+    s"""{ "event_type": "$eventGroup - Erase", "event_properties": { "erase_object": "erase_home", "literal_field": "literal value" }, "user_properties": { "host": "side" }}""" ::
     s"""{ "event_type": "second_event_group - AppClose", "event_properties": { "session_length": "1000" }}""" :: Nil
 
   private val focusEventJsonMatch = JArray(

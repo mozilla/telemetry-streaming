@@ -54,7 +54,8 @@
           "name": "Erase",
           "description": "",
           "amplitudeProperties": {
-            "erase_object": "value"
+            "erase_object": "value",
+            "literal_field": "'literal value'"
           },
           "userProperties": {
             "host": "extra.host"
