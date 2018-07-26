@@ -387,8 +387,9 @@ case class Event(timestamp: Int,
     case "category" => category
     case "method" => method
     case "object" => `object`
-    case "value" => value.getOrElse ("")
-    case e if e.startsWith ("extra") => extra.getOrElse (Map.empty).getOrElse (e.stripPrefix ("extra."), "")
+    case "value" => value.getOrElse("")
+    case _ if field.startsWith("extra.") => extra.getOrElse(Map.empty).getOrElse(field.stripPrefix ("extra."), "")
+    case _ if field.startsWith("literal.") => field.stripPrefix("literal.")
     case _ => ""
   }
 
