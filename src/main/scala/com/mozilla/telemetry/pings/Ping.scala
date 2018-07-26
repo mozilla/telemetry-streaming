@@ -18,6 +18,7 @@ import org.json4s.jackson.JsonMethods.{parse, _}
 import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
 
 import scala.util.Try
+import scala.util.matching.Regex
 
 trait Ping {
   val meta: Meta
@@ -375,6 +376,11 @@ trait SendsToAmplitudeWithEnvironment extends SendsToAmplitude {
   }
 }
 
+object Event {
+  // A field specifier wrapped in single quotes is interpreted as a literal string.
+  val literalFieldPattern: Regex = "'(.*)'".r
+}
+
 case class Event(timestamp: Int,
                  category: String,
                  method: String,
@@ -389,6 +395,7 @@ case class Event(timestamp: Int,
     case "object" => `object`
     case "value" => value.getOrElse ("")
     case e if e.startsWith ("extra") => extra.getOrElse (Map.empty).getOrElse (e.stripPrefix ("extra."), "")
+    case Event.literalFieldPattern(unquoted) => unquoted
     case _ => ""
   }
 
