@@ -22,8 +22,8 @@
           "name": "open bookmark",
           "description": "client opens a bookmark",
           "amplitudeProperties": {
-            "meta-cat-1": "'navigate'",
-            "meta-cat-2": "'bookmark'"
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.bookmark"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -57,8 +57,8 @@
           "name": "save bookmark",
           "description": "client saves a bookmark",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'bookmark'"
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.bookmark"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -99,8 +99,8 @@
           "name": "remove bookmark",
           "description": "client removes a bookmark",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'bookmark'"
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.bookmark"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -141,7 +141,7 @@
           "name": "open hamburger menu",
           "description": "client opens the hamburger menu",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'"
+            "meta-cat-1": "literal.feature"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -175,7 +175,7 @@
           "name": "open library menu",
           "description": "client opens the library menu",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'"
+            "meta-cat-1": "literal.feature"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -209,7 +209,7 @@
           "name": "open dotdotdot menu",
           "description": "client opens the dotdotdot menu",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'"
+            "meta-cat-1": "literal.feature"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -243,8 +243,8 @@
           "name": "on readermode",
           "description": "Client turns on reader mode",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'readermode'"
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.readermode"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -285,8 +285,8 @@
           "name": "off readermode",
           "description": "Client turns off reader mode",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'readermode'"
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.readermode"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -327,8 +327,8 @@
           "name": "open tab",
           "description": "Client opens a new tab",
           "amplitudeProperties": {
-            "meta-cat-1": "'frame'",
-            "meta-cat-2": "'tab'"
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -369,8 +369,8 @@
           "name": "close tab",
           "description": "Client closes a new tab",
           "amplitudeProperties": {
-            "meta-cat-1": "'frame'",
-            "meta-cat-2": "'tab'"
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -411,8 +411,8 @@
           "name": "select tab",
           "description": "Client selects a tab",
           "amplitudeProperties": {
-            "meta-cat-1": "'frame'",
-            "meta-cat-2": "'tab'"
+            "meta-cat-1": "literal.frame",
+            "meta-cat-2": "literal.tab"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -453,8 +453,8 @@
           "name": "follow bookmark url",
           "description": "Client selects suggestion from URL bar which is a bookmark",
           "amplitudeProperties": {
-            "meta-cat-1": "'navigate'",
-            "meta-cat-2": "'url_bar'"
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.url_bar"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -495,8 +495,8 @@
           "name": "follow history url",
           "description": "Client selects suggestion from URL bar which is a history",
           "amplitudeProperties": {
-            "meta-cat-1": "'navigate'",
-            "meta-cat-2": "'url_bar'"
+            "meta-cat-1": "literal.navigate",
+            "meta-cat-2": "literal.url_bar"
           },
           "schema": {
             "$schema": "http://json-schema.org/schema#",
@@ -537,7 +537,7 @@
           "name": "made search",
           "description": "Client makes a search",
           "amplitudeProperties": {
-            "meta-cat-1": "'navigate'",
+            "meta-cat-1": "literal.navigate",
             "entrypoint": "object",
             "type": "value",
             "engine": "extra.engine"
@@ -574,8 +574,8 @@
           "name": "enable addon",
           "description": "Client enables an already installed addon",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -617,8 +617,8 @@
           "name": "disable addon",
           "description": "Client disable an already installed addon",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -660,8 +660,8 @@
           "name": "install addon start",
           "description": "Client starts installing an addon",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -703,8 +703,8 @@
           "name": "install addon finish",
           "description": "Addon client started installing finishes installing",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -746,8 +746,8 @@
           "name": "remove addon start",
           "description": "Client starts removing an addon",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -789,8 +789,8 @@
           "name": "remove addon finish",
           "description": "Addon client started removing finishes un-installing",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'addon'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.addon",
             "addonid": "value"
           },
           "schema": {
@@ -832,8 +832,8 @@
           "name": "load login form",
           "description": "Client loads a page with a login form",
           "amplitudeProperties": {
-            "meta-cat-1": "'encounter'",
-            "meta-cat-2": "'loginform'",
+            "meta-cat-1": "literal.encounter",
+            "meta-cat-2": "literal.loginform",
             "can-record-submit": "extra.canRecordSubmit",
             "flow-id": "extra.flow_id"
           },
@@ -876,8 +876,8 @@
           "name": "submit login form",
           "description": "Client submits credentials to a login form",
           "amplitudeProperties": {
-            "meta-cat-1": "'encounter'",
-            "meta-cat-2": "'loginform'",
+            "meta-cat-1": "literal.encounter",
+            "meta-cat-2": "literal.loginform",
             "flow-id": "extra.flow_id"
           },
           "schema": {
@@ -919,8 +919,8 @@
           "name": "use pw manager",
           "description": "client uses pw from the client manager",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'pwmgr'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
             "flow-id": "extra.flow_id"
           },
           "schema": {
@@ -955,8 +955,8 @@
           "name": "asked add pw",
           "description": "browser asks client if they want to save or update a password used",
           "amplitudeProperties": {
-            "meta-cat-1": "'popup'",
-            "meta-cat-2": "'pwmgr'",
+            "meta-cat-1": "literal.popup",
+            "meta-cat-2": "literal.pwmgr",
             "add-type": "value",
             "flow-id": "extra.flow_id"
           },
@@ -999,8 +999,8 @@
           "name": "saved pw",
           "description": "client saves a password after being prompted",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'pwmgr'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
             "flow-id": "extra.flow_id"
           },
           "schema": {
@@ -1042,8 +1042,8 @@
           "name": "updated pw",
           "description": "client updates pw after being prompted",
           "amplitudeProperties": {
-            "meta-cat-1": "'feature'",
-            "meta-cat-2": "'pwmgr'",
+            "meta-cat-1": "literal.feature",
+            "meta-cat-2": "literal.pwmgr",
             "flow-id": "extra.flow_id"
           },
           "schema": {
@@ -1085,7 +1085,7 @@
           "name": "study ended",
           "description": "client is unenrolled from the experiment",
           "amplitudeProperties": {
-            "meta-cat-1": "'shield'",
+            "meta-cat-1": "literal.shield",
             "reason": "object"
           },
           "schema": {

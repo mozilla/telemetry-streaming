@@ -56,7 +56,7 @@
           "description": "",
           "amplitudeProperties": {
             "erase_object": "value",
-            "literal_field": "'literal value'"
+            "literal_field": "literal.literal value"
           },
           "userProperties": {
             "host": "extra.host"

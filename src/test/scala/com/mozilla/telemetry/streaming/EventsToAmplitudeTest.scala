@@ -93,7 +93,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
       |      "host" : "side"
       |   },
       |   "event_properties" : {
-      |      "literal_field" : "literal value",
+      |      "literal_field" : "literal.literal value",
       |      "erase_object" : "erase_home"
       |   },
       |   "event_type" : "$eventGroup - Erase"
