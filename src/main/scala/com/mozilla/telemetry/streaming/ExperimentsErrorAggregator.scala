@@ -6,16 +6,15 @@ package com.mozilla.telemetry.streaming
 import java.sql.Timestamp
 
 import com.mozilla.telemetry.timeseries.SchemaBuilder
+import org.apache.spark.sql.types.StructType
 
-object ExperimentsErrorAggregator {
+object ExperimentsErrorAggregator extends ErrorAggregatorBase {
 
-  val outputPrefix = "experiment_error_aggregates/v1"
-  val appName = "Experiments Error Aggregates"
+  override val outputPrefix = "experiment_error_aggregates/v1"
 
-  val defaultCountHistogramErrorsSchema = (new SchemaBuilder()).build
-  val defaultThresholdHistograms: Map[String, (List[String], List[Int])] = Map.empty
+  override val countHistogramErrorsSchema: StructType = (new SchemaBuilder()).build
 
-  val defaultDimensionsSchema = new SchemaBuilder()
+  override val dimensionsSchema: StructType = new SchemaBuilder()
     .add[Timestamp]("timestamp")  // Windowed
     .add[String]("submission_date_s3")
     .add[String]("channel")
@@ -26,7 +25,7 @@ object ExperimentsErrorAggregator {
     .add[String]("experiment_branch")
     .build
 
-  val defaultMetricsSchema = new SchemaBuilder()
+  override val metricsSchema: StructType = new SchemaBuilder()
     .add[Float]("usage_hours")
     .add[Int]("count")
     .add[Int]("main_crashes")
@@ -37,14 +36,4 @@ object ExperimentsErrorAggregator {
     .add[Int]("gmplugin_crashes")
     .add[Int]("content_shutdown_crashes")
     .build
-
-  def main(args: Array[String]): Unit = {
-    ErrorAggregator.setPrefix(outputPrefix)
-    ErrorAggregator.setAppName(appName)
-
-    ErrorAggregator.run(args,
-      defaultDimensionsSchema,
-      defaultMetricsSchema,
-      defaultCountHistogramErrorsSchema)
-  }
 }

@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, LocalDate, ZoneId}
 
 import com.mozilla.telemetry.streaming.StreamingJobBase._
+import org.apache.spark.sql.SparkSession
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 /**
@@ -83,6 +84,10 @@ abstract class StreamingJobBase extends Serializable {
       required = false)
 
     requireOne(kafkaBroker, from)
+  }
+
+  protected def shouldStopContextAtEnd(spark: SparkSession): Boolean = {
+    !spark.conf.get("spark.home", "").startsWith("/databricks")
   }
 }
 

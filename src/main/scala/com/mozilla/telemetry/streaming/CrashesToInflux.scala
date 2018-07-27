@@ -123,7 +123,7 @@ object CrashesToInflux extends StreamingJobBase {
           httpSink.flush()
         }
     }
-    if (!spark.conf.get("spark.home", "").startsWith("/databricks")) {
+    if (shouldStopContextAtEnd(spark)) {
       spark.stop()
     }
   }

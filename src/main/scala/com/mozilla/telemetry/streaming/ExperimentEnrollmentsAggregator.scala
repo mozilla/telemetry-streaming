@@ -144,10 +144,6 @@ object ExperimentEnrollmentsAggregator extends StreamingJobBase {
       .drop($"window")
   }
 
-  private def shouldStopContextAtEnd(spark: SparkSession): Boolean = {
-    !spark.conf.get("spark.home").startsWith("/databricks")
-  }
-
   case class ExperimentEnrollmentEvent(method: String, // enroll/unenroll
                                        experiment_id: Option[String],
                                        branch_id: Option[String],
