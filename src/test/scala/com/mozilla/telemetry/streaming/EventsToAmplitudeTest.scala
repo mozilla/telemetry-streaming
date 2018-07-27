@@ -349,6 +349,11 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
 
     res should contain only (1527696000000L, 1527696002000L)
   }
+
+  "Schema configs" should "be parseable" in {
+    EventsToAmplitude.readConfigFile("configs/focus_android_events_schemas.json")
+    EventsToAmplitude.readConfigFile("configs/desktop_savant_events_schemas.json")
+  }
 }
 
 object EventsToAmplitudeTest {

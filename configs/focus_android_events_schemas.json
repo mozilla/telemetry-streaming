@@ -1,5 +1,6 @@
 {
-    "eventGroupName": "Focus", 
+    "source": "telemetry",
+    "eventGroupName": "Focus",
     "events": [
         [
             {
