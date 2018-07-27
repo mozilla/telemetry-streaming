@@ -54,7 +54,7 @@ object ErrorAggregator {
       required = false)
     val channel: ScallopOption[String] = opt[String](
       "channel",
-      descr = "Only process data from the given channel",
+      descr = "Only process data from the given channel (batch mode only)",
       required = false)
     val outputPath: ScallopOption[String] = opt[String](
       "outputPath",
@@ -85,7 +85,7 @@ object ErrorAggregator {
       )
 
     requireOne(kafkaBroker, from)
-    conflicts(kafkaBroker, List(from, to, fileLimit, numParquetFiles))
+    conflicts(kafkaBroker, List(from, to, fileLimit, channel, numParquetFiles))
     verify()
   }
 
