@@ -26,6 +26,7 @@ object TestUtils {
   val testTimestampNano = 1460036116829920000L
   val testTimestampMillis = testTimestampNano / 1000000
   val todayDays = ChronoUnit.DAYS.between(LocalDate.ofEpochDay(0), LocalDate.now())
+  val creationDate = todayDays - 70
 
   def generateCrashMessages(size: Int,
                             fieldsOverride: Option[Map[String, Any]] = None,
@@ -72,7 +73,7 @@ object TestUtils {
       "environment.profile" ->
         s"""
           |{
-          | "creationDate": ${todayDays-70}
+          | "creationDate": $creationDate
           | }""".stripMargin,
       "environment.experiments" ->
         """
@@ -124,7 +125,9 @@ object TestUtils {
       "environment.system" ->
         """
           |{
-          | "os": {"name": "Linux", "version": "42"}
+          | "os": {"name": "Linux", "version": "42"},
+          | "isWow64": false,
+          | "memoryMB": 4136
           |}""".stripMargin,
       "environment.addons" ->
         """
@@ -136,7 +139,7 @@ object TestUtils {
       "environment.profile" ->
         s"""
            |{
-           | "creationDate": ${todayDays-70}
+           | "creationDate": $creationDate
            | }""".stripMargin,
       "environment.experiments" ->
         """
@@ -154,7 +157,8 @@ object TestUtils {
         """
           |{
           |  "locale": "it_IT",
-          |  "isDefaultBrowser": true
+          |  "isDefaultBrowser": true,
+          |  "attribution": {"source": "example.com"}
           |}
         """.stripMargin,
       "payload.histograms" ->
@@ -404,7 +408,7 @@ object TestUtils {
       "environment.profile" ->
         s"""
            |{
-           | "creationDate": ${todayDays-70}
+           | "creationDate": $creationDate
            | }""".stripMargin,
       "environment.experiments" ->
         """
