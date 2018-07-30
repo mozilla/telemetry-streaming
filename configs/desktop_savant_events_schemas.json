@@ -1015,7 +1015,7 @@
                   "pwmgr"
                 ]
               },
-              "value": {
+              "object": {
                 "type": "string",
                 "enum": [
                   "ask"
@@ -1026,7 +1026,7 @@
               "timestamp",
               "category",
               "method",
-              "value"
+              "object"
             ]
           }
         },
@@ -1058,7 +1058,7 @@
                   "pwmgr"
                 ]
               },
-              "value": {
+              "object": {
                 "type": "string",
                 "enum": [
                   "save"
@@ -1069,7 +1069,7 @@
               "timestamp",
               "category",
               "method",
-              "value"
+              "object"
             ]
           }
         },
@@ -1101,7 +1101,7 @@
                   "pwmgr"
                 ]
               },
-              "value": {
+              "object": {
                 "type": "string",
                 "enum": [
                   "update"
@@ -1112,7 +1112,7 @@
               "timestamp",
               "category",
               "method",
-              "value"
+              "object"
             ]
           }
         },
