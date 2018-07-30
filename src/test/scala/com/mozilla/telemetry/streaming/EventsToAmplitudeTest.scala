@@ -12,7 +12,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, RequestPatternBuilder, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.mozilla.telemetry.pings.SendsToAmplitude
+import com.mozilla.telemetry.pings.{Meta, SendsToAmplitude}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
@@ -36,6 +36,8 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
   implicit val formats = DefaultFormats
 
   val expectedTotalMsgs = TestUtils.scalarValue
+
+  val creationDateIso8601 = Meta.epochDayToIso8601(TestUtils.creationDate)
 
   // mocked server pieces
   val path = "/httpapi"
@@ -73,9 +75,20 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     |    "country": "IT",
     |    "user_properties": {
     |      "channel": "release",
+    |      "sample_id": 73.0,
     |      "app_build_id": "20170101000000",
+    |      "app_name": "Firefox",
+    |      "app_version": "42.0",
     |      "locale": "it_IT",
+    |      "country": "IT",
+    |      "os":"Linux",
+    |      "os_version":"Linux",
+    |      "env_build_arch":"x86",
     |      "is_default_browser": true,
+    |      "is_wow64": false,
+    |      "memory_mb": 4136.0,
+    |      "profile_creation_date": "$creationDateIso8601",
+    |      "source": "example.com",
     |      "experiments": ["experiment1_control", "experiment2_chaos"]
     |    }
     |  }

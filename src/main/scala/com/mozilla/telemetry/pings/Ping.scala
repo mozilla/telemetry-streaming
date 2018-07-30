@@ -151,6 +151,7 @@ case class Meta(Host: Option[String],
                 `environment.build`: Option[EnvironmentBuild],
                 `environment.settings`: Option[Settings],
                 `environment.system`: Option[System],
+                `environment.profile`: Option[Profile],
                 `environment.addons`: Option[Addons],
                 `environment.experiments`: Option[Map[String, NewStyleExperiment]],
                 // Main ping fields preparsed by hindsight
@@ -172,13 +173,17 @@ case class Meta(Host: Option[String],
 
 object Meta {
   val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+  def epochDayToIso8601(day: Long): String = {
+    val d: LocalDate = LocalDate.ofEpochDay(day)
+    DateTimeFormatter.ISO_LOCAL_DATE.format(d)
+  }
 }
 
 case class EnvironmentBuild(version: Option[String],
                             buildId: Option[String],
                             architecture: Option[String])
 
-case class System(os: SystemOs)
+case class System(os: SystemOs, isWow64: Option[Boolean], memoryMB: Option[Double])
 
 case class SystemOs(name: String, version: String) {
   val normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
@@ -195,6 +200,10 @@ case class OS(name: Option[String], version: Option[String]) {
         null
     }
   }
+}
+
+case class Profile(creationDate: Option[Long], resetDate: Option[Long]) {
+  val normalizedCreationDate: Option[String] = creationDate.map(Meta.epochDayToIso8601)
 }
 
 case class Addons(activeAddons: Option[Map[String, ActiveAddon]],
@@ -222,7 +231,10 @@ object Theme {
 case class Settings(blocklistEnabled: Option[Boolean],
                     isDefaultBrowser: Option[Boolean],
                     locale: Option[String],
+                    attribution: Option[Attribution],
                     telemetryEnabled: Option[Boolean])
+
+case class Attribution(source: Option[String])
 
 trait HasEnvironment {
   this: Ping =>
@@ -367,11 +379,23 @@ trait SendsToAmplitudeWithEnvironment extends SendsToAmplitude {
 
     ("user_properties" ->
       ("channel" -> meta.normalizedChannel) ~
-        ("app_build_id" -> meta.appBuildId) ~
-        ("locale" -> meta.`environment.settings`.map(_.locale)) ~
-        ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
-        ("experiments" -> experimentsArray)) ~
-      ("user_id" -> getClientId)
+      ("sample_id" -> meta.sampleId) ~
+      ("app_build_id" -> meta.appBuildId) ~
+      ("app_name" -> meta.appName) ~
+      ("app_version" -> meta.appVersion) ~
+      ("locale" -> meta.`environment.settings`.map(_.locale)) ~
+      ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
+      ("country" -> meta.geoCountry) ~
+      ("os" -> meta.os) ~
+      ("os_version" -> meta.`environment.system`.map(_.os.name)) ~
+      ("env_build_arch" -> meta.`environment.build`.map(_.architecture)) ~
+      ("is_wow64" -> meta.`environment.system`.map(_.isWow64)) ~
+      ("memory_mb" -> meta.`environment.system`.map(_.memoryMB)) ~
+      ("profile_creation_date" -> meta.`environment.profile`.map(_.normalizedCreationDate)) ~
+      ("source" -> meta.`environment.settings`.flatMap(_.attribution).map(_.source)) ~
+      ("experiments" -> experimentsArray)
+    ) ~
+    ("user_id" -> getClientId)
   }
 }
 
