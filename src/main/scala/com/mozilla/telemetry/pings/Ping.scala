@@ -382,12 +382,9 @@ trait SendsToAmplitudeWithEnvironment extends SendsToAmplitude {
       ("sample_id" -> meta.sampleId) ~
       ("app_build_id" -> meta.appBuildId) ~
       ("app_name" -> meta.appName) ~
-      ("app_version" -> meta.appVersion) ~
       ("locale" -> meta.`environment.settings`.map(_.locale)) ~
       ("is_default_browser" -> meta.`environment.settings`.map(_.isDefaultBrowser)) ~
       ("country" -> meta.geoCountry) ~
-      ("os" -> meta.os) ~
-      ("os_version" -> meta.`environment.system`.map(_.os.name)) ~
       ("env_build_arch" -> meta.`environment.build`.map(_.architecture)) ~
       ("is_wow64" -> meta.`environment.system`.map(_.isWow64)) ~
       ("memory_mb" -> meta.`environment.system`.map(_.memoryMB)) ~
