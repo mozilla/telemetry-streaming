@@ -185,9 +185,30 @@ object TestUtils {
           |  },
           |  "SUBPROCESS_KILL_HARD": {
           |    "ShutDownKill": {"values": {"0": 1}}
+          |  },
+          |  "SEARCH_COUNTS": {
+          |    "ddg.urlbar": {
+          |      "range": [
+          |        1,
+          |        2
+          |      ],
+          |      "bucket_count": 3,
+          |      "histogram_type": 4,
+          |      "values": {
+          |        "0": 4,
+          |        "1": 0
+          |      },
+          |      "sum": 4
+          |    }
           |  }
           |}""".stripMargin,
-      "payload.simpleMeasurements" -> """{"firstPaint": 1200}""",
+      "payload.simpleMeasurements" ->
+        """
+          |{
+          |  "activeTicks": 2000,
+          |  "firstPaint": 1200
+          |}
+        """.stripMargin,
       "payload.info" ->
         """
           |{

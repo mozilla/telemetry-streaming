@@ -37,6 +37,8 @@ import scala.io.Source
  */
 object EventsToAmplitude extends StreamingJobBase {
 
+  val log: org.apache.log4j.Logger = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
+
   val AMPLITUDE_API_KEY_KEY = "AMPLITUDE_API_KEY"
 
   // Maps source dataset name to partition fields.
@@ -117,11 +119,8 @@ object EventsToAmplitude extends StreamingJobBase {
     eventGroups: Seq[AmplitudeEventGroup]) {
 
     def getBatchFilters: Map[String, List[String]] = {
-      filters.map{ case(k, v) => k ->
-        (k match {
-          case "docType" => v.map(_.replace("-", "_"))
-          case _ => v
-        })
+      filters.map { case (k, v) =>
+        k -> v.map(_.replace("-", "_"))
       }
     }
 
@@ -132,7 +131,7 @@ object EventsToAmplitude extends StreamingJobBase {
     }
 
     val nonTopLevelFilters: Map[String, List[String]] = filters.filter {
-      case(name, _) => !topLevelFilters.contains(name)
+      case(name, _) => !topLevelPingFields.contains(name)
     }
   }
 
@@ -141,6 +140,12 @@ object EventsToAmplitude extends StreamingJobBase {
     val fields = message.fieldsAsMap
 
     config.topLevelFilters
+      .filter { case (name, _) =>
+        // Some top-level fields exist in the partition structure of batch data, but not in the ping messages;
+        // such filters get applied in batch mode when we create the Dataset, but we have to skip them here,
+        // so they won't apply to streaming mode.
+        fields.keySet.contains(name)
+      }
       .map{ case(name, allowedVals) =>
         allowedVals.contains(fields.getOrElse(name, "").asInstanceOf[String])
       }.reduce(_ & _) match {
@@ -160,7 +165,9 @@ object EventsToAmplitude extends StreamingJobBase {
         try {
           parsePing(Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]]), sample, config)
         } catch {
-          case _: Throwable if !raiseOnError => Array[String]()
+          case ex: Throwable if !raiseOnError =>
+            log.error("Encountered an error; skipping this ping!", ex)
+            Array[String]()
         }
       }).as[String]
   }
@@ -240,6 +247,8 @@ object EventsToAmplitude extends StreamingJobBase {
       val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
       val minDelay = opts.minDelay()
       val url = opts.url()
+
+      log.info(s"Processing events for ${pingsDataFrame.count()} pings on $currentDate")
 
       getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
         .repartition(maxParallelRequests)

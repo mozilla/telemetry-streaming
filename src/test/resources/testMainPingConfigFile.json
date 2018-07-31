@@ -11,6 +11,49 @@
   },
   "eventGroups": [
     {
+      "eventGroupName": "Meta",
+      "events": [
+        {
+          "name": "session split",
+          "description": "a ping was sent defining a subsession",
+          "amplitudeProperties": {
+            "subsession_length": "extra.subsession_length",
+            "active_ticks": "extra.active_ticks",
+            "uri_count": "extra.uri_count",
+            "search_count": "extra.search_count",
+            "reason": "extra.reason"
+          },
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "meta"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "session_split"
+                ]
+              }
+            },
+            "required": [
+              "timestamp",
+              "category",
+              "method"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "eventGroupName": "main_ping",
       "events": [
         {
