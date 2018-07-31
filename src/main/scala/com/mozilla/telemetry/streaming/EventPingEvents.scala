@@ -115,12 +115,18 @@ object EventPingEvents extends StreamingJobBase {
           val ping = EventPing(m)
           ping.processEventMap.flatMap { case (process, events) =>
             events.map { e =>
+              // Serializing a Map[String, Any] causes problems: https://issues.apache.org/jira/browse/SPARK-23251
+              val extra: Option[Map[String, String]] =
+                e.extra.map(
+                  _.map { case (k, v) =>
+                    k -> v.toString
+                  }.toMap
+                )
               EventRow(ping.meta.documentId.get, ping.meta.clientId.get, ping.meta.normalizedChannel, ping.meta.geoCountry,
                 ping.getLocale, ping.meta.appName, ping.meta.appVersion, ping.getOsName, ping.getOsVersion,
                 ping.payload.sessionId, ping.payload.subsessionId, ping.sessionStart,
                 (ping.meta.Timestamp / 1e9).toLong, ping.meta.sampleId.map(_.toString), ping.getMSStyleExperiments,
-                e.timestamp, e.category, e.method, e.`object`, e.value, e.extra, process)
-
+                e.timestamp, e.category, e.method, e.`object`, e.value, extra, process)
             }
           }
         }

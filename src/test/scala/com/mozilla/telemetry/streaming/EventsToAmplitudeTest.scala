@@ -90,6 +90,19 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     |  }
     """.stripMargin
 
+  private val pingSentJson =
+    s"""
+       |{
+       |  "event_type": "Meta - session split",
+       |  "event_properties": {
+       |    "subsession_length": "3600",
+       |    "active_ticks": "2000",
+       |    "uri_count": "63",
+       |    "search_count": "4"
+       |  }
+       |}
+     """.stripMargin
+
   // these keys are present in all events, but values differ
   private val requiredKeys = "session_id" :: "insert_id" :: "time" :: Nil
 
@@ -125,6 +138,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     )
 
   private val mainPingJsonMatch = JArray(
+    parse(pingSentJson) +:
     eventsJson("main_ping").map {
       e => parse(e) merge parse(mainPingJson)
     }
@@ -196,7 +210,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
   }
 
-  "HTTPSink" should "send main ping events correctly" in {
+  it should "send main ping events correctly" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
     val msgs = TestUtils.generateMainMessages(expectedTotalMsgs,
       customPayload=EventsToAmplitudeTest.CustomMainPingPayload)
@@ -262,7 +276,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
   }
 
-  "Events to Amplitude" should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
+  it should "send main ping events via HTTP request" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
     Kafka.createTopic(StreamingJobBase.TelemetryKafkaTopic)
     val kafkaProducer = Kafka.makeProducer(StreamingJobBase.TelemetryKafkaTopic)
 
@@ -314,7 +328,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
   }
 
-  "Events to Amplitude" should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
+  it should "ignore pings without events" taggedAs(Kafka.DockerComposeTag, DockerEventsTag, DockerMainEvents) in {
     Kafka.createTopic(TelemetryKafkaTopic)
     val kafkaProducer = Kafka.makeProducer(TelemetryKafkaTopic)
 
@@ -322,7 +336,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
       rs.foreach{ kafkaProducer.send(_, synchronous = true) }
     }
 
-    val messages = (TestUtils.generateMainMessages(expectedTotalMsgs))
+    val messages = (TestUtils.generateFocusEventMessages(expectedTotalMsgs))
       .map(_.toByteArray)
 
     val listener = new StreamingQueryListener {
@@ -389,6 +403,19 @@ object EventsToAmplitudeTest {
     """
       |    "processes": {
       |      "parent": {
+      |        "scalars": {
+      |          "media.page_count": 4,
+      |          "browser.engagement.unique_domains_count": 7,
+      |          "browser.engagement.tab_open_event_count": 11,
+      |          "browser.engagement.max_concurrent_window_count": 2,
+      |          "browser.engagement.max_concurrent_tab_count": 21,
+      |          "browser.engagement.unfiltered_uri_count": 128,
+      |          "browser.engagement.window_open_event_count": 1,
+      |          "browser.errors.collected_with_stack_count": 37,
+      |          "browser.engagement.total_uri_count": 63,
+      |          "browser.errors.collected_count": 181,
+      |          "browser.engagement.active_ticks": 271
+      |        },
       |        "events": [
       |          [
       |            176078022,
@@ -436,7 +463,7 @@ object EventsToAmplitudeTest {
       |            "background",
       |            "app",
       |            "",
-      |            { "sessionLength": "1000" }
+      |            { "sessionLength": 1000 }
       |          ],
       |          [
       |            176151591,

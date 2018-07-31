@@ -61,6 +61,13 @@ case class MainPing(application: Application,
     }
   }
 
+  def getScalarValue(processType: String, scalarName: String): Option[Long] = {
+    this.payload.processes \ processType \ "scalars" \ scalarName match {
+      case JInt(v) => Some(v.toLong)
+      case _ => None
+    }
+  }
+
   def usageHours: Option[Float] = {
     val max_hours = 25
     val min_hours = 0
@@ -72,6 +79,25 @@ case class MainPing(application: Application,
     } catch {
       case _: Throwable => None
     }
+  }
+
+  def searchCount: Long = meta.`payload.keyedHistograms` \ "SEARCH_COUNTS" match {
+    case JObject(hists) =>
+      hists
+        .filter { case (name, _) =>
+          name.split('.').toList match {
+            case _ :: source :: _ => MainPing.directSearchSources.contains(source)
+            case _ => false
+          }
+        }
+        .foldLeft(0L) { case (sum, (name, hist)) =>
+        val count = hist \ "sum" match {
+          case JInt(x) => x.toLong
+          case _ => 0L
+        }
+        sum + count
+      }
+    case _ => 0L
   }
 
   /*
@@ -107,6 +133,21 @@ case class MainPing(application: Application,
     dynamicProcessEvents.filter(_.category == "normandy")
   }
 
+  override def sessionSplitEvents: Seq[Event] = {
+    val extra: Map[String, String] = Map(
+      "subsession_length" -> Some(subsessionLength),
+      "active_ticks" -> activeTicks,
+      "uri_count" -> getScalarValue("parent", "browser.engagement.total_uri_count"),
+      "search_count" -> Some(searchCount),
+      "reason" -> reason)
+      .flatMap {
+        case (k, Some(v)) => Some(k -> v.toString)
+        case _ => None
+      }
+    val event = Event(sessionLength, "meta", "session_split", "", None, Some(extra))
+    Seq(event)
+  }
+
   // Make events lazy so we don't extract them in error aggregates, which doesn't use them
   lazy val events: Seq[Event] = Ping.extractEvents(payload.processes, MainPing.eventLocations())
 
@@ -119,9 +160,32 @@ case class MainPing(application: Application,
     // sessionStartDate is truncated to the hour anyway, so we just want to get somewhere near the correct timeframe
     case _ => ((meta.Timestamp / 1e9) - events.map(_.timestamp).max).toLong
   }
+
+  def sessionLength: Int = meta.`payload.info` \ "sessionLength" match {
+    case JInt(v) => v.toInt
+    case _ => 0
+  }
+
+  def subsessionLength: Int = meta.`payload.info` \ "subsessionLength" match {
+    case JInt(v) => v.toInt
+    case _ => 0
+  }
+
+  def activeTicks: Option[Long] = meta.`payload.simpleMeasurements` \ "activeTicks" match {
+    case JInt(v) => Some(v.toLong)
+    case _ => None
+  }
+
+  def reason: Option[String] = meta.`payload.info` \ "reason" match {
+    case JString(v) => Some(v)
+    case _ => None
+  }
+
 }
 
 object MainPing {
+
+  val directSearchSources = Set("urlbar", "searchbar", "newtab", "abouthome", "contextmenu", "system")
 
   def apply(message: Message): MainPing = {
     implicit val formats = DefaultFormats

@@ -13,6 +13,15 @@ Mozilla.
 
 Please file bugs in the [Datasets: Error Aggregates](https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=Datasets%3A%20Error%20Aggregates) component.
 
+## Amplitude Event Configuration
+
+Some of the jobs defined in `telemetry-streaming` exist to transform telemetry events
+and republish to [Amplitude](https://amplitude.com/) for further analysis.
+Filtering and transforming events is accomplished via JSON configurations.
+If you're creating or updating such a schema, see:
+
+- [Amplitude event configuration docs](docs/amplitude)
+
 ## Development
 
 The recommended workflow for running tests is to use your favorite editor for editing

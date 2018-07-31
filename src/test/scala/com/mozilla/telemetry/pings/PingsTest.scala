@@ -27,9 +27,25 @@ class PingsTest extends FlatSpec with Matchers{
       |        }
       |      }
       |    }
+      |  },
+      |  "parent": {
+      |    "scalars": {
+      |      "media.page_count": 4,
+      |      "browser.engagement.unique_domains_count": 7,
+      |      "browser.engagement.tab_open_event_count": 11,
+      |      "browser.engagement.max_concurrent_window_count": 2,
+      |      "browser.engagement.max_concurrent_tab_count": 21,
+      |      "browser.engagement.unfiltered_uri_count": 128,
+      |      "browser.engagement.window_open_event_count": 1,
+      |      "browser.errors.collected_with_stack_count": 37,
+      |      "browser.engagement.total_uri_count": 63,
+      |      "browser.errors.collected_count": 181,
+      |      "browser.engagement.active_ticks": 271
+      |    }
       |  }
       |}
-    """.stripMargin)
+      |""".stripMargin)
+
   val message = TestUtils.generateMainMessages(1, customPayload = ContentHistogramPayload).head
   val mainPing = MainPing(message)
   val ts = TestUtils.testTimestampMillis
@@ -43,6 +59,10 @@ class PingsTest extends FlatSpec with Matchers{
     mainPing.getCountKeyedHistogramValue("foo", "bar").isEmpty should be (true)
     mainPing.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "foo").isEmpty should be (true)
     mainPing.getCountKeyedHistogramValue("SUBPROCESS_CRASHES_WITH_DUMP", "content").get should be (1)
+  }
+
+  it should "return the value of a process scalar" in {
+    mainPing.getScalarValue("parent", "browser.engagement.total_uri_count").head should be (63)
   }
 
   it should "return the value of its usage hours" in {

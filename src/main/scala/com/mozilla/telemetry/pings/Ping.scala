@@ -17,7 +17,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{parse, _}
 import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 trait Ping {
   val meta: Meta
@@ -297,8 +297,16 @@ trait SendsToAmplitude {
 
   def pingAmplitudeProperties: JObject = JObject()
 
+  /**
+    * Subclasses may override this to provide one or more "pseudo-events" containing ping-level information.
+    */
+  def sessionSplitEvents: Seq[Event] = Seq.empty
+
   def eventToAmplitudeEvent(eventGroup: String, e: Event, es: AmplitudeEvent): JObject = {
-    val sessionIdOffset = Try(es.sessionIdOffset.map(o => e.getField(o).toLong).getOrElse(0L)).getOrElse(0L)
+    val sessionIdOffset = Try(es.sessionIdOffset.map(o => e.getField(o).toLong)) match {
+      case Success(Some(x)) => x
+      case _ => 0L
+    }
 
     pingAmplitudeProperties merge
       ("session_id" -> (sessionStart + sessionIdOffset)) ~
@@ -320,7 +328,8 @@ trait SendsToAmplitude {
     val factory = JsonSchemaFactory.byDefault
     val schemas = config.eventGroups.flatMap(g => g.events.map(e => factory.getJsonSchema(asJsonNode(e.schema))))
 
-    val eventsList = events.map{ e => e -> asJsonNode(Extraction.decompose(e)): (Event, JsonNode) }
+    val eventsList = (sessionSplitEvents ++ events)
+      .map{ e => e -> asJsonNode(Extraction.decompose(e)): (Event, JsonNode) }
       .map{ case(e, es) => // for each event, try each schema
         e -> schemas.map( ts => ts.validateUnchecked(es).isSuccess )
           .zip(config.eventGroups.flatMap(g => g.events.map((g.eventGroupName, _))))
