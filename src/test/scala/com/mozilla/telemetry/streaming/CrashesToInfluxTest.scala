@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import com.mozilla.telemetry.StackTraceUtils
 import com.mozilla.telemetry.sinks.BatchHttpSink
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
@@ -49,10 +50,30 @@ class CrashesToInfluxTest extends FlatSpec with Matchers with BeforeAndAfterEach
 
     crashes
       .flatMap(m => CrashesToInflux.parsePing(m, CrashesToInflux.defaultChannels,
-        CrashesToInflux.defaultAppNames, defaultMeasurementName))
+        CrashesToInflux.defaultAppNames, defaultMeasurementName,
+        getSignature = false, usingDatabricks = false))
       .foreach(httpSink.process)
 
     verify(k, postRequestedFor(urlMatching(path)))
+  }
+
+  // crash signatures require python library so ignore in CI
+  ignore should "get crash signature" in {
+    val k1 = 4
+
+    val httpSink = new BatchHttpSink(s"http://$host:$port$path")
+    val crashes = TestUtils.generateCrashMessages(k1, customPayload = Some(StackTraceUtils.sampleStackTrace))
+
+    val crashStrings = crashes
+      .flatMap(m => CrashesToInflux.parsePing(m, CrashesToInflux.defaultChannels,
+        CrashesToInflux.defaultAppNames, defaultMeasurementName,
+        getSignature = true, usingDatabricks = false))
+
+    crashStrings.foreach(httpSink.process)
+
+    crashStrings.count(_.contains("crashSignature")) should be (k1)
+
+    verify(k1, postRequestedFor(urlMatching(path)))
   }
 
   "Message parser" should "generate 1 crash to send for each valid crash ping" in {

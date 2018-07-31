@@ -13,14 +13,14 @@ import scala.util.{Failure, Success, Try}
 
 class BatchHttpSink(url: String, maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000,
                     prefix: String = "", sep: String = "\n", suffix: String = "", maxBatchSize: Int = 1,
-                    retryCodes: List[Int] = List.empty[Int])
+                    retryCodes: List[Int] = List.empty[Int], successCode: Int = 200)
   extends ForeachWriter[String] {
 
   val TimeoutPseudoCode = -1
   val ErrorPseudoCode = -2
 
   val RetryCodes = TimeoutPseudoCode :: Nil ++ retryCodes
-  val OK = 200
+  val OK = successCode
 
   // timeouts in ms
   val ReadTimeout = 5000
@@ -56,17 +56,21 @@ class BatchHttpSink(url: String, maxAttempts: Int = 5, defaultDelay: Int = 500, 
 
       batchCalls.clear()
 
-      attempt(
+      val success = attempt(
         Http(url.toString)
           .postData(payload)
           .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = ReadTimeout))
+
+      if (!success) {
+        log.warn(s"Failed payload: $payload")
+      }
     }
   }
 
   private def backoff(tries: Int): Long = (scala.math.pow(2, tries) - 1).toLong * defaultDelay
 
   @tailrec
-  private def attempt(request: HttpRequest, tries: Int = 0): Unit = {
+  private def attempt(request: HttpRequest, tries: Int = 0): Boolean = {
     if(tries > 0) { // minor optimization
       java.lang.Thread.sleep(backoff(tries))
     }
@@ -81,12 +85,13 @@ class BatchHttpSink(url: String, maxAttempts: Int = 5, defaultDelay: Int = 500, 
     }
 
     (code, tries + 1 == maxAttempts) match {
-      case (OK, _) =>
-      case (ErrorPseudoCode, _) =>
+      case (OK, _) => true
+      case (ErrorPseudoCode, _) => true
       case (c, false) if RetryCodes.contains(c) => attempt(request, tries + 1)
       case (c, _) => {
         val url = request.url + "?" + request.params.map{ case(k, v) => s"$k=$v" }.mkString("&")
         log.warn(s"Failed request: $url, last status code: $c")
+        false
       }
     }
   }
