@@ -74,9 +74,6 @@ test in assembly := {}
 // Add configs to resources
 unmanagedResourceDirectories in Compile += baseDirectory.value / "configs"
 
-// Default SBT settings suck
-javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
-
 parallelExecution in Test := false
 
 scalacOptions ++= Seq(
@@ -99,7 +96,8 @@ assemblyShadeRules in assembly := Seq(
   ShadeRule.rename("com.trueaccord.scalapb.**" -> "shadescalapb.@1").inAll
 )
 
-addCommandAlias("ci", ";clean ;compile ;test:compile ;scalastyle ;test:scalastyle ;coverage ;dockerComposeTest ;coverageReport")
+// Shorthand for locally running the full set of tests that would run in continuous integration.
+addCommandAlias("ci", ";clean ;compile ;test:compile ;scalastyle ;test:scalastyle ;dockerComposeTest")
 
 val scalaStyleConfigUrl = Some(url("https://raw.githubusercontent.com/mozilla/moztelemetry/master/scalastyle-config.xml"))
 (scalastyleConfigUrl in Compile) := scalaStyleConfigUrl
