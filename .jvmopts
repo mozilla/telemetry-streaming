@@ -1,0 +1,5 @@
+# See 'sbt -help' for docs on how .jvmopts and .sbtopts are used.
+-Xms512M
+-Xmx2G
+-XX:ReservedCodeCacheSize=128M
+-XX:+CMSClassUnloadingEnabled

@@ -32,7 +32,8 @@ the source code and running the tests via sbt. Some common invocations for sbt:
 * `sbt "testOnly *ErrorAgg* -- -z version"  # run the tests only for packages matching ErrorAgg, limited to test cases with "version" in them`
 * `sbt dockerComposeTest  # run the docker compose tests (slow)`
 * `sbt "dockerComposeTest -tags:DockerComposeTag" # run only tests with DockerComposeTag (while using docker)`
-* `sbt ci  # run all tests`
+* `sbt scalastyle test:scalastyle  # run linter`
+* `sbt ci  # run the full set of continuous integration tests`
 
 Some tests need Kafka to run. If one prefers to run them via IDE, it's required to run the test cluster:
 ```bash
