@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mozilla/telemetry-streaming.svg?branch=master)](https://travis-ci.org/mozilla/telemetry-streaming)
+[![Build Status](https://circleci.com/gh/mozilla/telemetry-streaming/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla/telemetry-streaming/tree/master)
 [![codecov.io](https://codecov.io/github/mozilla/telemetry-streaming/coverage.svg?branch=master)](https://codecov.io/github/mozilla/telemetry-streaming?branch=master)
 
 # telemetry-streaming
