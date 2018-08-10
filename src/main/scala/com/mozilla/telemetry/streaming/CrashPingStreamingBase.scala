@@ -215,6 +215,7 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
           "osName" -> ping.getOsName.getOrElse(""),
           "osVersion" -> ping.getOsVersion.getOrElse(""),
           "architecture" -> ping.getArchitecture.getOrElse(""),
+          "buildIdTag" -> ping.getNormalizedBuildId.getOrElse(metadata.appBuildId),
           "crashSignature" -> crashSignature
         ).filter{ case (k, v) => v.nonEmpty }
 
