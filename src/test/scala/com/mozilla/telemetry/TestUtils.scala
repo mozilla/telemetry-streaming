@@ -205,7 +205,7 @@ object TestUtils {
       "payload.simpleMeasurements" ->
         """
           |{
-          |  "activeTicks": 2000,
+          |  "activeTicks": 275,
           |  "firstPaint": 1200
           |}
         """.stripMargin,

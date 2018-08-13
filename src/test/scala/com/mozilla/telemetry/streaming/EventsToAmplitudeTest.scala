@@ -96,7 +96,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
        |  "event_type": "Meta - session split",
        |  "event_properties": {
        |    "subsession_length": "3600",
-       |    "active_ticks": "2000",
+       |    "active_ticks": "271",
        |    "uri_count": "63",
        |    "search_count": "4"
        |  }
