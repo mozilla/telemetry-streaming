@@ -171,9 +171,15 @@ case class MainPing(application: Application,
     case _ => 0
   }
 
-  def activeTicks: Option[Long] = meta.`payload.simpleMeasurements` \ "activeTicks" match {
-    case JInt(v) => Some(v.toLong)
-    case _ => None
+  def activeTicks: Option[Long] = {
+    // Prefer the scalar over the simpleMeasurement due to bug through at least FF 61;
+    // See bug 1482924
+    getScalarValue("parent", "browser.engagement.active_ticks")
+      .orElse(
+        meta.`payload.simpleMeasurements` \ "activeTicks" match {
+          case JInt(v) => Some(v.toLong)
+          case _ => None
+        })
   }
 
   def reason: Option[String] = meta.`payload.info` \ "reason" match {
