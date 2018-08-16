@@ -17,7 +17,8 @@
           "amplitudeProperties": {
             "entrypoint": "extra.entrypoint",
             "first_panel": "extra.first_panel",
-            "splitconsole": "extra.splitconsole"
+            "splitconsole": "extra.splitconsole",
+            "shortcut": "extra.shortcut"
           },
           "sessionIdOffset": "extra.session_id",
           "description": "",
