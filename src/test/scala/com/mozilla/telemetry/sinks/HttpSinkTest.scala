@@ -1,14 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package com.mozilla.telemetry.streaming
+package com.mozilla.telemetry.sinks
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
-import com.mozilla.telemetry.sinks.HttpSink
 import org.apache.log4j.Level
 import org.scalatest._
 
@@ -21,11 +20,18 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
 
   var wireMockServer: WireMockServer = _
 
+  val apiKey = "foo"
   val maxAttempts = 5
   val delay = 1
   val timeout = 100
 
-  val httpSink = new HttpSink(s"http://$Host:$Port$Path", Map.empty, maxAttempts, delay, timeout)()
+  val httpSink = AmplitudeHttpSink(
+    apiKey,
+    s"http://$Host:$Port$Path",
+    maxAttempts = maxAttempts,
+    defaultDelayMillis = delay,
+    connectionTimeoutMillis = timeout
+  )
 
   var scenario = "Response Codes Scenario"
   var event = """{"event": "test event, please ignore"}"""

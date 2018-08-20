@@ -203,7 +203,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
   "HTTPSink" should "send focus events correctly" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath(ConfigFileName))
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
-    val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))()
+    val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
 
@@ -215,7 +215,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
     val msgs = TestUtils.generateMainMessages(expectedTotalMsgs,
       customPayload=EventsToAmplitudeTest.CustomMainPingPayload)
-    val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))()
+    val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
 
