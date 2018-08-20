@@ -10,66 +10,104 @@ import scala.annotation.tailrec
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-class HttpSink[String](url: String, data: Map[String, String], maxAttempts: Int = 5, defaultDelay: Int = 500, connectionTimeout: Int = 2000)
-                      (httpSendMethod: (HttpRequest, String) => HttpRequest =
-                       (req: HttpRequest, event: String) =>
-                         req.postForm(("event" -> event.toString) :: data.toList.map { case (a, b) => a.toString -> b.toString }))
-  extends ForeachWriter[String] {
+case class HttpSinkConfig(
+  maxAttempts: Int = Int.MaxValue,
+  defaultDelayMillis: Int = 500,
+  maxDelayMillis: Int = 30000,
+  connectionTimeoutMillis: Int = 2000,
+  readTimeoutMillis: Int = 5000
+)
 
-  // codes to retry a request on - allow retries on timeouts
-  // docs: https://amplitude.zendesk.com/hc/en-us/articles/204771828#http-status-codes-retrying-failed-requests
-
-  val TimeoutPseudoCode = -1
-  val ErrorPseudoCode = -2
-
-  val RetryCodes = TimeoutPseudoCode :: 429 :: 500 :: 502 :: 503 :: 504 :: Nil
+object HttpSink {
+  val TimeoutPseudoCode: Int = -1
+  val ErrorPseudoCode: Int = -2
   val OK = 200
+  val Conflict = 409
+  val TooManyRequests = 429
+  val InternalServerError = 500
+  val BadGateway = 502
+  val ServiceUnavailable = 503
+  val GatewayTimeout = 504
 
-  // timeouts in ms
-  val ReadTimeout = 5000
+  /**
+    * The general set of HTTP status codes that indicate an error that can be resolved by retrying.
+    *
+    * For example, these are called out specifically in Amplitude's documentation:
+    * https://developers.amplitude.com/#http-status-codes--amp--retrying-failed-requests
+    */
+  val RetryCodes: Set[Int] =
+    Set(TimeoutPseudoCode, Conflict, TooManyRequests, InternalServerError, BadGateway, ServiceUnavailable, GatewayTimeout)
+}
 
-  @transient lazy val log = org.apache.log4j.LogManager.getLogger("HttpSinkLogger")
+abstract class HttpSink[T]() extends ForeachWriter[T] {
 
-  def close(errorOrNull: Throwable): Unit = {
+  // Classes should implement these as vals in the constructor.
+  val url: String
+  val maxAttempts: Int
+  val defaultDelayMillis: Int
+  val maxDelayMillis: Int
+  val connectionTimeoutMillis: Int
+  val readTimeoutMillis: Int
+
+  private val baseRequest = Http(url)
+    .timeout(connTimeoutMs = connectionTimeoutMillis, readTimeoutMs = readTimeoutMillis)
+
+  import HttpSink._
+
+  // Using a transient logger for Spark application per https://stackoverflow.com/a/30453662/1260237
+  @transient lazy val log = org.apache.log4j.LogManager.getLogger("HttpSink")
+
+  /**
+    * Override to add additional codes to retry for specific APIs.
+    */
+  val retryCodes: Set[Int] = RetryCodes
+
+  /**
+    * This method will wrapped in retry logic and called to submit data to the target API.
+    */
+  def httpSendMethod(request: HttpRequest, value: T): HttpRequest
+
+  override def close(errorOrNull: Throwable): Unit = {
     errorOrNull match {
       case null =>
       case e => log.error(e.getStackTrace.mkString("\n"))
     }
   }
 
-  def open(partitionId: Long, version: Long): Boolean = true
+  override def open(partitionId: Long, version: Long): Boolean = true
 
-  def process(event: String): Unit = {
-    attempt(
-      httpSendMethod(Http(url.toString), event)
-        .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = ReadTimeout))
+  override def process(value: T): Unit = {
+    attempt(httpSendMethod(baseRequest, value))
   }
 
-  private def backoff(tries: Int): Long = (scala.math.pow(2, tries) - 1).toLong * defaultDelay
+  private def backoffMillis(tries: Int): Long = {
+    val millis = (scala.math.pow(2, tries) - 1).toLong * defaultDelayMillis
+    math.min(millis, maxDelayMillis)
+  }
 
   @tailrec
   private def attempt(request: HttpRequest, tries: Int = 0): Unit = {
+    val nextTry = tries + 1
+
     if(tries > 0) { // minor optimization
-      java.lang.Thread.sleep(backoff(tries))
+      java.lang.Thread.sleep(backoffMillis(tries))
     }
 
     val code = Try(request.asString.code) match {
       case Success(c) => c
-      case Failure(e: java.net.SocketTimeoutException) => TimeoutPseudoCode
+      case Failure(_: java.net.SocketTimeoutException) => TimeoutPseudoCode
       case Failure(e) if NonFatal(e) => {
         log.error(e.getStackTrace.mkString("\n"))
         ErrorPseudoCode
       }
     }
 
-    (code, tries + 1 == maxAttempts) match {
-      case (OK, _) =>
-      case (ErrorPseudoCode, _) =>
-      case (c, false) if RetryCodes.contains(c) => attempt(request, tries + 1)
-      case (c, _) => {
+    code match {
+      case OK | ErrorPseudoCode => // pass; we're all done here
+      case _ if nextTry < maxAttempts && retryCodes.contains(code) => attempt(request, nextTry)
+      case _ =>
         val url = request.url + "?" + request.params.map{ case(k, v) => s"$k=$v" }.mkString("&")
-        log.warn(s"Failed request: $url, last status code: $c")
-      }
+        log.warn(s"Failed request: $url, last status code: $code")
     }
   }
 }

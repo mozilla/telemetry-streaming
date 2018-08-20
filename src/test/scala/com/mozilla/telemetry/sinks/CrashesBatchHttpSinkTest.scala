@@ -26,7 +26,7 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   val retryCodes =  List[Int](429, 500, 502, 503, 504)
 
-  val httpSink = new BatchHttpSink(s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
+  val httpSink = new CrashesBatchHttpSink(s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
     prefix = "", sep = "\n", suffix = "", maxBatchSize = 1, retryCodes = retryCodes)
 
   var scenario = "Response Codes Scenario"
@@ -164,7 +164,7 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   "Batch HTTP Sink with batch size > 1" should "send once when batch size is reached" in {
     val batchSize = 4
-    val batchHttpSink = new BatchHttpSink(
+    val batchHttpSink = new CrashesBatchHttpSink(
       s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
@@ -183,7 +183,7 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   it should "send each time batch size is reached" in {
     val batchSize = 2
-    val batchHttpSink = new BatchHttpSink(
+    val batchHttpSink = new CrashesBatchHttpSink(
       s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
@@ -201,7 +201,7 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   it should "retain order of events processed" in {
     val batchSize = 5
-    val batchHttpSink = new BatchHttpSink(
+    val batchHttpSink = new CrashesBatchHttpSink(
       s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
@@ -222,7 +222,7 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
   }
 
   it should "correctly add prefix, suffix, and event separators to the request" in {
-    val batchHttpSink = new BatchHttpSink(
+    val batchHttpSink = new CrashesBatchHttpSink(
       s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
       prefix = "{\"events\": [", sep = ", ", suffix = "]}", maxBatchSize = 5)
 
