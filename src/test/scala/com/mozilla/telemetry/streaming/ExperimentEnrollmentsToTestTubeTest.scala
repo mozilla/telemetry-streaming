@@ -12,7 +12,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.holdenkarau.spark.testing.StructuredStreamingBase
 import com.mozilla.telemetry.streaming.EnrollmentEvents.{ExperimentA, ExperimentB, enrollmentEventJson}
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.HttpSink
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, GivenWhenThen, Matchers}

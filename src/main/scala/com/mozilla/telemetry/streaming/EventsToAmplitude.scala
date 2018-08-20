@@ -7,7 +7,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.HttpSink
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.json4s._

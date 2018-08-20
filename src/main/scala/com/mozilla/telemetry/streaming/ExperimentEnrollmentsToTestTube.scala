@@ -8,7 +8,7 @@ import java.sql.Timestamp
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.{EventPing, MainPing}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.HttpSink
 import org.apache.spark
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}

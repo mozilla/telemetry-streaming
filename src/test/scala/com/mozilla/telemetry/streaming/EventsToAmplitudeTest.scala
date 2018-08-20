@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, RequestPatternBuilder, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.pings.{Meta, SendsToAmplitude}
+import com.mozilla.telemetry.sinks
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
