@@ -8,13 +8,13 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.HttpSink
 import org.apache.log4j.Level
 import org.scalatest._
 
 import scala.annotation.tailrec
 
-class HTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
   val Port = 9876
   val Host = "localhost"
   val Path = "/httpapi"
