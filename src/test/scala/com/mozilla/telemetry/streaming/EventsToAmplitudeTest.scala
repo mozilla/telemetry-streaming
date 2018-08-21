@@ -205,7 +205,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
     val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
-    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
+    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get.eventArrayString))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
     verify(expectedTotalMsgs, createMatcher(focusEventJsonMatch))
@@ -217,7 +217,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
       customPayload=EventsToAmplitudeTest.CustomMainPingPayload)
     val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
-    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
+    msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get.eventArrayString))
 
     verify(expectedTotalMsgs, postRequestedFor(urlMatching(path)))
     verify(expectedTotalMsgs, createMatcher(mainPingJsonMatch))
@@ -386,7 +386,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
       customPayload=EventsToAmplitudeTest.sessionIdOffsetPayload).head
 
     val res = for {
-      JObject(l) <- parse(SendsToAmplitude(msg).getAmplitudeEvents(config).get) \\ "session_id"
+      JObject(l) <- parse(SendsToAmplitude(msg).getAmplitudeEvents(config).get.eventArrayString) \\ "session_id"
       JField("session_id", JInt(session_id)) <- l
     } yield session_id
 
