@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.StackTraceUtils
-import com.mozilla.telemetry.sinks.BatchHttpSink
+import com.mozilla.telemetry.sinks.CrashesBatchHttpSink
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
@@ -53,7 +53,7 @@ class CrashPingStreamingBaseTest extends FlatSpec with Matchers with BeforeAndAf
   "Parse ping" should "create a crash to send via HTTP" in {
     val k = 23
 
-    val httpSink = new BatchHttpSink(s"http://$host:$port$path")
+    val httpSink = new CrashesBatchHttpSink(s"http://$host:$port$path")
     val crashes = TestUtils.generateCrashMessages(k)
 
     crashes
@@ -69,7 +69,7 @@ class CrashPingStreamingBaseTest extends FlatSpec with Matchers with BeforeAndAf
   ignore should "get crash signature" in {
     val k1 = 4
 
-    val httpSink = new BatchHttpSink(s"http://$host:$port$path")
+    val httpSink = new CrashesBatchHttpSink(s"http://$host:$port$path")
     val crashes = TestUtils.generateCrashMessages(k1, customPayload = Some(StackTraceUtils.sampleStackTrace))
 
     val crashStrings = crashes

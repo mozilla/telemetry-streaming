@@ -39,6 +39,11 @@ object HttpSink {
     Set(TimeoutPseudoCode, Conflict, TooManyRequests, InternalServerError, BadGateway, ServiceUnavailable, GatewayTimeout)
 }
 
+/**
+  * An abstract base class for sending data to an HTTP API.
+  *
+  * @tparam T type of the values passed in to httpSendMethod
+  */
 abstract class HttpSink[T]() extends ForeachWriter[T] {
 
   // Classes should implement these as vals in the constructor.
@@ -49,13 +54,18 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
   val connectionTimeoutMillis: Int
   val readTimeoutMillis: Int
 
-  private val baseRequest = Http(url)
+  protected final val baseRequest = Http(url)
     .timeout(connTimeoutMs = connectionTimeoutMillis, readTimeoutMs = readTimeoutMillis)
 
   import HttpSink._
 
   // Using a transient logger for Spark application per https://stackoverflow.com/a/30453662/1260237
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("HttpSink")
+
+  /**
+    * Override to modify which codes are considered success.
+    */
+  val successCodes: Set[Int] = Set(OK)
 
   /**
     * Override to add additional codes to retry for specific APIs.
@@ -86,7 +96,7 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
   }
 
   @tailrec
-  private def attempt(request: HttpRequest, tries: Int = 0): Unit = {
+  protected final def attempt(request: HttpRequest, tries: Int = 0): Unit = {
     val nextTry = tries + 1
 
     if(tries > 0) { // minor optimization
@@ -103,7 +113,8 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
     }
 
     code match {
-      case OK | ErrorPseudoCode => // pass; we're all done here
+      case ErrorPseudoCode => // pass; nothing more we can do to fix the problem.
+      case _ if successCodes.contains(code) => // pass; our work here is done.
       case _ if nextTry < maxAttempts && retryCodes.contains(code) => attempt(request, nextTry)
       case _ =>
         val url = request.url + "?" + request.params.map{ case(k, v) => s"$k=$v" }.mkString("&")
