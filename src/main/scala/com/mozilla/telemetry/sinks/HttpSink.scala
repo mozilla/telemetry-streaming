@@ -103,12 +103,12 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
       java.lang.Thread.sleep(backoffMillis(tries))
     }
 
-    val code = Try(request.asString.code) match {
-      case Success(c) => c
-      case Failure(_: java.net.SocketTimeoutException) => TimeoutPseudoCode
+    val (code, response) = Try(request.asString) match {
+      case Success(r) => (r.code, Some(r))
+      case Failure(_: java.net.SocketTimeoutException) => (TimeoutPseudoCode, None)
       case Failure(e) if NonFatal(e) => {
         log.error(e.getStackTrace.mkString("\n"))
-        ErrorPseudoCode
+        (ErrorPseudoCode, None)
       }
     }
 
@@ -117,8 +117,8 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
       case _ if successCodes.contains(code) => // pass; our work here is done.
       case _ if nextTry < maxAttempts && retryCodes.contains(code) => attempt(request, nextTry)
       case _ =>
-        val url = request.url + "?" + request.params.map{ case(k, v) => s"$k=$v" }.mkString("&")
-        log.warn(s"Failed request: $url, last status code: $code")
+        val body = response.map(": " + _.body).getOrElse("")
+        log.warn(s"Dropping request that failed with last status code `$code' $body")
     }
   }
 }

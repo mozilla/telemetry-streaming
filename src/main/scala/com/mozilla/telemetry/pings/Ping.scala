@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Meta._
-import com.mozilla.telemetry.streaming.EventsToAmplitude.{AmplitudeEvent, Config}
+import com.mozilla.telemetry.streaming.EventsToAmplitude.{AmplitudeEvent, Config, KeyedAmplitudePayload}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{parse, _}
 import org.json4s.{DefaultFormats, Extraction, JArray, JField, JNull, JObject, JValue, _}
@@ -346,7 +346,7 @@ trait SendsToAmplitude {
       ("city" -> meta.geoCity)
   }
 
-  def getAmplitudeEvents(config: Config): Option[String] = {
+  def getAmplitudeEvents(config: Config): Option[KeyedAmplitudePayload] = {
     implicit val formats = DefaultFormats
 
     val factory = JsonSchemaFactory.byDefault
@@ -366,7 +366,8 @@ trait SendsToAmplitude {
     if (eventsList.isEmpty) {
       None
     } else {
-      Some(compact(render(eventsList)))
+      val events = eventsList.map(e => compact(render(e)))
+      Some(KeyedAmplitudePayload(getClientId.getOrElse(""), events))
     }
   }
 

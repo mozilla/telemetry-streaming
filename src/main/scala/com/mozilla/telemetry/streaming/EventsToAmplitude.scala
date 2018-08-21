@@ -7,9 +7,9 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.sinks.AmplitudeHttpSink
+import com.mozilla.telemetry.sinks.{AmplitudeBatchHttpSink, AmplitudeHttpSink}
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession, functions => f}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.rogach.scallop.ScallopOption
@@ -86,7 +86,7 @@ object EventsToAmplitude extends StreamingJobBase {
       required = false,
       default = Some(1.0))
     val minDelay: ScallopOption[Long] = opt[Long](
-      descr = "Amount of delay between requesets in batch mode, in ms",
+      descr = "Amount of delay between requests in batch mode, in ms",
       required = false,
       default = Some(0))
     val maxParallelRequests: ScallopOption[Int] = opt[Int](
@@ -101,6 +101,13 @@ object EventsToAmplitude extends StreamingJobBase {
     }
 
     verify()
+  }
+
+  case class KeyedAmplitudePayload(clientId: String, events: Seq[String]) {
+    /**
+      * Return a JSON event array string suitable for Amplitude's /httpapi endpoint.
+      */
+    def eventArrayString: String = s"""[${events.mkString(",")}]"""
   }
 
   case class AmplitudeEvent(
@@ -135,8 +142,8 @@ object EventsToAmplitude extends StreamingJobBase {
     }
   }
 
-  def parsePing(message: Message, sample: Double, config: Config): Array[String] = {
-    val emptyReturn = Array[String]()
+  def parsePing(message: Message, sample: Double, config: Config): Array[KeyedAmplitudePayload] = {
+    val emptyReturn = Array[KeyedAmplitudePayload]()
     val fields = message.fieldsAsMap
 
     config.topLevelFilters
@@ -158,7 +165,7 @@ object EventsToAmplitude extends StreamingJobBase {
       }
   }
 
-  def getEvents(config: Config, pings: DataFrame, sample: Double, raiseOnError: Boolean): Dataset[String] = {
+  def getEvents(config: Config, pings: DataFrame, sample: Double, raiseOnError: Boolean): Dataset[KeyedAmplitudePayload] = {
     import pings.sparkSession.implicits._
 
     pings.flatMap( v => {
@@ -167,9 +174,9 @@ object EventsToAmplitude extends StreamingJobBase {
         } catch {
           case ex: Throwable if !raiseOnError =>
             log.error("Encountered an error; skipping this ping!", ex)
-            Array[String]()
+            Array[KeyedAmplitudePayload]()
         }
-      }).as[String]
+      }).as[KeyedAmplitudePayload]
   }
 
   private def getMetaSchema: JValue = {
@@ -212,7 +219,11 @@ object EventsToAmplitude extends StreamingJobBase {
       .option("startingOffsets", opts.startingOffsets())
       .load()
 
+    import spark.implicits._
+
     getEvents(config, pings.select("value"), opts.sample(), opts.raiseOnError())
+      .repartition(f.col("clientId"))  // Bug 1484819
+      .map(_.eventArrayString)
       .writeStream
       .queryName(QueryName)
       .foreach(httpSink)
@@ -226,6 +237,17 @@ object EventsToAmplitude extends StreamingJobBase {
     val maxParallelRequests = opts.maxParallelRequests()
 
     implicit val sc = spark.sparkContext
+
+    val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
+    val minDelay = opts.minDelay()
+    val url = opts.url()
+    val useBatchApi = url.endsWith("/batch")
+
+    if (useBatchApi) {
+      log.info("Using logic for the /batch endpoint")
+    } else {
+      log.info("Using logic for the /httpapi endoint")
+    }
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val dataset = com.mozilla.telemetry.heka.Dataset(config.source)
@@ -247,21 +269,36 @@ object EventsToAmplitude extends StreamingJobBase {
       ))
 
       val pingsDataFrame = spark.createDataFrame(pings, schema)
-      val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
-      val minDelay = opts.minDelay()
-      val url = opts.url()
 
       log.info(s"Processing events for ${pingsDataFrame.count()} pings on $currentDate")
 
-      getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
-        .repartition(maxParallelRequests)
-        .foreachPartition{ it: Iterator[String] =>
-          val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
-          it.foreach{ event =>
-            httpSink.process(event)
-            java.lang.Thread.sleep(minDelay)
+      import spark.implicits._
+
+      val keyedDataset: Dataset[KeyedAmplitudePayload] =
+        getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
+          .repartition(maxParallelRequests, f.col("clientId"))  // Bug 1484819
+
+      if (useBatchApi) {
+        keyedDataset
+          .flatMap(_.events)
+          .foreachPartition { it =>
+            val httpSink = AmplitudeBatchHttpSink(apiKey = apiKey, url = url)
+            httpSink.splitIntoBatches(it).foreach { batch =>
+              httpSink.process(batch)
+              java.lang.Thread.sleep(minDelay)
+            }
           }
-        }
+      } else {
+        keyedDataset
+          .map(_.eventArrayString)
+          .foreachPartition { it =>
+            val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
+            it.foreach { event =>
+              httpSink.process(event)
+              java.lang.Thread.sleep(minDelay)
+            }
+          }
+      }
     }
 
     spark.stop()
