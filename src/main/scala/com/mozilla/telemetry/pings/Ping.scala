@@ -302,15 +302,39 @@ trait SendsToAmplitude {
     */
   def sessionSplitEvents: Seq[Event] = Seq.empty
 
+  /**
+    * We need to generate some string here that is unique for each event we send.
+    * The details of what that string looks like aren't important except that
+    * it should be stable; if we change the logic here or change the fields we pass into this
+    * function, an event that gets sent through both the old logic and new logic won't be
+    * detected as a duplicate.
+    *
+    * For details of how insert_id is used for deduplication, see
+    * https://amplitude.zendesk.com/hc/en-us/articles/204771828#optional-keys
+    */
+  def mkInsertId(items: Any*): String =
+    items
+      .map {
+        case Some(item) => item.toString
+        case None => "None"
+        case item => item.toString
+      }
+      .mkString("-")
+
   def eventToAmplitudeEvent(eventGroup: String, e: Event, es: AmplitudeEvent): JObject = {
     val sessionIdOffset = Try(es.sessionIdOffset.map(o => e.getField(o).toLong)) match {
       case Success(Some(x)) => x
       case _ => 0L
     }
 
+    val insertId = mkInsertId(
+      getClientId, sessionStart,
+      es.name,
+      e.timestamp, e.category, e.method, e.`object`)
+
     pingAmplitudeProperties merge
       ("session_id" -> (sessionStart + sessionIdOffset)) ~
-      ("insert_id" -> (getClientId.getOrElse("None") + sessionStart.toString + e.getAmplitudeId)) ~
+      ("insert_id" -> insertId) ~
       ("event_type" -> getFullEventName(eventGroup, es.name)) ~
       ("time" -> (e.timestamp + sessionStart)) ~
       ("event_properties" -> e.getProperties(es.amplitudeProperties)) ~
@@ -426,6 +450,4 @@ case class Event(timestamp: Int,
   def getProperties(properties: Option[Map[String, String]]): JObject = {
     properties.getOrElse(Map.empty).map { case (k, v) => k -> getField(v) }.foldLeft(JObject())(_ ~ _)
   }
-
-  def getAmplitudeId: String = timestamp.toString + category + method + `object`
 }
