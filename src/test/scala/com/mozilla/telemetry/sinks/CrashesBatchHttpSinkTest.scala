@@ -13,7 +13,7 @@ import org.scalatest._
 
 import scala.annotation.tailrec
 
-class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+class CrashesBatchHttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
   val Port = 9876
   val Host = "localhost"
   val Path = "/httpapi"
@@ -24,10 +24,11 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
   val delay = 1
   val timeout = 100
 
-  val retryCodes =  List[Int](429, 500, 502, 503, 504)
-
-  val httpSink = new CrashesBatchHttpSink(s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
-    prefix = "", sep = "\n", suffix = "", maxBatchSize = 1, retryCodes = retryCodes)
+  val httpSink = CrashesBatchHttpSink(s"http://$Host:$Port$Path",
+    maxAttempts = maxAttempts,
+    defaultDelayMillis = delay,
+    connectionTimeoutMillis = timeout,
+    prefix = "", sep = "\n", suffix = "", maxBatchSize = 1)
 
   var scenario = "Response Codes Scenario"
   var eventA = """{"event": "test eventA, please ignore"}"""
@@ -164,8 +165,10 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   "Batch HTTP Sink with batch size > 1" should "send once when batch size is reached" in {
     val batchSize = 4
-    val batchHttpSink = new CrashesBatchHttpSink(
-      s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
+    val batchHttpSink = CrashesBatchHttpSink(s"http://$Host:$Port$Path",
+      maxAttempts = maxAttempts,
+      defaultDelayMillis = delay,
+      connectionTimeoutMillis = timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
     for (i <- 1 to batchSize) {
@@ -183,8 +186,10 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   it should "send each time batch size is reached" in {
     val batchSize = 2
-    val batchHttpSink = new CrashesBatchHttpSink(
-      s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
+    val batchHttpSink = CrashesBatchHttpSink(s"http://$Host:$Port$Path",
+      maxAttempts = maxAttempts,
+      defaultDelayMillis = delay,
+      connectionTimeoutMillis = timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
     val k = 8
@@ -201,8 +206,10 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   it should "retain order of events processed" in {
     val batchSize = 5
-    val batchHttpSink = new CrashesBatchHttpSink(
-      s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
+    val batchHttpSink = CrashesBatchHttpSink(s"http://$Host:$Port$Path",
+      maxAttempts = maxAttempts,
+      defaultDelayMillis = delay,
+      connectionTimeoutMillis = timeout,
       prefix = "", sep = "\n", suffix = "", maxBatchSize = batchSize)
 
     batchHttpSink.process(eventA)
@@ -222,8 +229,10 @@ class BatchHTTPSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll wi
   }
 
   it should "correctly add prefix, suffix, and event separators to the request" in {
-    val batchHttpSink = new CrashesBatchHttpSink(
-      s"http://$Host:$Port$Path", maxAttempts, delay, timeout,
+    val batchHttpSink = CrashesBatchHttpSink(s"http://$Host:$Port$Path",
+      maxAttempts = maxAttempts,
+      defaultDelayMillis = delay,
+      connectionTimeoutMillis = timeout,
       prefix = "{\"events\": [", sep = ", ", suffix = "]}", maxBatchSize = 5)
 
     batchHttpSink.process(eventA)

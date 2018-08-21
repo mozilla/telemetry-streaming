@@ -7,12 +7,13 @@ import scalaj.http.HttpRequest
 
 import scala.collection.mutable.ArrayBuffer
 
-case class BatchHttpSink(
+case class CrashesBatchHttpSink(
   url: String,
   prefix: String = "",
   sep: String = "\n",
   suffix: String = "",
   maxBatchSize: Int = 1,
+  override val successCodes: Set[Int] = Set(HttpSink.OK),
   maxAttempts: Int = 5,
   defaultDelayMillis: Int = 500,
   maxDelayMillis: Int = 30000,

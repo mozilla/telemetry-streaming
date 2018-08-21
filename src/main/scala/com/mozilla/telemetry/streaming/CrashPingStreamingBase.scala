@@ -7,7 +7,7 @@ import java.io.{BufferedWriter, File, FileWriter}
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.{CrashPayload, CrashPing}
-import com.mozilla.telemetry.sinks.BatchHttpSink
+import com.mozilla.telemetry.sinks.CrashesBatchHttpSink
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
@@ -227,8 +227,8 @@ abstract class CrashPingStreamingBase extends StreamingJobBase {
   def buildOutputString(measurementName: String, timestamp: Long,
                         buildId: String, tags: Map[String, String]): String
 
-  def getHttpSink(url: String, maxBatchSize: Int): BatchHttpSink = {
-    new BatchHttpSink(url, maxBatchSize = maxBatchSize)
+  def getHttpSink(url: String, maxBatchSize: Int): CrashesBatchHttpSink = {
+    new CrashesBatchHttpSink(url, maxBatchSize = maxBatchSize)
   }
 
   def formatCrashSignature(signature: String): String = signature
