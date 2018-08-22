@@ -7,6 +7,640 @@
                 {
                     "amplitudeProperties": {},
                     "description": "",
+                    "name": "Open in new tab tip displayed",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "open_in_new_tab_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Add to homescreen tip displayed",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "add_to_homescreen_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Disable tracking protection tip displayed",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "disable_tracking_protection_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Set default browser tip displayed",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "default_browser_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Autocomplete URL tip displayed",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "add_autocomplete_url_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Open in new tab tip tapped",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "open_in_new_tab_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Add to homescreen tip tapped",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "add_to_homescreen_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Disable tracking protection tip tapped",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "disable_tracking_protection_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Set default browser tip tapped",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "default_browser_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Autocomplete URL tip tapped",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "add_autocomplete_url_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Homescreen tips enabled/disabled",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "tip"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "add_to_homescreen_tip"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
+                    "name": "Find in Page Clicked",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "menu"
+                                ],
+                                "type": "string"
+                            },
+                            "value": {
+                                "enum": [
+                                    "find_in_page"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method",
+                            "value"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {
+                        "requested": "value"
+                    },
+                    "description": "",
+                    "name": "Request Desktop Site Clicked",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "desktop_request_check"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {
+                        "source": "extra.source"
+                    },
+                    "description": "",
+                    "name": "Autocomplete Updates",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "save"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "autocomplete_domain"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {},
+                    "description": "",
                     "name": "Start session",
                     "schema": {
                         "$schema": "http://json-schema.org/schema#",
@@ -2059,7 +2693,7 @@
     "filters": {
         "appName": [
             "Focus"
-        ], 
+        ],
         "docType": [
             "focus-event"
         ],
