@@ -43,7 +43,8 @@ case class FocusEventPing(clientId: String,
       ("pref_performance_block_webfonts" -> settings.blockWebfonts) ~
       ("pref_performance_block_images" -> settings.blockImages) ~
       ("pref_autocomplete_installed" -> settings.autocompleteInstalled) ~
-      ("pref_autocomplete_custom" -> settings.autocompleteCustom))
+      ("pref_autocomplete_custom" -> settings.autocompleteCustom) ~
+      ("pref_key_tips" -> settings.prefKeyTips))
   }
 }
 
@@ -58,7 +59,8 @@ case class FocusSettings(pref_privacy_block_ads: Option[String],
                          pref_performance_block_webfonts: Option[String],
                          pref_performance_block_images: Option[String],
                          pref_autocomplete_installed: Option[String],
-                         pref_autocomplete_custom: Option[String]) {
+                         pref_autocomplete_custom: Option[String],
+                         pref_key_tips: Option[String]) {
 
   def blockAds: Option[Boolean] = asBool(pref_privacy_block_ads)
 
@@ -81,6 +83,8 @@ case class FocusSettings(pref_privacy_block_ads: Option[String],
   def autocompleteInstalled: Option[Boolean] = asBool(pref_autocomplete_installed)
 
   def autocompleteCustom: Option[Boolean] = asBool(pref_autocomplete_custom)
+
+  def prefKeyTips: Option[Boolean] = asBool(pref_key_tips)
 }
 
 object FocusEventPing {
