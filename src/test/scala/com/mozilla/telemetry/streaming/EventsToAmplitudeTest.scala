@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.matching.{EqualToJsonPattern, MatchResult, RequestPatternBuilder, ValueMatcher}
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.mozilla.telemetry.pings.{Meta, SendsToAmplitude}
+import com.mozilla.telemetry.sinks
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.json4s.jackson.JsonMethods._
@@ -202,7 +203,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
   "HTTPSink" should "send focus events correctly" in {
     val config = EventsToAmplitude.readConfigFile(configFilePath(ConfigFileName))
     val msgs = TestUtils.generateFocusEventMessages(expectedTotalMsgs)
-    val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))()
+    val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
 
@@ -214,7 +215,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     val config = EventsToAmplitude.readConfigFile(configFilePath(MainEventsConfigFile))
     val msgs = TestUtils.generateMainMessages(expectedTotalMsgs,
       customPayload=EventsToAmplitudeTest.CustomMainPingPayload)
-    val sink = new sinks.HttpSink(s"http://$Host:$Port$path", Map("api_key" -> apiKey))()
+    val sink = sinks.AmplitudeHttpSink(apiKey, s"http://$Host:$Port$path")
 
     msgs.foreach(m => sink.process(SendsToAmplitude(m).getAmplitudeEvents(config).get))
 

@@ -7,7 +7,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.AmplitudeHttpSink
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.json4s._
@@ -196,7 +196,7 @@ object EventsToAmplitude extends StreamingJobBase {
 
   def sendStreamingEvents(spark: SparkSession, opts: Opts, apiKey: String): Unit = {
     val config = readConfigFile(opts.configFilePath())
-    val httpSink = new HttpSink(opts.url(), Map("api_key" -> apiKey))()
+    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url())
 
     val pings = spark
       .readStream
@@ -253,7 +253,7 @@ object EventsToAmplitude extends StreamingJobBase {
       getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
         .repartition(maxParallelRequests)
         .foreachPartition{ it: Iterator[String] =>
-          val httpSink = new HttpSink(url, Map("api_key" -> apiKey))()
+          val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
           it.foreach{ event =>
             httpSink.process(event)
             java.lang.Thread.sleep(minDelay)

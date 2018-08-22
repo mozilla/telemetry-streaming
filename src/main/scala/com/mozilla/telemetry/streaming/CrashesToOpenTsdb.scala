@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.streaming
 
-import com.mozilla.telemetry.sinks.BatchHttpSink
+import com.mozilla.telemetry.sinks.CrashesBatchHttpSink
 
 object CrashesToOpenTsdb extends CrashPingStreamingBase {
 
@@ -25,9 +25,8 @@ object CrashesToOpenTsdb extends CrashPingStreamingBase {
         """.stripMargin
   }
 
-  override def getHttpSink(url: String, maxBatchSize: Int): BatchHttpSink = {
-    new BatchHttpSink(url, maxBatchSize = maxBatchSize,
-      prefix = "[", sep = ",", suffix = "]", successCode = 204)
+  override def getHttpSink(url: String, maxBatchSize: Int): CrashesBatchHttpSink = {
+    CrashesBatchHttpSink(url, maxBatchSize = maxBatchSize, prefix = "[", sep = ",", suffix = "]", successCodes = Set(204))
   }
 
   // characters from:

@@ -8,20 +8,15 @@ import java.sql.Timestamp
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.{EventPing, MainPing}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.TestTubeHttpSink
 import org.apache.spark
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.json4s.jackson.Serialization
 import org.rogach.scallop.ScallopOption
-import scalaj.http.HttpRequest
 
 object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
   val MaxParalellRequests = 10
-  val httpSendMethod: (HttpRequest, String) => HttpRequest = (req: HttpRequest, data: String) =>
-    req.postData(s"""{"enrollment":[$data]}""").header("content-type", "application/json")
-
-
   val kafkaCacheMaxCapacity = 100
 
   private val allowedDocTypes = List("main", "event")
@@ -35,7 +30,7 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
       .getOrCreate()
 
 
-    val httpSink = new HttpSink(opts.url(), Map())(httpSendMethod)
+    val httpSink = TestTubeHttpSink(opts.url())
 
     val pings = spark
       .readStream
@@ -53,7 +48,7 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
       .awaitTermination()
   }
 
-  def aggregateAndSend(pings: DataFrame, httpSink: HttpSink[String], checkpointPath: String): StreamingQuery = {
+  def aggregateAndSend(pings: DataFrame, httpSink: TestTubeHttpSink, checkpointPath: String): StreamingQuery = {
     aggregate(pings)
       .coalesce(MaxParalellRequests)
       .writeStream

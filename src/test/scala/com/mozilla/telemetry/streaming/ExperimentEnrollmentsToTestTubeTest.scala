@@ -12,7 +12,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.holdenkarau.spark.testing.StructuredStreamingBase
 import com.mozilla.telemetry.streaming.EnrollmentEvents.{ExperimentA, ExperimentB, enrollmentEventJson}
-import com.mozilla.telemetry.streaming.sinks.HttpSink
+import com.mozilla.telemetry.sinks.TestTubeHttpSink
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, GivenWhenThen, Matchers}
@@ -41,7 +41,7 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
 
     val pingsStream = MemoryStream[Array[Byte]]
 
-    val httpSink = new HttpSink(s"http://$Host:$Port$path", Map())(ExperimentEnrollmentsToTestTube.httpSendMethod)
+    val httpSink = TestTubeHttpSink(s"http://$Host:$Port$path")
 
     When("pings are aggregated and sent")
     val query = ExperimentEnrollmentsToTestTube.aggregateAndSend(pingsStream.toDF(), httpSink, streamingCheckpointPath)
@@ -112,7 +112,7 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
       ).map(_.toByteArray).seq
 
     val pingsStream = MemoryStream[Array[Byte]]
-    val httpSink = new HttpSink(s"http://$Host:$Port$path", Map())(ExperimentEnrollmentsToTestTube.httpSendMethod)
+    val httpSink = TestTubeHttpSink(s"http://$Host:$Port$path")
 
     When("pings are aggregated and sent")
     val query = ExperimentEnrollmentsToTestTube.aggregateAndSend(pingsStream.toDF(), httpSink, streamingCheckpointPath)
