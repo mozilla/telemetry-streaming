@@ -2058,9 +2058,8 @@
     ],
     "filters": {
         "appName": [
-            "Focus",
-            "OTHER"
-        ],
+            "Focus"
+        ], 
         "docType": [
             "focus-event"
         ],
