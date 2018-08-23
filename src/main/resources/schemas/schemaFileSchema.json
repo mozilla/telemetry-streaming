@@ -43,12 +43,31 @@
       },
       "uniqueItems": true,
       "default": []
+    },
+    "allowedPropertyValues": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "timestamp",
+            "category",
+            "object",
+            "method",
+            "value"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(extra)|(literal)"
+        }
+      ]
     }
   },
   "required": [
     "source",
     "eventGroups"
   ],
+  "additionalProperties": false,
   "properties": {
     "source": {
       "type": "string"
@@ -120,52 +139,14 @@
                 "userProperties": {
                   "type": "object",
                   "additionalProperties": {
-                    "oneOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "timestamp",
-                          "category",
-                          "object",
-                          "method",
-                          "value"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^extra"
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^literal"
-                      }
-                    ]
+                    "$ref": "#/definitions/allowedPropertyValues"
                   },
                   "uniqueItems": true
                 },
                 "amplitudeProperties": {
                   "type": "object",
                   "additionalProperties": {
-                    "oneOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "timestamp",
-                          "category",
-                          "object",
-                          "method",
-                          "value"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^extra"
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^literal"
-                      }
-                    ]
+                  "$ref": "#/definitions/allowedPropertyValues"
                   },
                   "uniqueItems": true
                 },
