@@ -187,7 +187,10 @@ object EventsToAmplitude extends StreamingJobBase {
     // validate config json
     val factory = JsonSchemaFactory.byDefault
     val schema = factory.getJsonSchema(asJsonNode(getMetaSchema))
-    schema.validate(asJsonNode(json))
+    val report = schema.validate(asJsonNode(json))
+    if (!report.isSuccess()) {
+      throw new IllegalArgumentException(s"Event schema does not validate against meta-schema: $report")
+    }
 
     // get pieces of config
     implicit val formats = DefaultFormats
