@@ -1,9 +1,8 @@
 {
     "source": "telemetry",
-    "eventGroupName": "Focus",
     "eventGroups": [
         {
-            "eventGroupName": "m_foc",
+            "eventGroupName": "Focus",
             "events": [
                 {
                     "amplitudeProperties": {},
