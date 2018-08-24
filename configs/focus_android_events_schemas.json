@@ -467,52 +467,6 @@
                 {
                     "amplitudeProperties": {},
                     "description": "",
-                    "name": "Homescreen tips enabled/disabled",
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#",
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ],
-                                "type": "string"
-                            },
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ],
-                                "type": "string"
-                            },
-                            "object": {
-                                "enum": [
-                                    "tip"
-                                ],
-                                "type": "string"
-                            },
-                            "value": {
-                                "enum": [
-                                    "add_to_homescreen_tip"
-                                ],
-                                "type": "string"
-                            },
-                            "timestamp": {
-                                "minimum": 0,
-                                "type": "number"
-                            }
-                        },
-                        "required": [
-                            "category",
-                            "timestamp",
-                            "object",
-                            "method",
-                            "value"
-                        ],
-                        "type": "object"
-                    }
-                },
-                {
-                    "amplitudeProperties": {},
-                    "description": "",
                     "name": "Find in Page Clicked",
                     "schema": {
                         "$schema": "http://json-schema.org/schema#",
