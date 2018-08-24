@@ -9,13 +9,15 @@ import scalaj.http.{Http, StringBodyConnectFunc}
 case class Event(device_id: String)
 case class UploadRequestBody(api_key: String, events: Seq[Event])
 
-class AmplitudeBatchHttpSinkTest extends FlatSpec with Matchers {
+class AmplitudeHttpSinkTest extends FlatSpec with Matchers {
 
-  "Amplitude Batch Sink" should "split batches by size" in {
+  val batchUrl = "https://api.amplitude.com/batch"
+
+  "AmplitudeBatcher" should "split batches by size" in {
     val testStrings = List.fill(5)("abcdefghij")
 
-    val httpSink = AmplitudeBatchHttpSink("foo", maxBytesPerBatch = 50)
-    val result: List[List[String]] = httpSink.splitIntoBatches(testStrings.iterator).map(_.toList).toList
+    val batcher = AmplitudeHttpSink.Batcher(maxBytesPerBatch = 50)
+    val result: List[List[String]] = batcher(testStrings.iterator).map(_.toList).toList
 
     result should contain theSameElementsAs
       List(List("abcdefghij", "abcdefghij"), List("abcdefghij", "abcdefghij"), List("abcdefghij"))
@@ -24,8 +26,8 @@ class AmplitudeBatchHttpSinkTest extends FlatSpec with Matchers {
   it should "split batches by count" in {
     val testStrings = List.fill(5)("abcdefghij")
 
-    val httpSink = AmplitudeBatchHttpSink("foo", maxEventsPerBatch = 2)
-    val result: List[List[String]] = httpSink.splitIntoBatches(testStrings.iterator).map(_.toList).toList
+    val batcher = AmplitudeHttpSink.Batcher(maxBytesPerBatch = Int.MaxValue, maxEventsPerBatch = 2)
+    val result: List[List[String]] = batcher(testStrings.iterator).map(_.toList).toList
 
     result should contain theSameElementsAs
       List(List("abcdefghij", "abcdefghij"), List("abcdefghij", "abcdefghij"), List("abcdefghij"))
@@ -41,7 +43,7 @@ class AmplitudeBatchHttpSinkTest extends FlatSpec with Matchers {
 
     Seq(UploadRequestBody("foo", Seq.empty)) should have length 1
 
-    val httpSink = AmplitudeBatchHttpSink("foo")
+    val httpSink = AmplitudeHttpSink("foo", batchUrl)
     val bodyStr = httpSink
       .httpSendMethod(Http(httpSink.url), events.map(write(_)))
       .connectFunc.asInstanceOf[StringBodyConnectFunc].data

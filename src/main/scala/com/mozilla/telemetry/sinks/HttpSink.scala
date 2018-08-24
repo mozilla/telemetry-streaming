@@ -10,19 +10,23 @@ import scala.annotation.tailrec
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-case class HttpSinkConfig(
-  maxAttempts: Int = Int.MaxValue,
-  defaultDelayMillis: Int = 500,
-  maxDelayMillis: Int = 30000,
-  connectionTimeoutMillis: Int = 2000,
-  readTimeoutMillis: Int = 5000
-)
-
 object HttpSink {
+
+  case class Config(
+    maxAttempts: Int = 5,
+    defaultDelayMillis: Int = 500,
+    maxDelayMillis: Int = 30000,
+    connectionTimeoutMillis: Int = 2000,
+    readTimeoutMillis: Int = 5000,
+    successCodes: Set[Int] = Set(OK),
+    retryCodes: Set[Int] = RetryCodes
+  )
+
   val TimeoutPseudoCode: Int = -1
   val ErrorPseudoCode: Int = -2
   val OK = 200
   val Conflict = 409
+  val PayloadTooLarge = 413
   val TooManyRequests = 429
   val InternalServerError = 500
   val BadGateway = 502
@@ -48,14 +52,10 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
 
   // Classes should implement these as vals in the constructor.
   val url: String
-  val maxAttempts: Int
-  val defaultDelayMillis: Int
-  val maxDelayMillis: Int
-  val connectionTimeoutMillis: Int
-  val readTimeoutMillis: Int
+  val config: HttpSink.Config
 
   protected final val baseRequest = Http(url)
-    .timeout(connTimeoutMs = connectionTimeoutMillis, readTimeoutMs = readTimeoutMillis)
+    .timeout(connTimeoutMs = config.connectionTimeoutMillis, readTimeoutMs = config.readTimeoutMillis)
 
   import HttpSink._
 
@@ -63,19 +63,17 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("HttpSink")
 
   /**
-    * Override to modify which codes are considered success.
-    */
-  val successCodes: Set[Int] = Set(OK)
-
-  /**
-    * Override to add additional codes to retry for specific APIs.
-    */
-  val retryCodes: Set[Int] = RetryCodes
-
-  /**
     * This method will wrapped in retry logic and called to submit data to the target API.
     */
   def httpSendMethod(request: HttpRequest, value: T): HttpRequest
+
+  /**
+    * By default, we drop requests that return 413, but classes can override this
+    * method to recover and send smaller requests.
+    */
+  def handlePayloadTooLarge(value: T): Unit = {
+    log.warn("Dropping request that returned 413: Payload Too Large")
+  }
 
   override def close(errorOrNull: Throwable): Unit = {
     errorOrNull match {
@@ -87,16 +85,16 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
   override def open(partitionId: Long, version: Long): Boolean = true
 
   override def process(value: T): Unit = {
-    attempt(httpSendMethod(baseRequest, value))
+    attempt(value, httpSendMethod(baseRequest, value))
   }
 
   private def backoffMillis(tries: Int): Long = {
-    val millis = (scala.math.pow(2, tries) - 1).toLong * defaultDelayMillis
-    math.min(millis, maxDelayMillis)
+    val millis = (scala.math.pow(2, tries) - 1).toLong * config.defaultDelayMillis
+    math.min(millis, config.maxDelayMillis)
   }
 
   @tailrec
-  protected final def attempt(request: HttpRequest, tries: Int = 0): Unit = {
+  protected final def attempt(value: T, request: HttpRequest, tries: Int = 0): Unit = {
     val nextTry = tries + 1
 
     if(tries > 0) { // minor optimization
@@ -114,8 +112,10 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
 
     code match {
       case ErrorPseudoCode => // pass; nothing more we can do to fix the problem.
-      case _ if successCodes.contains(code) => // pass; our work here is done.
-      case _ if nextTry < maxAttempts && retryCodes.contains(code) => attempt(request, nextTry)
+      case _ if config.successCodes.contains(code) => // pass; our work here is done.
+      case PayloadTooLarge => handlePayloadTooLarge(value)
+      case _ if nextTry < config.maxAttempts && config.retryCodes.contains(code) =>
+        attempt(value, request, nextTry)
       case _ =>
         val body = response.map(": " + _.body).getOrElse("")
         log.warn(s"Dropping request that failed with last status code `$code' $body")
