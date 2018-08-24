@@ -7,7 +7,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
-import com.mozilla.telemetry.sinks.{AmplitudeBatchHttpSink, AmplitudeHttpSink}
+import com.mozilla.telemetry.sinks.AmplitudeHttpSink
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession, functions => f}
 import org.json4s._
@@ -103,12 +103,7 @@ object EventsToAmplitude extends StreamingJobBase {
     verify()
   }
 
-  case class KeyedAmplitudePayload(clientId: String, events: Seq[String]) {
-    /**
-      * Return a JSON event array string suitable for Amplitude's /httpapi endpoint.
-      */
-    def eventArrayString: String = s"""[${events.mkString(",")}]"""
-  }
+  case class KeyedAmplitudePayload(clientId: String, events: Seq[String])
 
   case class AmplitudeEvent(
     name: String,
@@ -223,7 +218,7 @@ object EventsToAmplitude extends StreamingJobBase {
 
     getEvents(config, pings.select("value"), opts.sample(), opts.raiseOnError())
       .repartition(f.col("clientId"))  // Bug 1484819
-      .map(_.eventArrayString)
+      .map(_.events)
       .writeStream
       .queryName(QueryName)
       .foreach(httpSink)
@@ -241,13 +236,7 @@ object EventsToAmplitude extends StreamingJobBase {
     val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
     val minDelay = opts.minDelay()
     val url = opts.url()
-    val useBatchApi = url.endsWith("/batch")
-
-    if (useBatchApi) {
-      log.info("Using logic for the /batch endpoint")
-    } else {
-      log.info("Using logic for the /httpapi endoint")
-    }
+    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val dataset = com.mozilla.telemetry.heka.Dataset(config.source)
@@ -274,31 +263,13 @@ object EventsToAmplitude extends StreamingJobBase {
 
       import spark.implicits._
 
-      val keyedDataset: Dataset[KeyedAmplitudePayload] =
-        getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
-          .repartition(maxParallelRequests, f.col("clientId"))  // Bug 1484819
-
-      if (useBatchApi) {
-        keyedDataset
-          .flatMap(_.events)
-          .foreachPartition { it =>
-            val httpSink = AmplitudeBatchHttpSink(apiKey = apiKey, url = url)
-            httpSink.splitIntoBatches(it).foreach { batch =>
-              httpSink.process(batch)
-              java.lang.Thread.sleep(minDelay)
-            }
-          }
-      } else {
-        keyedDataset
-          .map(_.eventArrayString)
-          .foreachPartition { it =>
-            val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
-            it.foreach { event =>
-              httpSink.process(event)
-              java.lang.Thread.sleep(minDelay)
-            }
-          }
-      }
+      getEvents(config, pingsDataFrame, opts.sample(), opts.raiseOnError())
+        .repartition(maxParallelRequests, f.col("clientId"))  // Bug 1484819
+        .map(_.events)
+        .foreachPartition { it =>
+          httpSink.batchAndProcess(it)
+          java.lang.Thread.sleep(minDelay)
+        }
     }
 
     spark.stop()
