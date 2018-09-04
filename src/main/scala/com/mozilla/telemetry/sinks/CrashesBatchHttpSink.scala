@@ -13,12 +13,7 @@ case class CrashesBatchHttpSink(
   sep: String = "\n",
   suffix: String = "",
   maxBatchSize: Int = 1,
-  override val successCodes: Set[Int] = Set(HttpSink.OK),
-  maxAttempts: Int = 5,
-  defaultDelayMillis: Int = 500,
-  maxDelayMillis: Int = 30000,
-  connectionTimeoutMillis: Int = 2000,
-  readTimeoutMillis: Int = 5000
+  config: HttpSink.Config = HttpSink.Config()
 ) extends HttpSink[String] {
 
   private val batchCalls = ArrayBuffer[String]()
@@ -52,7 +47,7 @@ case class CrashesBatchHttpSink(
     if (batchCalls.nonEmpty) {
       val payload = batchCalls.mkString(prefix, sep, suffix)
       batchCalls.clear()
-      attempt(baseRequest.postData(payload))
+      attempt("", baseRequest.postData(payload))
     }
   }
 

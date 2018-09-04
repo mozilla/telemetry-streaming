@@ -7,11 +7,7 @@ import scalaj.http.HttpRequest
 
 case class TestTubeHttpSink(
   url: String,
-  maxAttempts: Int = 5,
-  defaultDelayMillis: Int = 500,
-  maxDelayMillis: Int = 30000,
-  connectionTimeoutMillis: Int = 2000,
-  readTimeoutMillis: Int = 5000
+  config: HttpSink.Config = HttpSink.Config()
 ) extends HttpSink[String] {
 
   override def httpSendMethod(request: HttpRequest, data: String): HttpRequest = {

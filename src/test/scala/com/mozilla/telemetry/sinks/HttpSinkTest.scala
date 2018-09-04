@@ -28,10 +28,10 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   val httpSink = AmplitudeHttpSink(
     apiKey,
     s"http://$Host:$Port$Path",
-    maxAttempts = maxAttempts,
-    defaultDelayMillis = delay,
-    connectionTimeoutMillis = timeout
-  )
+    config = HttpSink.Config(
+      maxAttempts = maxAttempts,
+      defaultDelayMillis = delay,
+      connectionTimeoutMillis = timeout))
 
   var scenario = "Response Codes Scenario"
   var event = """{"event": "test event, please ignore"}"""
@@ -48,7 +48,7 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     val prevLogLevel = httpSink.log.getLevel
     httpSink.log.setLevel(Level.ERROR)
     try {
-      httpSink.process(event)
+      httpSink.process(Seq(event))
     } finally {
       httpSink.log.setLevel(prevLogLevel)
     }
@@ -87,7 +87,7 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     val responseCodes = OK :: Nil
 
     multiStub(responseCodes)
-    httpSink.process(event)
+    httpSink.process(Seq(event))
     verifyCount(responseCodes.size)
   }
 
@@ -95,7 +95,7 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     val responseCodes = SERVER_ERROR :: SERVER_ERROR :: SERVER_ERROR :: OK :: Nil
 
     multiStub(responseCodes)
-    httpSink.process(event)
+    httpSink.process(Seq(event))
     verifyCount(responseCodes.size)
   }
 
