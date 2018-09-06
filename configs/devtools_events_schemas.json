@@ -9,7 +9,9 @@
       "Firefox"
     ],
     "appUpdateChannel": [
-      "nightly"
+      "nightly",
+      "beta",
+      "aurora"
     ]
   },
   "eventGroups": [
