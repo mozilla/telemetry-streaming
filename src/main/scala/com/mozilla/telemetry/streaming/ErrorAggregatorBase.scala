@@ -236,9 +236,6 @@ abstract class ErrorAggregatorBase extends StreamingJobBase {
       })
 
     val dimensionsCols = List(
-      window($"timestamp", "5 minute").as("window"),
-      col("window.start").as("window_start"),
-      col("window.end").as("window_end")
     ) ++ dimensionsSchema.fieldNames.filter(_ != "timestamp").map(col(_))
 
     val stats = statsSchema.fieldNames.map(_.toLowerCase)
@@ -249,10 +246,8 @@ abstract class ErrorAggregatorBase extends StreamingJobBase {
     * Everything else gets dropped by .agg()
     * */
     parsedPings
-      .withWatermark("timestamp", "1 minute")
       .groupBy(dimensionsCols: _*)
       .agg(aggCols.head, aggCols.tail: _*)
-      .drop("window")
   }
 
   private def buildDimensions(dimensionsSchema: StructType, ping: Ping): Array[Row] = {
