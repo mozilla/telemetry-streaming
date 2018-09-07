@@ -23,7 +23,7 @@ abstract class ErrorAggregatorBase extends StreamingJobBase {
   val defaultNumFiles = 60
 
   //TODO: make relationships visible here - we're adding crash/Fennec and core/Fennec/Android
-  private val allowedDocTypes = List("main", "crash", "core")
+  private val allowedDocTypes = List("main")
   private val allowedAppNames = List("Firefox", "Fennec")
   private val coreFennecPingAllowedOses = List("Android")
   private val disallowedChannels = List("Other")
