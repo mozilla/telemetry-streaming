@@ -167,13 +167,13 @@ workflows:
   version: 2
   build:
     jobs:
-      - lint
-      - test
-      - kafka-test
+#      - lint
+#      - test
+#      - kafka-test
       - assembly
       - deploy:
           requires:
-            - lint
-            - test
-            - kafka-test
+#            - lint
+#            - test
+#            - kafka-test
             - assembly

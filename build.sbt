@@ -78,10 +78,10 @@ unmanagedResourceDirectories in Compile += baseDirectory.value / "configs"
 parallelExecution in Test := false
 
 scalacOptions ++= Seq(
-  "-feature",
-  "-Ywarn-unused",
-  "-Ywarn-unused-import",
-  "-Xfatal-warnings"
+//  "-feature",
+//  "-Ywarn-unused",
+//  "-Ywarn-unused-import",
+//  "-Xfatal-warnings"
 )
 
 assemblyMergeStrategy in assembly := {
