@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.pings
 
+import java.sql.Timestamp
+
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.Ping.messageToPing
 import com.mozilla.telemetry.pings.main.Processes
@@ -23,6 +25,7 @@ case class EventPing(application: Application,
   def getClientId: Option[String] = meta.clientId
 
   def sessionStart: Long = payload.processStartTimestamp
+  def sessionStartAsTimestamp: Timestamp = new Timestamp(sessionStart)
 
   def getCreated: Option[Long] = meta.creationTimestamp.map(t => (t / 1e9).toLong)
 
