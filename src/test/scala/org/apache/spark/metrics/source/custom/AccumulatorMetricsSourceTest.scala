@@ -14,13 +14,43 @@ import org.scalatest._
 
 import scala.io.Source
 
+/**
+  * For details on creating reusable fixtures with correct beforeEach and afterEach behavior, see
+  * http://www.scalatest.org/user_guide/sharing_fixtures#composingFixtures
+  */
+trait AccumulatorMetricsSourceTestBase extends BeforeAndAfterEach { this: Suite =>
 
-class AccumulatorMetricsSourceTest extends FlatSpec with Matchers with BeforeAndAfterEach with GivenWhenThen {
+  protected val MetricsOutputDir = "/tmp/metrics-test/"
+  protected val appName = "metrics-test"
+  protected val MetricsSourceName = "ApplicationMetrics"
+  protected val MetricName = "test-metric"
 
-  private val MetricsOutputDir = "/tmp/metrics-test/"
-  private val appName = "metrics-test"
-  private val MetricsSourceName = "ApplicationMetrics"
-  private val MetricName = "test-metric"
+  override protected def beforeEach(): Unit = {
+    cleanupTestDirectories()
+    Files.createDirectories(Paths.get(MetricsOutputDir))
+    super.beforeEach()
+  }
+
+  override protected def afterEach(): Unit = {
+    try super.afterEach()
+    finally cleanupTestDirectories()
+  }
+
+  protected def cleanupTestDirectories(): Unit = {
+    FileUtils.deleteDirectory(new File(MetricsOutputDir))
+  }
+
+  protected def printContents(files: Array[File]): String = {
+    files.map { f =>
+      "============================================================\n" +
+        "File: " + f.getName + "\n" +
+        scala.io.Source.fromFile(f).getLines().mkString("\n") + "\n" +
+        "============================================================"
+    }.mkString("\n")
+  }
+}
+
+class AccumulatorMetricsSourceTest extends FlatSpec with AccumulatorMetricsSourceTestBase with Matchers with GivenWhenThen {
 
   "AccumulatorMetricsSource" should "provide accumulator-based metrics" in {
     Given("Spark session configured with csv metrics reporter")
@@ -75,27 +105,4 @@ class AccumulatorMetricsSourceTest extends FlatSpec with Matchers with BeforeAnd
     spark.stop()
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    cleanupTestDirectories()
-    Files.createDirectories(Paths.get(MetricsOutputDir))
-  }
-
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-    cleanupTestDirectories()
-  }
-
-  private def cleanupTestDirectories(): Unit = {
-    FileUtils.deleteDirectory(new File(MetricsOutputDir))
-  }
-
-  private def printContents(files: Array[File]): String = {
-    files.map { f =>
-      "============================================================\n" +
-        "File: " + f.getName + "\n" +
-        scala.io.Source.fromFile(f).getLines().mkString("\n") + "\n" +
-        "============================================================"
-    }.mkString("\n")
-  }
 }

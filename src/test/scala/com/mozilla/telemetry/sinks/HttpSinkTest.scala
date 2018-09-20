@@ -9,11 +9,15 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import org.apache.log4j.Level
-import org.scalatest._
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers, Suite}
 
 import scala.annotation.tailrec
 
-class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with BeforeAndAfterEach {
+/**
+  * For details on creating reusable fixtures with correct beforeEach and afterEach behavior, see
+  * http://www.scalatest.org/user_guide/sharing_fixtures#composingFixtures
+  */
+trait HttpSinkTestBase extends BeforeAndAfterEach { this: Suite =>
   val Port = 9876
   val Host = "localhost"
   val Path = "/httpapi"
@@ -25,13 +29,7 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
   val delay = 1
   val timeout = 100
 
-  val httpSink = AmplitudeHttpSink(
-    apiKey,
-    s"http://$Host:$Port$Path",
-    config = HttpSink.Config(
-      maxAttempts = maxAttempts,
-      defaultDelayMillis = delay,
-      connectionTimeoutMillis = timeout))
+  var httpSink: AmplitudeHttpSink = _
 
   var scenario = "Response Codes Scenario"
   var event = """{"event": "test event, please ignore"}"""
@@ -54,18 +52,20 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
     }
   }
 
-  override def beforeEach {
+  override protected def beforeEach() {
     wireMockServer = new WireMockServer(wireMockConfig().port(Port))
     wireMockServer.start()
     WireMock.configureFor(Host, Port)
+    super.beforeEach()
   }
 
-  override def afterEach {
-    wireMockServer.stop()
+  override protected def afterEach() {
+    try super.afterEach()
+    finally wireMockServer.stop()
   }
 
   @tailrec
-  private def multiStub(responseCodes: Seq[Int], scenarioState: String = STARTED): Unit = {
+  protected final def multiStub(responseCodes: Seq[Int], scenarioState: String = STARTED): Unit = {
     val nextScenario = "post" + scenarioState
 
     stubFor(post(urlMatching(Path))
@@ -74,13 +74,28 @@ class HttpSinkTest extends FlatSpec with Matchers with BeforeAndAfterAll with Be
       .willReturn(aResponse().withStatus(responseCodes.head))
       .willSetStateTo(nextScenario))
 
-    if(!responseCodes.tail.isEmpty) {
+    if(responseCodes.tail.nonEmpty) {
       multiStub(responseCodes.tail, nextScenario)
     }
   }
 
-  private def verifyCount(count: Int): Unit = {
+  protected def verifyCount(count: Int): Unit = {
     verify(count, postRequestedFor(urlMatching(Path)))
+  }
+
+}
+
+class HttpSinkTest extends FlatSpec with HttpSinkTestBase with Matchers with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = {
+    httpSink = AmplitudeHttpSink(
+      apiKey,
+      s"http://$Host:$Port$Path",
+      config = HttpSink.Config(
+        maxAttempts = maxAttempts,
+        defaultDelayMillis = delay,
+        connectionTimeoutMillis = timeout))
+    super.beforeEach()
   }
 
   "HTTP Sink" should "only send once on success" in {
