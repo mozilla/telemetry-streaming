@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.sinks
 
-import org.apache.spark.SparkContext
 import org.apache.spark.metrics.source.custom.AccumulatorMetricsSource
-import org.apache.spark.sql.ForeachWriter
+import org.apache.spark.sql.{ForeachWriter, SparkSession}
 import org.apache.spark.util.LongAccumulator
 import scalaj.http.{Http, HttpRequest}
 
@@ -32,15 +31,15 @@ object HttpSink {
     metrics: Option[Metrics] = None
   ) {
     /** Return a copy of this config with HttpSink metrics enabled. */
-    def withMetrics(implicit sc: SparkContext): Config = {
+    def withMetrics(implicit spark: SparkSession): Config = {
       val source = new AccumulatorMetricsSource("HttpSink")
-      val config = this.withMetrics(source)
+      val config = this.withMetrics(source)(spark)
       source.start()
       config
     }
 
     /** Return a copy of this config with HttpSink metrics enabled, registering accumulators with the given source. */
-    def withMetrics(source: AccumulatorMetricsSource)(implicit sc: SparkContext): Config = {
+    def withMetrics(source: AccumulatorMetricsSource)(implicit spark: SparkSession): Config = {
       require(this.metrics.isEmpty, "Metrics are already enabled for this HttpSink.Config")
       val metrics = Metrics.registeredTo(source)
       this.copy(metrics = Option(metrics))
@@ -57,9 +56,9 @@ object HttpSink {
       * Factory method that creates a Metrics instance, registering each accumulator with
       * the given metrics source.
       */
-    def registeredTo(source: AccumulatorMetricsSource)(implicit sc: SparkContext): Metrics = {
+    def registeredTo(source: AccumulatorMetricsSource)(implicit spark: SparkSession): Metrics = {
       def metric(name: String): LongAccumulator = {
-        val acc = sc.longAccumulator(name)
+        val acc = spark.sparkContext.longAccumulator(name)
         source.registerAccumulator(acc)
         acc
       }

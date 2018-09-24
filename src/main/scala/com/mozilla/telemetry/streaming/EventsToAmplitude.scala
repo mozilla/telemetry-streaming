@@ -202,7 +202,7 @@ object EventsToAmplitude extends StreamingJobBase {
   def sendStreamingEvents(spark: SparkSession, opts: Opts, apiKey: String): Unit = {
     val config = readConfigFile(opts.configFilePath())
 
-    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark.sparkContext)
+    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark)
     val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url(), httpSinkConfig)
 
     val pings = spark
@@ -238,7 +238,7 @@ object EventsToAmplitude extends StreamingJobBase {
     val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
     val minDelay = opts.minDelay()
 
-    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark.sparkContext)
+    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark)
     val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url(), httpSinkConfig)
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
