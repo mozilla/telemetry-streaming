@@ -6,8 +6,8 @@ package com.mozilla.telemetry.streaming
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings._
-import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import com.mozilla.telemetry.sinks.AmplitudeHttpSink
+import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession, functions => f}
 import org.json4s._
@@ -201,7 +201,9 @@ object EventsToAmplitude extends StreamingJobBase {
 
   def sendStreamingEvents(spark: SparkSession, opts: Opts, apiKey: String): Unit = {
     val config = readConfigFile(opts.configFilePath())
-    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url())
+
+    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark)
+    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url(), httpSinkConfig)
 
     val pings = spark
       .readStream
@@ -235,8 +237,9 @@ object EventsToAmplitude extends StreamingJobBase {
 
     val apiKey = sys.env(AMPLITUDE_API_KEY_KEY)
     val minDelay = opts.minDelay()
-    val url = opts.url()
-    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = url)
+
+    val httpSinkConfig = AmplitudeHttpSink.Config.withMetrics(spark)
+    val httpSink = AmplitudeHttpSink(apiKey = apiKey, url = opts.url(), httpSinkConfig)
 
     datesBetween(opts.from(), opts.to.get).foreach { currentDate =>
       val dataset = com.mozilla.telemetry.heka.Dataset(config.source)
