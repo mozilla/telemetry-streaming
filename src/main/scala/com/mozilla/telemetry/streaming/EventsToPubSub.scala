@@ -7,7 +7,7 @@ import com.mozilla.telemetry.pings.EventPing
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.rogach.scallop.ScallopOption
-import com.mozilla.telemetry.sinks.{Experiments, GCPMapValue, PubSubTopicSink}
+import com.mozilla.telemetry.sinks.{GCPMapValue, PubSubTopicSink}
 
 object EventsToPubSub extends StreamingJobBase {
   override val outputPrefix = "events/v1"
@@ -15,12 +15,11 @@ object EventsToPubSub extends StreamingJobBase {
   val kafkaCacheMaxCapacity = 10
 
   private val allowedDocTypes = List("event")
-  private val allowedAppNames = List("Firefox")
 
 
-  private case class Experiments(experiment_id: String, branch: String)
+  protected[streaming] case class Experiments(experiment_id: String, branch: String)
 
-  private case class EventMessage(ping_timestamp: Timestamp, document_id: String, client_id: String, normalized_channel: String,
+  case class EventMessage(ping_timestamp: Timestamp, document_id: String, client_id: String, normalized_channel: String,
                       country: String, locale: Option[String], app_name: String, app_version: String,
                       os: Option[String], os_version: Option[String], session_id: String, subsession_id: String,
                       session_start_time: Timestamp,
