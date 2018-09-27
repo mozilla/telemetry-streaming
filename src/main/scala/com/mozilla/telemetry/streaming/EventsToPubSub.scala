@@ -28,7 +28,7 @@ object EventsToPubSub extends StreamingJobBase {
                       session_start_time: Timestamp,
                       experiments: Seq[Experiments], event_timestamp: Long, event_category: String,
                       event_method: String, event_object: String, event_string_value: Option[String],
-                      event_map_values: Seq[GCPMapValue], event_process: String)
+                      event_map_values: Seq[GCPMapValue], event_process: String, doc_type: String)
 
   class EventPubSubTopicSink(projectName: String, topicId: String) extends PubSubTopicSink[EventMessage](projectName, topicId)
 
@@ -115,7 +115,7 @@ object EventsToPubSub extends StreamingJobBase {
                 ping.meta.geoCountry, ping.getLocale, ping.meta.appName, ping.meta.appVersion, ping.getOsName,
                 ping.getOsVersion, ping.payload.sessionId, ping.payload.subsessionId, ping.sessionStartAsTimestamp,
                 experiments, e.timestamp, e.category, e.method, e.`object`, e.value,
-                GCPMapValue.mapToGCP(extra.getOrElse(Map.empty[String, String])), process)
+                GCPMapValue.mapToGCP(extra.getOrElse(Map.empty[String, String])), process, "event")
             }
           }
         }
