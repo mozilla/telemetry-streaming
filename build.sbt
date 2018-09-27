@@ -43,7 +43,8 @@ lazy val root = (project in file(".")).
     libraryDependencies += "io.findify" %% "s3mock" % "0.2.5" % Test,
     libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.11.+" % "provided",
     libraryDependencies += "com.lihaoyi" %% "pprint" % "0.5.3",
-    libraryDependencies += "com.google.cloud" % "google-cloud-pubsub" % "1.40.0"
+    libraryDependencies += "com.google.cloud" % "google-cloud-pubsub" % "1.40.0",
+    dependencyOverrides += "com.google.guava" % "guava" % "26.0-jre"
   )
 
 // Setup docker task
