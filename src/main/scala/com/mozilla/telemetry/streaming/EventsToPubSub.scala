@@ -75,7 +75,6 @@ object EventsToPubSub extends StreamingJobBase {
     val writer = new EventPubSubTopicSink(opts.gcpProjectName(), opts.pubsubTopicName())
 
     explodeEvents(pings.select("value"))
-      .repartition(1)
       .writeStream
       .queryName(QueryName)
       .foreach(writer)
