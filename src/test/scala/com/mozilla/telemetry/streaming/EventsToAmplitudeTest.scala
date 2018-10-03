@@ -395,6 +395,7 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   "Schema configs" should "validate against meta-schema" in {
+    EventsToAmplitude.readConfigFile("configs/rocket_android_events_schemas.json")
     EventsToAmplitude.readConfigFile("configs/focus_android_events_schemas.json")
     EventsToAmplitude.readConfigFile("configs/desktop_savant_events_schemas.json")
     EventsToAmplitude.readConfigFile("configs/devtools_prerelease_schemas.json")
