@@ -13,6 +13,8 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.rogach.scallop.ScallopOption
 
 object ExperimentEnrollmentsAggregator extends StreamingJobBase {
+  override val JobName: String = "experiment_enrollments_aggregator"
+
   override val outputPrefix = "experiment_enrollments/v1"
 
   val kafkaCacheMaxCapacity = 100

@@ -23,6 +23,11 @@ abstract class StreamingJobBase extends Serializable {
   val QueryName: String = "main_query"
 
   /**
+    * Abstract job name must be defined in concrete children
+    */
+  val JobName: String
+
+  /**
     * S3 output prefix with version number
     */
   val outputPrefix: String = ""
@@ -69,7 +74,7 @@ abstract class StreamingJobBase extends Serializable {
       "checkpointPath",
       descr = "Checkpoint path (streaming mode only)",
       required = false,
-      default = Some("/tmp/checkpoint"))
+      default = Some(s"/tmp/checkpoints/$JobName"))
     val from: ScallopOption[String] = opt[String](
       "from",
       descr = "Start submission date (batch mode only). Format: YYYYMMDD",

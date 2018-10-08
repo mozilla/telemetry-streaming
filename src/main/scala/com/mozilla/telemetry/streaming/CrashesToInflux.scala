@@ -6,6 +6,7 @@ package com.mozilla.telemetry.streaming
 import com.mozilla.telemetry.sinks.{CrashesBatchHttpSink, HttpSink}
 
 object CrashesToInflux extends CrashPingStreamingBase {
+  override val JobName: String = "crahses_to_influx"
 
   override val sparkAppName: String = this.getClass.getSimpleName
 
