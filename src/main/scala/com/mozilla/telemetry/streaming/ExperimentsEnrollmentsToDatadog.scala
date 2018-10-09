@@ -13,6 +13,8 @@ import org.rogach.scallop.ScallopOption
 
 
 object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
+  override val JobName: String = "experiment_enrollments_to_datadog"
+
   val kafkaCacheMaxCapacity = 100
 
   private val allowedDocTypes = List("main", "event")

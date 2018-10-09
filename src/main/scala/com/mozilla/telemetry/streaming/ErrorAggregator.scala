@@ -10,6 +10,7 @@ import org.apache.spark.sql.types.StructType
 
 object ErrorAggregator extends ErrorAggregatorBase {
 
+  override val JobName: String = "error_aggregator"
 
   override val outputPrefix = "error_aggregator/v2"
 

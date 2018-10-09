@@ -6,6 +6,7 @@ package com.mozilla.telemetry.streaming
 import com.mozilla.telemetry.sinks.{CrashesBatchHttpSink, HttpSink}
 
 object CrashesToOpenTsdb extends CrashPingStreamingBase {
+  override val JobName: String = "crashes_to_opentsdb"
 
   override val sparkAppName: String = this.getClass.getSimpleName
 

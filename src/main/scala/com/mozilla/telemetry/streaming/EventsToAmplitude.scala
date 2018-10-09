@@ -37,6 +37,8 @@ import scala.io.Source
  */
 object EventsToAmplitude extends StreamingJobBase {
 
+  override val JobName: String = "events_to_amplitude"
+
   val log: org.apache.log4j.Logger = org.apache.log4j.LogManager.getLogger(this.getClass.getName)
 
   val AMPLITUDE_API_KEY_KEY = "AMPLITUDE_API_KEY"
