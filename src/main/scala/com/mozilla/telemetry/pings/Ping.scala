@@ -396,7 +396,14 @@ trait SendsToAmplitude {
 object SendsToAmplitude {
   def apply(message: Message): SendsToAmplitude = {
     message.fieldsAsMap.get("docType") match {
-      case Some("focus-event") => FocusEventPing(message)
+      case Some("focus-event") => {
+        message.fieldsAsMap.get("appName") match {
+          case Some("Focus") => FocusEventPing(message)
+          case Some("Zerda") => RocketEventPing(message)
+          case Some(x) => throw new IllegalArgumentException(s"Expect Focus or Zerda for focus-event, but we got $x")
+          case _ => throw new IllegalArgumentException(s"No App Name found for focus-event")
+        }
+      }
       case Some("main") => MainPing(message)
       case Some("event") => EventPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
