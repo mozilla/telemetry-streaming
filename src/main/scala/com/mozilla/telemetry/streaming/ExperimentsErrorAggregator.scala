@@ -9,6 +9,7 @@ import com.mozilla.telemetry.timeseries.SchemaBuilder
 import org.apache.spark.sql.types.StructType
 
 object ExperimentsErrorAggregator extends ErrorAggregatorBase {
+  override val JobName: String = "expeirments_error_aggregator"
 
   override val outputPrefix = "experiment_error_aggregates/v1"
 

@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.sinks
 
-import org.apache.spark.sql.ForeachWriter
+import org.apache.spark.metrics.source.custom.AccumulatorMetricsSource
+import org.apache.spark.sql.{ForeachWriter, SparkSession}
+import org.apache.spark.util.LongAccumulator
 import scalaj.http.{Http, HttpRequest}
 
 import scala.annotation.tailrec
@@ -12,6 +14,12 @@ import scala.util.{Failure, Success, Try}
 
 object HttpSink {
 
+  /**
+    * Configuration options for HttpSink subclasses.
+    *
+    * These could all be constructor parameters, but we use a separate case class instead to
+    * avoid having to duplicate and keep the parameter list in sync across many subclasses.
+    */
   case class Config(
     maxAttempts: Int = 5,
     defaultDelayMillis: Int = 500,
@@ -19,9 +27,64 @@ object HttpSink {
     connectionTimeoutMillis: Int = 2000,
     readTimeoutMillis: Int = 5000,
     successCodes: Set[Int] = Set(OK),
-    retryCodes: Set[Int] = RetryCodes
-  )
+    retryCodes: Set[Int] = RetryCodes,
+    metrics: Option[Metrics] = None
+  ) {
+    /** Return a copy of this config with HttpSink metrics enabled. */
+    def withMetrics(implicit spark: SparkSession): Config = {
+      val source = new AccumulatorMetricsSource("HttpSink")
+      val config = this.withMetrics(source)(spark)
+      source.start()
+      config
+    }
 
+    /** Return a copy of this config with HttpSink metrics enabled, registering accumulators with the given source. */
+    def withMetrics(source: AccumulatorMetricsSource)(implicit spark: SparkSession): Config = {
+      require(this.metrics.isEmpty, "Metrics are already enabled for this HttpSink.Config")
+      val metrics = Metrics.registeredTo(source)
+      this.copy(metrics = Option(metrics))
+    }
+
+    /** If metrics are enabled for this config, add 1 on the target accumulator. */
+    def mark(f: Metrics => LongAccumulator): Unit = {
+      metrics.map(f).foreach(_.add(1L))
+    }
+  }
+
+  object Metrics {
+    /**
+      * Factory method that creates a Metrics instance, registering each accumulator with
+      * the given metrics source.
+      */
+    def registeredTo(source: AccumulatorMetricsSource)(implicit spark: SparkSession): Metrics = {
+      def metric(name: String): LongAccumulator = {
+        val acc = spark.sparkContext.longAccumulator(name)
+        source.registerAccumulator(acc)
+        acc
+      }
+
+      Metrics(
+        error = metric("error"),
+        success = metric("success"),
+        payloadTooLarge = metric("payload-too-large"),
+        retry = metric("retry"),
+        dropped = metric("dropped"))
+    }
+  }
+
+  /**
+    * A container for accumulators tracking HTTP response code rates.
+    *
+    * We separate these to a separate class because a SparkContext is needed for registering
+    * these accumulators. By keeping the accumulators out of the base HttpSink class, it remains
+    * testable without a SparkContext in the case that metrics are not enabled.
+    */
+  case class Metrics(
+    error: LongAccumulator,
+    success: LongAccumulator,
+    payloadTooLarge: LongAccumulator,
+    retry: LongAccumulator,
+    dropped: LongAccumulator)
   val TimeoutPseudoCode: Int = -1
   val ErrorPseudoCode: Int = -2
   val OK = 200
@@ -48,7 +111,7 @@ object HttpSink {
   *
   * @tparam T type of the values passed in to httpSendMethod
   */
-abstract class HttpSink[T]() extends ForeachWriter[T] {
+abstract class HttpSink[T] extends ForeachWriter[T] {
 
   // Classes should implement these as vals in the constructor.
   val url: String
@@ -111,14 +174,23 @@ abstract class HttpSink[T]() extends ForeachWriter[T] {
     }
 
     code match {
-      case ErrorPseudoCode => // pass; nothing more we can do to fix the problem.
-      case _ if config.successCodes.contains(code) => // pass; our work here is done.
-      case PayloadTooLarge => handlePayloadTooLarge(value)
+      case ErrorPseudoCode =>
+        config.mark(_.error)
+        // nothing more to do; this is a problem we can't fix.
+      case _ if config.successCodes.contains(code) =>
+        config.mark(_.success)
+        // nothing more to do; we succeeded!
+      case PayloadTooLarge =>
+        config.mark(_.payloadTooLarge)
+        handlePayloadTooLarge(value)
       case _ if nextTry < config.maxAttempts && config.retryCodes.contains(code) =>
+        config.mark(_.retry)
         attempt(value, request, nextTry)
       case _ =>
         val body = response.map(": " + _.body).getOrElse("")
         log.warn(s"Dropping request that failed with last status code `$code' $body")
+        config.mark(_.dropped)
     }
   }
+
 }

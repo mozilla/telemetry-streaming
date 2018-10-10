@@ -16,6 +16,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 class CrashPingStreamingBaseTest extends FlatSpec with Matchers with BeforeAndAfterEach with DataFrameSuiteBase {
 
   private val CrashPingStreaming = new CrashPingStreamingBase {
+    override val JobName: String = "crash_ping_streaming_test"
     override val sparkAppName: String = "CrashPingStreaming"
 
     override def buildOutputString(measurementName: String, timestamp: Long, buildId: String, tags: Map[String, String]): String = {

@@ -16,6 +16,7 @@ import org.json4s.jackson.Serialization
 import org.rogach.scallop.ScallopOption
 
 object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
+  override val JobName: String = "experiment_enrollments_to_test_tube"
   val MaxParalellRequests = 10
   val kafkaCacheMaxCapacity = 100
 

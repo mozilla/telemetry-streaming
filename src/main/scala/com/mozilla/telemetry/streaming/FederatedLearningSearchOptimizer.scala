@@ -18,6 +18,7 @@ import com.mozilla.telemetry.util.PrettyPrint
 import scala.collection.mutable
 
 object FederatedLearningSearchOptimizer extends StreamingJobBase {
+  override val JobName: String = "federated_learning_search_optimizer"
 
   def main(args: Array[String]): Unit = {
     val opts = new Opts(args)

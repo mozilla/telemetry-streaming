@@ -76,14 +76,14 @@ class AccumulatorMetricsSourceTest extends FlatSpec with Matchers with BeforeAnd
   }
 
   override protected def beforeEach(): Unit = {
-    super.beforeEach()
     cleanupTestDirectories()
     Files.createDirectories(Paths.get(MetricsOutputDir))
+    super.beforeEach()
   }
 
   override protected def afterEach(): Unit = {
-    super.afterEach()
-    cleanupTestDirectories()
+    try super.afterEach()
+    finally cleanupTestDirectories()
   }
 
   private def cleanupTestDirectories(): Unit = {

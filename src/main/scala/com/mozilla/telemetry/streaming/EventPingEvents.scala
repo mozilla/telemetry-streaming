@@ -10,6 +10,9 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.rogach.scallop.ScallopOption
 
 object EventPingEvents extends StreamingJobBase {
+
+  override val JobName: String = "event_ping_events"
+
   override val outputPrefix = "events/v1"
 
   val kafkaCacheMaxCapacity = 10
