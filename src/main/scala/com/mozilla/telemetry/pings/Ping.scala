@@ -169,6 +169,11 @@ case class Meta(Host: Option[String],
   def normalizedTimestamp(): Timestamp = {
     new Timestamp(this.Timestamp / 1000000)
   }
+
+  // Bug 1507238: don't forget to map to an int before converting to a string or we'll end up with `42.0`
+  def stringSampleId: Option[String] = {
+    sampleId.map(_.toInt.toString())
+  }
 }
 
 object Meta {

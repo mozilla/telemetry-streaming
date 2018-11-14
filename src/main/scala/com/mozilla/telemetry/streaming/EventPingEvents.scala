@@ -128,7 +128,7 @@ object EventPingEvents extends StreamingJobBase {
               EventRow(ping.meta.documentId.get, ping.meta.clientId.get, ping.meta.normalizedChannel, ping.meta.geoCountry,
                 ping.getLocale, ping.meta.appName, ping.meta.appVersion, ping.getOsName, ping.getOsVersion,
                 ping.payload.sessionId, ping.payload.subsessionId, ping.sessionStart,
-                (ping.meta.Timestamp / 1e9).toLong, ping.meta.sampleId.map(_.toString), ping.getMSStyleExperiments,
+                (ping.meta.Timestamp / 1e9).toLong, ping.meta.stringSampleId, ping.getMSStyleExperiments,
                 e.timestamp, e.category, e.method, e.`object`, e.value, extra, process)
             }
           }
