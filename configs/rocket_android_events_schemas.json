@@ -102,84 +102,6 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": " App is started by intent", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "intent_url"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "app"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Text Selection", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "text_selection_intent"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "app"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
                     "name": " App is launched by Launcher", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
@@ -274,101 +196,7 @@
                         "type": "extra.type"
                     }, 
                     "description": "", 
-                    "name": " App is launched by text_selection", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "launch"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "app"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "external_app"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "type": "extra.type"
-                    }, 
-                    "description": "", 
-                    "name": " App is launched by Web Search", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "launch"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "app"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "external_app"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " App is Launched by other Apps", 
+                    "name": " App is launched by external app", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -559,7 +387,7 @@
                         "to": "extra.to"
                     }, 
                     "description": "", 
-                    "name": " Users clicked on the Learn More link in Settings", 
+                    "name": " Users change Locale in Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1127,9 +955,7 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "value": "value"
-                    }, 
+                    "amplitudeProperties": {}, 
                     "description": "", 
                     "name": " Permission-Media", 
                     "schema": {
@@ -1828,6 +1654,54 @@
                         "to": "extra.to"
                     }, 
                     "description": "", 
+                    "name": " Click Menu - Night Mode", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "change"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "menu"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "night_mode"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "to": "extra.to"
+                    }, 
+                    "description": "", 
                     "name": " Click Menu - Block Images", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
@@ -2290,7 +2164,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version", 
+                        "category_versio": "extra.category_versio", 
                         "version": "extra.version"
                     }, 
                     "description": "", 
@@ -2604,9 +2478,7 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "value": "value"
-                    }, 
+                    "amplitudeProperties": {}, 
                     "description": "", 
                     "name": " Toggle Private Mode", 
                     "schema": {
@@ -2692,7 +2564,9 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Clear SearchBar", 
                     "schema": {
@@ -2731,7 +2605,9 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Dismiss SearchBar", 
                     "schema": {
@@ -3786,7 +3662,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version"
+                        "category_versio": "extra.category_versio"
                     }, 
                     "description": "", 
                     "name": " Open Capture Link", 
@@ -3835,7 +3711,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version", 
+                        "category_versio": "extra.category_versio", 
                         "success": "extra.success"
                     }, 
                     "description": "", 
@@ -3885,7 +3761,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version", 
+                        "category_versio": "extra.category_versio", 
                         "snackbar": "extra.snackbar"
                     }, 
                     "description": "", 
@@ -3935,7 +3811,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version"
+                        "category_versio": "extra.category_versio"
                     }, 
                     "description": "", 
                     "name": " Show Capture Info", 
@@ -3984,7 +3860,7 @@
                 {
                     "amplitudeProperties": {
                         "category": "extra.category", 
-                        "category_version": "extra.category_version"
+                        "category_versio": "extra.category_versio"
                     }, 
                     "description": "", 
                     "name": " Delete Capture Image", 
@@ -4032,11 +3908,10 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "value": "value"
+                        "source": "extra.source"
                     }, 
                     "description": "", 
-                    "name": " Delete Capture Image", 
+                    "name": " click Rate App", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -4064,6 +3939,7 @@
                             }, 
                             "value": {
                                 "enum": [
+                                    null, 
                                     "dismiss", 
                                     "positive", 
                                     "negative"
@@ -4082,50 +3958,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Show Feedback Dialog", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "feedback"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
                     "amplitudeProperties": {
                         "source": "extra.source"
                     }, 
                     "description": "", 
-                    "name": " Show Rate AppNotification", 
+                    "name": " Show Rate App", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -4157,57 +3994,6 @@
                             "timestamp", 
                             "object", 
                             "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "value": "value"
-                    }, 
-                    "description": "", 
-                    "name": " Click Rate AppNotification", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "feedback"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "null", 
-                                    "positive", 
-                                    "negative"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
                         ], 
                         "type": "object"
                     }
@@ -4338,8 +4124,7 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "value": "value"
+                        "source": "extra.source"
                     }, 
                     "description": "", 
                     "name": " Promote Share Dialog Clicked", 
@@ -4741,104 +4526,6 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "value": "value"
-                    }, 
-                    "description": "", 
-                    "name": " Click Wifi Finder Survey Feedback", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "doorhanger"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "negative", 
-                                    "positive"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Dismiss Wifi Finder Survey Feedback", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "doorhanger"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "dismiss"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
                     "amplitudeProperties": {}, 
                     "description": "", 
                     "name": " Click VPN Survey", 
@@ -4886,11 +4573,10 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "value": "value"
+                        "source": "extra.source"
                     }, 
                     "description": "", 
-                    "name": " Click VPN Survey Feedback", 
+                    "name": " Survey Result", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -4919,7 +4605,8 @@
                             "value": {
                                 "enum": [
                                     "negative", 
-                                    "positive"
+                                    "positive", 
+                                    "dismiss"
                                 ], 
                                 "type": "string"
                             }
@@ -4935,11 +4622,55 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "source": "extra.source"
-                    }, 
+                    "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": " Dismiss VPN Survey", 
+                    "name": " Show VPN Recommend", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "vpn_recommend"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click VPN Recommend", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -4957,7 +4688,100 @@
                             }, 
                             "object": {
                                 "enum": [
-                                    "doorhanger"
+                                    "home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "vpn_recommend"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click VPN Recommend", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "vpn_doorhanger"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "negative", 
+                                    "positive"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Dismiss VPN Recommend", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "vpn_doorhanger"
                                 ], 
                                 "type": "string"
                             }, 
@@ -4984,10 +4808,11 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source"
+                        "source": "extra.source", 
+                        "version": "extra.version"
                     }, 
                     "description": "", 
-                    "name": " Cancel FindInPage - others", 
+                    "name": " Cancel FindInPage", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -5025,90 +4850,10 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source"
+                        "version": "extra.version"
                     }, 
                     "description": "", 
-                    "name": " Cancel FindInPage using close button", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "cancel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "find_in_page"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Cancel FindInPage using back button", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "cancel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "find_in_page"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click FindInPage Previous", 
+                    "name": " Click FindInPage Next", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -5152,7 +4897,9 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click FindInPage Previous", 
                     "schema": {
@@ -5198,7 +4945,9 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click Menu FindInPage", 
                     "schema": {
