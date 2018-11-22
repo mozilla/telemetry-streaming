@@ -191,18 +191,18 @@ case class EnvironmentBuild(version: Option[String],
 case class System(os: SystemOs, isWow64: Option[Boolean], memoryMB: Option[Double])
 
 case class SystemOs(name: String, version: String) {
-  val normalizedVersion: String = OS(Option(name), Option(version)).normalizedVersion
+  val normalizedVersion: Option[String] = OS(Option(name), Option(version)).normalizedVersion
 }
 
 case class OS(name: Option[String], version: Option[String]) {
   val versionRegex = "(\\d+(\\.\\d+)?(\\.\\d+)?)?.*".r
-  val normalizedVersion: String = {
+  val normalizedVersion: Option[String] = {
     version match {
       case Some(v) =>
         val versionRegex(normalized, _, _) = v
-        normalized
+        Option(normalized)
       case None =>
-        null
+        None
     }
   }
 }
@@ -263,7 +263,7 @@ trait HasEnvironment {
 
   override def getOsName: Option[String] = meta.`environment.system`.map(_.os.name)
 
-  override def getOsVersion: Option[String] = meta.`environment.system`.map(_.os.normalizedVersion)
+  override def getOsVersion: Option[String] = meta.`environment.system`.flatMap(_.os.normalizedVersion)
 
   override def getArchitecture: Option[String] = meta.`environment.build`.flatMap(_.architecture)
 
