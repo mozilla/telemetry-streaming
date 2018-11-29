@@ -2,7 +2,6 @@
   "source": "telemetry",
   "filters": {
     "docType": [
-      "main",
       "event"
     ],
     "appName": [
