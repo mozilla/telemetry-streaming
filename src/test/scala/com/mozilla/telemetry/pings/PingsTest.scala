@@ -107,16 +107,16 @@ class PingsTest extends FlatSpec with Matchers{
   }
 
   "An OS instance" should "normalize the version" in {
-    OS(Some("linux"), Some("1.1.1-ignore")).normalizedVersion should be ("1.1.1")
-    OS(Some("linux"), Some("1.1.1ignore")).normalizedVersion should be ("1.1.1")
-    OS(Some("linux"), Some("1.1")).normalizedVersion should be ("1.1")
-    OS(Some("linux"), Some("1.1-ignore")).normalizedVersion should be ("1.1")
-    OS(Some("linux"), Some("1.1ignore")).normalizedVersion should be ("1.1")
-    OS(Some("linux"), Some("1")).normalizedVersion should be ("1")
-    OS(Some("linux"), Some("1-ignore")).normalizedVersion should be ("1")
-    OS(Some("linux"), Some("1ignore")).normalizedVersion should be ("1")
-    OS(Some("linux"), Some("non-numeric")).normalizedVersion should be (null)
-    OS(Some("linux"), Some("nonnumeric1.1")).normalizedVersion should be (null)
+    OS(Some("linux"), Some("1.1.1-ignore")).normalizedVersion shouldBe Some("1.1.1")
+    OS(Some("linux"), Some("1.1.1ignore")).normalizedVersion shouldBe Some("1.1.1")
+    OS(Some("linux"), Some("1.1")).normalizedVersion shouldBe Some("1.1")
+    OS(Some("linux"), Some("1.1-ignore")).normalizedVersion shouldBe Some("1.1")
+    OS(Some("linux"), Some("1.1ignore")).normalizedVersion shouldBe Some("1.1")
+    OS(Some("linux"), Some("1")).normalizedVersion shouldBe Some("1")
+    OS(Some("linux"), Some("1-ignore")).normalizedVersion shouldBe Some("1")
+    OS(Some("linux"), Some("1ignore")).normalizedVersion shouldBe Some("1")
+    OS(Some("linux"), Some("non-numeric")).normalizedVersion shouldBe None
+    OS(Some("linux"), Some("nonnumeric1.1")).normalizedVersion shouldBe None
   }
 
   "Main Ping" can "read events" in {

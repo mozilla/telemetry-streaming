@@ -398,7 +398,8 @@ class EventsToAmplitudeTest extends FlatSpec with Matchers with BeforeAndAfterAl
     EventsToAmplitude.readConfigFile("configs/rocket_android_events_schemas.json")
     EventsToAmplitude.readConfigFile("configs/focus_android_events_schemas.json")
     EventsToAmplitude.readConfigFile("configs/desktop_savant_events_schemas.json")
-    EventsToAmplitude.readConfigFile("configs/devtools_events_schemas.json")
+    EventsToAmplitude.readConfigFile("configs/devtools_prerelease_schemas.json")
+    EventsToAmplitude.readConfigFile("configs/devtools_release_schemas.json")
   }
 }
 
