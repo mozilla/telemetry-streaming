@@ -95,6 +95,11 @@ object EventsToAmplitude extends StreamingJobBase {
       descr = "Max number of parallel requests in batch mode",
       required = false,
       default = Some(100))
+    val skipCountLog: ScallopOption[Boolean] = opt[Boolean](
+      descr = "Skips log line counting pings when large numbers of pings match",
+      required = false,
+      default = Some(false)
+    )
 
     conflicts(kafkaBroker, List(from, to, fileLimit, minDelay, maxParallelRequests))
     validateOpt (sample) {
@@ -255,7 +260,7 @@ object EventsToAmplitude extends StreamingJobBase {
           }
         }.where("submissionDate") {
           case date if date == currentDate => true
-        }.records(opts.fileLimit.get, Some(maxParallelRequests))
+        }.records(opts.fileLimit.get, Some(maxParallelRequests * 10))
          .map(m => Row(m.toByteArray))
 
       val schema = StructType(List(
@@ -264,7 +269,9 @@ object EventsToAmplitude extends StreamingJobBase {
 
       val pingsDataFrame = spark.createDataFrame(pings, schema)
 
-      log.info(s"Processing events for ${pingsDataFrame.count()} pings on $currentDate")
+      if (!opts.skipCountLog()) {
+        log.info(s"Processing events for ${pingsDataFrame.count()} pings on $currentDate")
+      }
 
       import spark.implicits._
 
