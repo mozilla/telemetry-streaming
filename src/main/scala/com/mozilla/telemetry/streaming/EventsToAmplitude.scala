@@ -95,6 +95,10 @@ object EventsToAmplitude extends StreamingJobBase {
       descr = "Max number of parallel requests in batch mode",
       required = false,
       default = Some(100))
+    val partitionMultiplier: ScallopOption[Int] = opt[Int](
+      descr = "In batch mode, pings will be packed into maxParallelRequests * multiplier partitions",
+      required = false,
+      default = Some(1))
 
     conflicts(kafkaBroker, List(from, to, fileLimit, minDelay, maxParallelRequests))
     validateOpt (sample) {
@@ -234,6 +238,7 @@ object EventsToAmplitude extends StreamingJobBase {
     val config = readConfigFile(opts.configFilePath())
 
     val maxParallelRequests = opts.maxParallelRequests()
+    val partitionMultiplier = opts.partitionMultiplier()
 
     implicit val sc = spark.sparkContext
 
@@ -255,7 +260,7 @@ object EventsToAmplitude extends StreamingJobBase {
           }
         }.where("submissionDate") {
           case date if date == currentDate => true
-        }.records(opts.fileLimit.get, Some(maxParallelRequests))
+        }.records(opts.fileLimit.get, Some(maxParallelRequests * partitionMultiplier))
          .map(m => Row(m.toByteArray))
 
       val schema = StructType(List(
