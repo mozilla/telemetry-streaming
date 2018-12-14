@@ -11,7 +11,20 @@ Mozilla.
 
 ## Issue Tracking
 
-Please file bugs in the [Datasets: Error Aggregates](https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=Datasets%3A%20Error%20Aggregates) component.
+Please file bugs related to the error aggregates streaming job in the
+[Datasets: Error Aggregates](https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=Datasets%3A%20Error%20Aggregates) component.
+
+## Deployment
+
+The jobs defined in this repository are generally deployed as streaming jobs within
+[our hosted Databricks account](https://docs.telemetry.mozilla.org/concepts/pipeline/data_pipeline_detail.html?highlight=databricks#databricks-managed-spark-analysis),
+but some are deployed as periodic batch jobs via Airflow
+using wrappers codified in
+[telemetry-airflow](https://github.com/mozilla/telemetry-airflow)
+that spin up EMR clusters whose configuration is governed by
+[emr-bootstrap-spark](https://github.com/mozilla/emr-bootstrap-spark/).
+Changes in production behavior that don't seem to correspond to changes
+in this repository's code could be related to changes in those other projects.
 
 ## Amplitude Event Configuration
 
