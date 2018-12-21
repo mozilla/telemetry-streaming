@@ -1,3 +1,6 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package com.mozilla.telemetry
 
 import java.sql.{Date, Timestamp}
@@ -14,6 +17,8 @@ package object timeseries {
       typeOf[T] match {
         case t if t =:= typeOf[String] =>
           fields += StructField (name, StringType, true)
+        case t if t =:= typeOf[Boolean] =>
+          fields += StructField (name, BooleanType, true)
         case t if t =:= typeOf[Float] =>
           fields += StructField (name, FloatType, true)
         case t if t =:= typeOf[Double] =>
@@ -37,7 +42,8 @@ package object timeseries {
   }
 
   object SchemaBuilder {
-    def merge(x: StructType, y: StructType): StructType = StructType(x.fields ++ y.fields)
+    def merge(x: StructType, y: StructType*): StructType =
+      y.foldLeft(x)((acc, curr) => {StructType(acc.fields ++ curr.fields)})
   }
 
   class RowBuilder(schema: StructType) extends Serializable {
