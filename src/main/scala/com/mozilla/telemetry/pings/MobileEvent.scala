@@ -39,24 +39,24 @@ case class MobileEventPing(arch: String,
     ("arch" -> arch) ~
     ("locale" -> locale) ~
     ("user_properties" ->
-      ("pref_defaultSearchEngine" -> settings.defaultSearchEngine) ~
-      ("pref_prefKeyAutomaticSliderValue" -> settings.prefKeyAutomaticSliderValue) ~
-      ("pref_prefKeyAutomaticSwitchOnOff" -> settings.prefKeyAutomaticSwitchOnOff) ~
-      ("pref_prefKeyThemeName" -> settings.prefKeyThemeName) ~
-      ("pref_profile.ASBookmarkHighlightsVisible" -> settings.`profile.ASBookmarkHighlightsVisible`.asBool) ~
-      ("pref_profile.ASPocketStoriesVisible" -> settings.`profile.ASPocketStoriesVisible`.asBool) ~
-      ("pref_profile.ASRecentHighlightsVisible" -> settings.`profile.ASRecentHighlightsVisible`.asBool) ~
-      ("pref_profile.blockPopups" -> settings.`profile.blockPopups`.asBool) ~
-      ("pref_profile.prefkey.trackingprotection.enabled" -> settings.`profile.prefkey.trackingprotection.enabled`) ~
-      ("pref_profile.prefkey.trackingprotection.normalbrowsing" -> settings.`profile.prefkey.trackingprotection.normalbrowsing`) ~
-      ("pref_profile.prefkey.trackingprotection.privatebrowsing" -> settings.`profile.prefkey.trackingprotection.privatebrowsing`) ~
-      ("pref_profile.prefkey.trackingprotection.strength" -> settings.`profile.prefkey.trackingprotection.strength`) ~
-      ("pref_profile.saveLogins" -> settings.`profile.saveLogins`.asBool) ~
-      ("pref_profile.settings.closePrivateTabs" -> settings.`profile.settings.closePrivateTabs`.asBool) ~
-      ("pref_profile.show-translation" -> settings.`profile.show-translation`.asBool) ~
-      ("pref_profile.showClipboardBar" -> settings.`profile.showClipboardBar`.asBool) ~
-      ("pref_windowHeight" -> settings.windowHeight) ~
-      ("pref_windowWidth" -> settings.windowWidth))
+      ("pref_default_search_engine" -> settings.defaultSearchEngine) ~
+      ("pref_automatic_slider_value" -> settings.prefKeyAutomaticSliderValue) ~
+      ("pref_automatic_switch_on_off" -> settings.prefKeyAutomaticSwitchOnOff) ~
+      ("pref_theme_name" -> settings.prefKeyThemeName) ~
+      ("pref_activity_stream_bookmark_highlights_visible" -> settings.`profile.ASBookmarkHighlightsVisible`.asBool) ~
+      ("pref_activity_stream_pocket_stories_visible" -> settings.`profile.ASPocketStoriesVisible`.asBool) ~
+      ("pref_activity_stream_recent_highlights_visible" -> settings.`profile.ASRecentHighlightsVisible`.asBool) ~
+      ("pref_block_popups" -> settings.`profile.blockPopups`.asBool) ~
+      ("pref_tracking_protection_enabled" -> settings.`profile.prefkey.trackingprotection.enabled`) ~
+      ("pref_tracking_protection_normal_browsing" -> settings.`profile.prefkey.trackingprotection.normalbrowsing`) ~
+      ("pref_tracking_protection_private_browsing" -> settings.`profile.prefkey.trackingprotection.privatebrowsing`) ~
+      ("pref_tracking_protection_strength" -> settings.`profile.prefkey.trackingprotection.strength`) ~
+      ("pref_save_logins" -> settings.`profile.saveLogins`.asBool) ~
+      ("pref_settings_close_private_tabs" -> settings.`profile.settings.closePrivateTabs`.asBool) ~
+      ("pref_show_translation" -> settings.`profile.show-translation`.asBool) ~
+      ("pref_show_clipboard_bar" -> settings.`profile.showClipboardBar`.asBool) ~
+      ("pref_window_height" -> settings.windowHeight) ~
+      ("pref_window_width" -> settings.windowWidth))
   }
 }
 
