@@ -1387,7 +1387,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping Website Data in Data Management Menu", 
+                    "name": "Tap Website Data in Data Management Menu", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1426,7 +1426,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping on the Search Bar in Website Data", 
+                    "name": "Tap on the Search Bar in Website Data", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1465,7 +1465,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping on 'Clear All Website Data' button in Website Data", 
+                    "name": "Tap on 'Clear All Website Data' button in Website Data", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1504,7 +1504,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping Top Sites button in New Tab Settings", 
+                    "name": "Tap Top Sites button in New Tab Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1543,7 +1543,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping Blank Page button in New Tab Settings", 
+                    "name": "Tap Blank Page button in New Tab Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1582,7 +1582,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping Bookmarks button in New Tab Settings", 
+                    "name": "Tap Bookmarks button in New Tab Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1621,7 +1621,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping History button in New Tab Settings", 
+                    "name": "Tap History button in New Tab Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
@@ -1660,7 +1660,7 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
-                    "name": "Tapping Homepage button in New Tab Settings", 
+                    "name": "Tap Homepage button in New Tab Settings", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
                         "properties": {
