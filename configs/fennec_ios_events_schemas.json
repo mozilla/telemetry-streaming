@@ -1786,8 +1786,7 @@
     ], 
     "filters": {
         "appName": [
-            "Fennec", 
-            "OTHER"
+            "Fennec"
         ], 
         "docType": [
             "mobile-event"
