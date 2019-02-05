@@ -404,6 +404,7 @@ object SendsToAmplitude {
           case _ => throw new IllegalArgumentException(s"No App Name found for focus-event")
         }
       }
+      case Some("mobile-event") => MobileEventPing(message)
       case Some("main") => MainPing(message)
       case Some("event") => EventPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
