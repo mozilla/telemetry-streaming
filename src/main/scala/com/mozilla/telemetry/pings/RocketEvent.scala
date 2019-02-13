@@ -32,13 +32,13 @@ case class RocketEventPing(clientId: String,
   override def pingAmplitudeProperties: JObject = {
     ("device_id" -> getClientId) ~
     ("user_properties" ->
-      ("pref_search_engine" -> settings.searchEngine) ~
+      ("pref_search_engine" -> settings.pref_search_engine) ~
       ("pref_privacy_turbo_mode" -> settings.turboMode) ~
       ("pref_performance_block_images" -> settings.blockImage) ~
       ("pref_default_browser" -> settings.defaultBrowser) ~
-      ("pref_save_downloads_to" -> settings.downloadTo) ~
-      ("pref_webview_version" -> settings.webviewVersion) ~
-      ("pref_locale" -> settings.locale))
+      ("pref_save_downloads_to" -> settings.pref_save_downloads_to) ~
+      ("pref_webview_version" -> settings.pref_webview_version) ~
+      ("pref_locale" -> settings.pref_locale))
   }
 }
 
@@ -52,19 +52,11 @@ case class RocketSettings(pref_search_engine: Option[String],
 
   def asBool(param: Option[String]): Option[Boolean] = param.map(_ == "true")
 
-  def searchEngine: Option[Boolean] = asBool(pref_search_engine)
-
   def turboMode: Option[Boolean] = asBool(pref_privacy_turbo_mode)
 
   def blockImage: Option[Boolean] = asBool(pref_performance_block_images)
 
   def defaultBrowser: Option[Boolean] = asBool(pref_default_browser)
-
-  def downloadTo: Option[Boolean] = asBool(pref_save_downloads_to)
-
-  def webviewVersion: Option[Boolean] = asBool(pref_webview_version)
-
-  def locale: Option[Boolean] = asBool(pref_locale)
 
 }
 
