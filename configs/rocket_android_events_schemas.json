@@ -2878,6 +2878,52 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
+                    "name": " Enter Private Mode from TabTray", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "private_mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_tray"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
                     "name": " Switch Tab From TabTray", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
@@ -4334,6 +4380,237 @@
                     }
                 }, 
                 {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Home Impression", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "to": "extra.to"
+                    }, 
+                    "description": "", 
+                    "name": " Banner Impression: new", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "banner"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "new"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "to": "extra.to"
+                    }, 
+                    "description": "", 
+                    "name": " Banner Impression: update", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "banner"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "update"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "to": "extra.to"
+                    }, 
+                    "description": "", 
+                    "name": " Banner Impression: return", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "banner"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "return"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "to": "extra.to"
+                    }, 
+                    "description": "", 
+                    "name": " Banner Impression: swipe", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "banner"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
                     "amplitudeProperties": {
                         "source": "extra.source"
                     }, 
@@ -4792,6 +5069,52 @@
                             "value": {
                                 "enum": [
                                     "dismiss"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Long Press Toolbar Download Indicator", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "Downloads"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "long_press"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "toolbar"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "download"
                                 ], 
                                 "type": "string"
                             }
