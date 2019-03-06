@@ -19,12 +19,21 @@ object FrecencyUpdatePing {
 }
 
 case class FrecencyUpdatePayload(model_version: Long,
-                                 study_variation: String,
-                                 update: Array[Double],
+                                 frecency_scores: Array[Double],
                                  loss: Double,
-                                 num_chars_typed: Long,
+                                 update: Array[Double],
+                                 num_suggestions_displayed: Long,
                                  rank_selected: Long,
-                                 num_suggestions_displayed: Long)
-
-
-
+                                 bookmark_and_history_num_suggestions_displayed: Long,
+                                 bookmark_and_history_rank_selected: Long,
+                                 num_key_down_events_at_selecteds_first_entry: Long,
+                                 num_key_down_events: Long,
+                                 time_start_interaction: Long,
+                                 time_end_interaction: Long,
+                                 time_at_selecteds_first_entry: Long,
+                                 search_string_length: Long,
+                                 selected_style: String,
+                                 selected_url_was_same_as_search_string: Long,
+                                 enter_was_pressed: Long,
+                                 study_variation: String,
+                                 study_addon_version: String)

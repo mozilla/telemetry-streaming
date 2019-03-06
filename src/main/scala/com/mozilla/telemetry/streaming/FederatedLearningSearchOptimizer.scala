@@ -64,7 +64,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
         val docType = fields.getOrElse("docType", "").asInstanceOf[String]
         if ("frecency-update" == docType) {
           val ping = FrecencyUpdatePing(m)
-          if (ping.payload.study_variation == "treatment") {
+          if ((ping.payload.study_variation contains "training") && (ping.payload.bookmark_and_history_num_suggestions_displayed > 0)) {
             Option(FrecencyUpdate(
               new Timestamp(clock.millis()),
               ping.payload.model_version,
