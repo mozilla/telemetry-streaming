@@ -74,7 +74,9 @@ class FrecencyUpdatePingTest extends FlatSpec with Matchers {
     payload.model_version shouldBe 140
     payload.frecency_scores should contain theSameElementsAs Array(38223.0, 3933.4, 304933.3, 21.0)
     payload.loss shouldBe 291989.21
-    payload.update should contain theSameElementsAs Array(1.2, 3.2, -3.1, 4.4, 0.5, 0.234, -0.98, 0.33, 0.34, 0.28, 0.302, 0.4, -0.8, 0.25, 0.9, -0.8, 0.29, 0.42, 0.89, 0.39, 0.54, 0.78)
+    payload.update should contain theSameElementsAs Array(1.2, 3.2,
+      -3.1, 4.4, 0.5, 0.234, -0.98, 0.33, 0.34, 0.28, 0.302, 0.4,
+      -0.8, 0.25, 0.9, -0.8, 0.29, 0.42, 0.89, 0.39, 0.54, 0.78)
     payload.num_suggestions_displayed shouldBe 1
     payload.rank_selected shouldBe 0
     payload.bookmark_and_history_num_suggestions_displayed shouldBe 1
