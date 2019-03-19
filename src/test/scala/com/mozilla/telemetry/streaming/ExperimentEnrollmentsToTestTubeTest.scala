@@ -33,10 +33,15 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
 
     Given("set of main pings with experiment enrollment events")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
-        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), enroll = true))
-        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, None, enroll = false))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "unenroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), "enroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, None, "unenroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "graduate"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "update"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enrollFailed"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "unenrollFailed"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "updateFailed"))
       ).map(_.toByteArray).seq
 
     val pingsStream = MemoryStream[Array[Byte]]
@@ -49,7 +54,7 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
     query.processAllAvailable()
 
     // send some more data in order to advance watermark and trigger sink commits
-    pingsStream.addData(TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), enroll = true),
+    pingsStream.addData(TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), "enroll"),
       timestamp = Some(TestUtils.testTimestampNano + TimeUnit.MINUTES.toNanos(6))).map(_.toByteArray).seq)
     query.processAllAvailable()
     pingsStream.addData(Array[Byte]())
@@ -67,6 +72,11 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
         |    "type" : "preference_study",
         |    "unenroll_count" : 2,
         |    "enroll_count" : 2,
+        |    "graduate_count" : 2,
+        |    "update_count" : 2,
+        |    "enroll_failed_count" : 2,
+        |    "unenroll_failed_count" : 2,
+        |    "update_failed_count" : 2,
         |    "window_start" : 1460036100000,
         |    "window_end" : 1460036400000,
         |    "submission_date_s3" : "20160407"
@@ -81,6 +91,11 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
         |    "type" : "preference_study",
         |    "enroll_count" : 2,
         |    "unenroll_count" : 0,
+        |    "graduate_count" : 0,
+        |    "update_count" : 0,
+        |    "enroll_failed_count" : 0,
+        |    "unenroll_failed_count" : 0,
+        |    "update_failed_count" : 0,
         |    "window_start" : 1460036100000,
         |    "window_end" : 1460036400000,
         |    "submission_date_s3" : "20160407"
@@ -95,6 +110,11 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
         |    "type" : "preference_study",
         |    "enroll_count" : 0,
         |    "unenroll_count" : 2,
+        |    "graduate_count" : 0,
+        |    "update_count" : 0,
+        |    "enroll_failed_count" : 0,
+        |    "unenroll_failed_count" : 0,
+        |    "update_failed_count" : 0,
         |    "window_start" : 1460036100000,
         |    "window_end" : 1460036400000,
         |    "submission_date_s3" : "20160407"
@@ -107,7 +127,7 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
 
     Given("set of main and event pings with experiment enrollment events")
     val pings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
         ++ TestUtils.generateEventMessages(k)
       ).map(_.toByteArray).seq
 
@@ -120,7 +140,7 @@ class ExperimentEnrollmentsToTestTubeTest extends FlatSpec with Matchers with Gi
     query.processAllAvailable()
 
     // send some more data in order to advance watermark and trigger sink commits
-    pingsStream.addData(TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), enroll = true),
+    pingsStream.addData(TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), "enroll"),
       timestamp = Some(TestUtils.testTimestampNano + TimeUnit.MINUTES.toNanos(6))).map(_.toByteArray).seq)
     query.processAllAvailable()
     pingsStream.addData(Array[Byte]())

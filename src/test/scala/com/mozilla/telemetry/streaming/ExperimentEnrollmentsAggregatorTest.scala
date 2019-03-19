@@ -39,9 +39,9 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("set of main pings with experiment enrollment events")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
-        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), enroll = true))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "unenroll"))
+        ++ TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentB, Some("one"), "enroll"))
       ).map(_.toByteArray).seq
     val pingsDf = spark.createDataset(mainPings).toDF()
 
@@ -71,9 +71,9 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("set of main pings with experiment enrollment events and some unenroll events without the branch")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
-        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = false))
-        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, None, enroll = false))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
+        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "unenroll"))
+        ++ TestUtils.generateMainMessages(k / 2, customPayload = enrollmentEventJson(ExperimentA, None, "unenroll"))
       ).map(_.toByteArray).seq
     val pingsDf = spark.createDataset(mainPings).toDF()
 
@@ -90,7 +90,7 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("a main ping with experiment enrollment events, main pings without events and a crash ping")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
         ++ TestUtils.generateMainMessages(k, customPayload = Some(""" "dynamic": {"events": []} """))
         ++ TestUtils.generateMainMessages(k)
         ++ TestUtils.generateCrashMessages(k)
@@ -110,7 +110,7 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
 
     Given("set of main and event pings with experiment enrollment events")
     val mainPings = (
-      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), enroll = true))
+      TestUtils.generateMainMessages(k, customPayload = enrollmentEventJson(ExperimentA, Some("six"), "enroll"))
         ++ TestUtils.generateEventMessages(k)
       ).map(_.toByteArray).seq
     val pingsDf = spark.createDataset(mainPings).toDF()
@@ -151,14 +151,14 @@ object EnrollmentEvents {
   val ExperimentA = "pref-flip-timer-speed-up-60-1443940"
   val ExperimentB = "pref-flip-search-composition-57-release-1413565"
 
-  def enrollmentEventJson(experiment_id: String, experimentBranch: Option[String], enroll: Boolean): Option[String] = {
+  def enrollmentEventJson(experiment_id: String, experimentBranch: Option[String], method: String): Option[String] = {
     val branchKv = experimentBranch.map(b => s""" "branch": "$b" """).getOrElse("")
     Some(
       s"""
          |"processes": {
          |  "dynamic": {
          |    "events": [
-         |      [554879, "normandy", "${if (enroll) "enroll" else "unenroll"}", "preference_study", "$experiment_id", {$branchKv}]
+         |      [554879, "normandy", "$method", "preference_study", "$experiment_id", {$branchKv}]
          |    ]
          |  }
          |}

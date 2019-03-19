@@ -102,7 +102,12 @@ object ExperimentEnrollmentsToTestTube extends StreamingJobBase {
         $"object", $"experiment_id", $"branch_id", $"submission_date_s3")
       .agg(
         count(when($"method" === "enroll", 1)).alias("enroll_count"),
-        count(when($"method" === "unenroll", 1)).alias("unenroll_count"))
+        count(when($"method" === "unenroll", 1)).alias("unenroll_count"),
+        count(when($"method" === "graduate", 1)).alias("graduate_count"),
+        count(when($"method" === "update", 1)).alias("update_count"),
+        count(when($"method" === "enrollFailed", 1)).alias("enroll_failed_count"),
+        count(when($"method" === "unenrollFailed", 1)).alias("unenroll_failed_count"),
+        count(when($"method" === "updateFailed", 1)).alias("update_failed_count"))
       .withColumn("window_start", $"window.start")
       .withColumn("window_end", $"window.end")
       .drop($"window")
