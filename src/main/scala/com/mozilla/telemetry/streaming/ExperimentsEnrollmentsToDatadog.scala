@@ -60,7 +60,7 @@ object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
 
     messages.flatMap(v => {
       try {
-        val m = Message.parseFrom(v.get(0).asInstanceOf[Array[Byte]])
+        val m = Message.parseFrom(v.getAs("value").asInstanceOf[Array[Byte]])
         val fields = m.fieldsAsMap
         // TODO: looks like we can get a double here
         val docType = fields.getOrElse("docType", "").asInstanceOf[String]
