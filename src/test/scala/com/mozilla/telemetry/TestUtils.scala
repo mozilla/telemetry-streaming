@@ -511,6 +511,8 @@ object TestUtils {
   }
 
   def generateFrecencyUpdateMessages(size: Int,
+                                     modelVersion: Int,
+                                     variation: String = "training",
                                      fieldsOverride: Option[Map[String, Any]] = None,
                                      timestamp: Option[Long] = None): Seq[Message] = {
     val defaultMap = Map(
@@ -533,7 +535,7 @@ object TestUtils {
     val applicationJson = compact(render(Extraction.decompose(defaultFirefoxApplication)))
     val payload =
       s"""
-       |    "model_version": 140,
+       |    "model_version": $modelVersion,
        |    "frecency_scores": [38223, 3933.4, 304933.3, 21],
        |    "loss": 291989.21,
        |    "update": [
@@ -573,7 +575,7 @@ object TestUtils {
        |    "selected_style": "autofill heuristic",
        |    "selected_url_was_same_as_search_string": 0,
        |    "enter_was_pressed": 1,
-       |    "study_variation": "training",
+       |    "study_variation": "$variation",
        |    "study_addon_version": "2.1.1"
        """.stripMargin
     1.to(size) map { index =>
