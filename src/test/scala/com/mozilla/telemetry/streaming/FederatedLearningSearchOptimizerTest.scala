@@ -67,7 +67,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -97,7 +97,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -127,7 +127,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -157,7 +157,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -187,7 +187,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -217,7 +217,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -247,7 +247,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     When("they're aggregated")
     val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
-      .writeStream.format("memory").option("checkpointLocation", CheckpointPath+"/spark").queryName("updates").start()
+      .writeStream.format("memory").option("checkpointLocation", CheckpointPath + "/spark").queryName("updates").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
