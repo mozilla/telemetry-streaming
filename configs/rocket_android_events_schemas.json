@@ -3248,6 +3248,104 @@
                 {
                     "amplitudeProperties": {}, 
                     "description": "", 
+                    "name": " Open lifefeed news", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "open"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "panel"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "lifefeed_news"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "feed": "extra.feed", 
+                        "position": "extra.position", 
+                        "source": "extra.source", 
+                        "subcategory": "extra.subcategory"
+                    }, 
+                    "description": "", 
+                    "name": " Click on news item", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "panel"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "lifefeed_news"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
                     "name": " Show File ContextMenu", 
                     "schema": {
                         "$schema": "http://json-schema.org/schema#", 
@@ -4068,6 +4166,90 @@
                             "object": {
                                 "enum": [
                                     "default_browser"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "delay": "extra.delay", 
+                        "message": "extra.message"
+                    }, 
+                    "description": "", 
+                    "name": " Receive Firstrun Push config", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "get"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "firstrun_push"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "delay": "extra.delay", 
+                        "message": "extra.message"
+                    }, 
+                    "description": "", 
+                    "name": " Firstrun Push notification shown", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "firstrun_push"
                                 ], 
                                 "type": "string"
                             }, 
@@ -5131,48 +5313,6 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "version": "extra.version"
-                    }, 
-                    "description": "", 
-                    "name": " Cancel FindInPage", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "cancel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "find_in_page"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
                         "version": "extra.version"
                     }, 
                     "description": "", 
@@ -5311,6 +5451,47 @@
                             "object", 
                             "method", 
                             "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "engine": "extra.engine"
+                    }, 
+                    "description": "", 
+                    "name": " Click Quick Search", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "search"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "quicksearch"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
                         ], 
                         "type": "object"
                     }
