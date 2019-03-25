@@ -40,22 +40,32 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .select("value")
 
     val query = optimize(pings,
-      opts.checkpointPath(), opts.modelOutputBucket(), opts.modelOutputKey(), opts.stateCheckpointPath(),
-      opts.stateBootstrapFilePath.get, Clock.systemUTC(), opts.windowOffsetMinutes(), opts.raiseOnError(),
-      opts.s3EndpointOverride.get)
+      opts.checkpointPath(), opts.modelOutputBucket(),
+      opts.modelOutputKey(), opts.modelBranch(),
+      opts.stateCheckpointPath(), opts.stateBootstrapFilePath.get,
+      Clock.systemUTC(), opts.windowOffsetMinutes(),
+      opts.raiseOnError(), opts.s3EndpointOverride.get)
 
     query.awaitTermination()
   }
 
   def optimize(pings: DataFrame, checkpointPath: String, modelOutputBucket: String, modelOutputKey: String, // scalastyle:ignore
-               stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
+               modelBranch: Int, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
                clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false, s3EndpointOverride: Option[String] = None): StreamingQuery = {
-    val aggregates = aggregate(pings, clock, windowOffsetMin, raiseOnError)
+    val aggregates = aggregate(pings, modelBranch, clock, windowOffsetMin, raiseOnError)
     writeUpdates(aggregates, checkpointPath, modelOutputBucket, modelOutputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
   }
 
-  def aggregate(pings: DataFrame, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
+  def aggregate(pings: DataFrame, modelBranch: Int, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
     import pings.sparkSession.implicits._
+
+
+    val variationTarget: String = modelBranch match {
+      case 1 => "model1"
+      case 2 => "model2"
+      case 3 => "model3"
+      case 4 => "model4"
+    }
 
     val frecencyUpdates: Dataset[FrecencyUpdate] = pings.flatMap { v =>
       try {
@@ -64,7 +74,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
         val docType = fields.getOrElse("docType", "").asInstanceOf[String]
         if ("frecency-update" == docType) {
           val ping = FrecencyUpdatePing(m)
-          if ((ping.payload.study_variation contains "training") && (ping.payload.bookmark_and_history_num_suggestions_displayed > -1)) {
+          if ((ping.payload.study_variation startsWith variationTarget) && (ping.payload.bookmark_and_history_num_suggestions_displayed > -1)) {
             Option(FrecencyUpdate(
               new Timestamp(clock.millis()),
               ping.payload.model_version,
@@ -98,7 +108,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   def writeUpdates(aggregates: Dataset[FrecencyUpdateAggregate], checkpointPath: String, modelOutputBucket: String, modelOutputKey: String,
-                   stateCheckpointPath: String, stateBootstrapFilePath: Option[String], s3EndpointOverride: Option[String] = None): StreamingQuery = {
+          stateCheckpointPath: String,
+          stateBootstrapFilePath: Option[String], s3EndpointOverride:
+          Option[String] = None): StreamingQuery = {
     val writer = aggregates.writeStream
       .format("com.mozilla.telemetry.learning.federated.FederatedLearningSearchOptimizerS3SinkProvider")
       .option("checkpointLocation", checkpointPath)
@@ -128,6 +140,10 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
     val modelOutputKey: ScallopOption[String] = opt[String](
       name = "modelOutputKey",
       descr = "S3 key to save public model iterations",
+      required = true)
+    val modelBranch: ScallopOption[Int] = opt[Int](
+      name = "modelBranch",
+      descr = "Experiment model branch that we are going to be updating",
       required = true)
     val stateCheckpointPath: ScallopOption[String] = opt[String](
       name = "stateCheckpointPath",

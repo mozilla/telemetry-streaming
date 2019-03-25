@@ -35,8 +35,38 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're aggregated")
-    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), clock, 28)
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), 1, clock, 28)
       .writeStream.format("memory").queryName("updates").start()
+      pingsStream.addData(pings)
+      query.processAllAvailable()
+
+      clock.advance(TimeUnit.MINUTES.toNanos(45))
+
+      pingsStream.addData(TestUtils.generateFrecencyUpdateMessages(5,
+        timestamp = Some(TestUtils.testTimestampNano + TimeUnit.MINUTES.toNanos(45))).map(_.toByteArray).seq)
+      query.processAllAvailable()
+      pingsStream.addData(Array[Byte]())
+      query.processAllAvailable()
+      query.stop()
+
+      Then("a set of aggregates is produced")
+      val res = spark.sql("select * from updates").as[FrecencyUpdateAggregate]
+
+      res.show(false)
+      res.count shouldBe 1
+  }
+
+  "Federated learning Optimizer" should "ignore pings for a different model" in {
+    import spark.implicits._
+
+    Given("set of frecency update pings")
+    val messages = TestUtils.generateFrecencyUpdateMessages(10, modelBranch="model2")
+    val pings = messages.map(_.toByteArray)
+    val pingsStream = MemoryStream[Array[Byte]]
+
+    When("they're aggregated")
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), 1, clock, 28)
+      .writeStream.format("memory").queryName("updates_ignored").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
 
@@ -49,12 +79,13 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     query.processAllAvailable()
     query.stop()
 
-    Then("a set of aggregates is produced")
-    val res = spark.sql("select * from updates").as[FrecencyUpdateAggregate]
+    Then("a empty set of aggregates is produced")
+    val res = spark.sql("select * from updates_ignored").as[FrecencyUpdateAggregate]
 
     res.show(false)
-    res.count shouldBe 1
+    res.count shouldBe 0
   }
+
 
   it should "optimize weight updates and save model" in {
     import spark.implicits._
@@ -68,7 +99,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     val s3 = S3TestUtil(MockEndpointPort, Some(OutputBucket))
     val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputBucket,
-      OutputKey, CheckpointPath, None, clock, 28, s3EndpointOverride = Some(MockEndpoint))
+      OutputKey, 1, CheckpointPath, None, clock, 28, s3EndpointOverride = Some(MockEndpoint))
     pingsStream.addData(pings)
     query.processAllAvailable()
 
