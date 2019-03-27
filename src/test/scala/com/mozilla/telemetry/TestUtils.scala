@@ -512,7 +512,8 @@ object TestUtils {
 
   def generateFrecencyUpdateMessages(size: Int,
                                      fieldsOverride: Option[Map[String, Any]] = None,
-                                     timestamp: Option[Long] = None): Seq[Message] = {
+                                     timestamp: Option[Long] = None,
+                                     modelBranch: String = "model1"): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "frecency-update",
@@ -573,7 +574,7 @@ object TestUtils {
        |    "selected_style": "autofill heuristic",
        |    "selected_url_was_same_as_search_string": 0,
        |    "enter_was_pressed": 1,
-       |    "study_variation": "training",
+       |    "study_variation": "${modelBranch}",
        |    "study_addon_version": "2.1.1"
        """.stripMargin
     1.to(size) map { index =>
