@@ -35,7 +35,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're aggregated")
-    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), 1, clock, 28)
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), "model1", clock, 28)
       .writeStream.format("memory").queryName("updates").start()
       pingsStream.addData(pings)
       query.processAllAvailable()
@@ -65,7 +65,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
     val pingsStream = MemoryStream[Array[Byte]]
 
     When("they're aggregated")
-    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), 1, clock, 28)
+    val query = FederatedLearningSearchOptimizer.aggregate(pingsStream.toDF(), "model1", clock, 28)
       .writeStream.format("memory").queryName("updates_ignored").start()
     pingsStream.addData(pings)
     query.processAllAvailable()
@@ -99,7 +99,7 @@ class FederatedLearningSearchOptimizerTest extends FlatSpec with Matchers with G
 
     val s3 = S3TestUtil(MockEndpointPort, Some(OutputBucket))
     val query = FederatedLearningSearchOptimizer.optimize(pingsStream.toDF(), CheckpointPath + "/spark", OutputBucket,
-      OutputKey, 1, CheckpointPath, None, clock, 28, s3EndpointOverride = Some(MockEndpoint))
+      OutputKey, "model1", CheckpointPath, None, clock, 28, s3EndpointOverride = Some(MockEndpoint))
     pingsStream.addData(pings)
     query.processAllAvailable()
 

@@ -50,22 +50,14 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   def optimize(pings: DataFrame, checkpointPath: String, modelOutputBucket: String, modelOutputKey: String, // scalastyle:ignore
-               modelBranch: Int, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
+               modelBranch: String, stateCheckpointPath: String, stateBootstrapFilePath: Option[String] = None,
                clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false, s3EndpointOverride: Option[String] = None): StreamingQuery = {
     val aggregates = aggregate(pings, modelBranch, clock, windowOffsetMin, raiseOnError)
     writeUpdates(aggregates, checkpointPath, modelOutputBucket, modelOutputKey, stateCheckpointPath, stateBootstrapFilePath, s3EndpointOverride)
   }
 
-  def aggregate(pings: DataFrame, modelBranch: Int, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
+  def aggregate(pings: DataFrame, modelBranch: String, clock: Clock, windowOffsetMin: Int, raiseOnError: Boolean = false): Dataset[FrecencyUpdateAggregate] = {
     import pings.sparkSession.implicits._
-
-
-    val variationTarget: String = modelBranch match {
-      case 1 => "model1"
-      case 2 => "model2"
-      case 3 => "model3"
-      case 4 => "model4"
-    }
 
     val frecencyUpdates: Dataset[FrecencyUpdate] = pings.flatMap { v =>
       try {
@@ -76,7 +68,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
           val ping = FrecencyUpdatePing(m)
           if (
               (
-               (ping.payload.study_variation startsWith variationTarget) &&
+               (ping.payload.study_variation startsWith modelBranch) &&
               !(ping.payload.study_variation contains "not-submitting")
               ) &&
               ( ping.payload.bookmark_and_history_num_suggestions_displayed > -1)
@@ -147,7 +139,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       name = "modelOutputKey",
       descr = "S3 key to save public model iterations",
       required = true)
-    val modelBranch: ScallopOption[Int] = opt[Int](
+    val modelBranch: ScallopOption[String] = opt[String](
       name = "modelBranch",
       descr = "Experiment model branch that we are going to be updating",
       required = true)
