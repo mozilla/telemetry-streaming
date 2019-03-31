@@ -36,6 +36,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", 100)
       .option("subscribe", TelemetryKafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
+      .option("failOnDataLoss", false)
       .load()
       .select("value")
 
