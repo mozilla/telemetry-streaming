@@ -36,7 +36,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", 100)
       .option("subscribe", TelemetryKafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
-      .option("failOnDataLoss", false)
+      .option("failOnDataLoss", opts.failOnDataLoss())
       .load()
       .select("value")
 
@@ -132,6 +132,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   private class Opts(args: Array[String]) extends BaseOpts(args) {
+    val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
+      descr = "Whether to fail the query when it’s possible that data is lost.",
+      default=Some(false))
     val modelOutputBucket: ScallopOption[String] = opt[String](
       name = "modelOutputBucket",
       descr = "S3 bucket to save public model iterations",
