@@ -132,7 +132,7 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   private class Opts(args: Array[String]) extends BaseOpts(args) {
-    val failOnDataLoss:ScallopOption[Boolean] = opt[Boolean](
+    val failOnDataLoss: ScallopOption[Boolean] = opt[Boolean](
       descr = "Whether to fail the query when it’s possible that data is lost.",
       default=Some(false))
     val modelOutputBucket: ScallopOption[String] = opt[String](
