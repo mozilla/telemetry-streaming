@@ -7,7 +7,8 @@ import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneOffset}
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.mozilla.telemetry.streaming.EnrollmentEvents.{ExperimentA, ExperimentB, enrollmentEventJson}
+import com.mozilla.telemetry.streaming.EnrollmentEvents.{ExperimentA, ExperimentB, enrollmentEventJson,
+  eventPingEnrollmentEventsJson}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types._
 import org.scalatest.{FlatSpec, GivenWhenThen, Matchers}
@@ -121,6 +122,29 @@ class ExperimentEnrollmentsAggregatorTest extends FlatSpec with Matchers with Gi
     val expected = prepareExpectedAggregate((ExperimentA, "six", k, 0), ("awesome-experiment", "control", k, 0))
     assertDataFrameEquals(aggregates, expected)
   }
+
+  it should "read enrollment events from all processes (bug 1538793)" in {
+    import spark.implicits._
+
+    Given("event pings with experiment enrollment events in different processes")
+    val pings = (
+        TestUtils.generateEventMessages(k, customPayload=eventPingEnrollmentEventsJson(ExperimentA, Some("six"),
+          enroll = true, process="dynamic"))
+          ++ TestUtils.generateEventMessages(k, customPayload=eventPingEnrollmentEventsJson(ExperimentA, Some("six"),
+          enroll = true, process="parent"))
+          ++ TestUtils.generateEventMessages(k, customPayload=eventPingEnrollmentEventsJson(ExperimentA, Some("six"),
+          enroll = true, process="extension"))
+      ).map(_.toByteArray).seq
+    val pingsDf = spark.createDataset(pings).toDF()
+
+    When("pings are aggregated")
+    val aggregates = ExperimentEnrollmentsAggregator.aggregate(pingsDf)
+
+    And("events are aggregated by experiment name and branch")
+    val expected = prepareExpectedAggregate((ExperimentA, "six", k * 3, 0))
+    assertDataFrameEquals(aggregates, expected)
+
+  }
 }
 
 object EnrollmentEvents {
@@ -137,6 +161,24 @@ object EnrollmentEvents {
          |      [554879, "normandy", "${if (enroll) "enroll" else "unenroll"}", "preference_study", "$experiment_id", {$branchKv}]
          |    ]
          |  }
+         |}
+      """.stripMargin)
+  }
+
+  def eventPingEnrollmentEventsJson(experiment_id: String, experimentBranch: Option[String], enroll: Boolean,
+                                     process: String = "dynamic"): Option[String] = {
+    val branchKv = experimentBranch.map(b => s""" "branch": "$b" """).getOrElse("")
+    Some(
+      s"""
+         |"reason": "periodic",
+         |"processStartTimestamp": 1530291900000,
+         |"sessionId": "dd302e9d-569b-4058-b7e8-02b2ff83522c",
+         |"subsessionId": "79a2728f-af12-4ed3-b56d-0531a03c2f26",
+         |"lostEventsCount": 0,
+         |"events": {
+         |  "$process": [
+         |    [554879, "normandy", "${if (enroll) "enroll" else "unenroll"}", "preference_study", "$experiment_id", {$branchKv}]
+         |  ]
          |}
       """.stripMargin)
   }

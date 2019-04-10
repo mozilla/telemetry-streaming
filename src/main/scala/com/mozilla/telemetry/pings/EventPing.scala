@@ -40,8 +40,7 @@ case class EventPing(application: Application,
   }
 
   def getNormandyEvents: Seq[Event] = {
-    val dynamicProcessEvents = processEventMap.getOrElse("dynamic", Seq.empty[Event])
-    dynamicProcessEvents.filter(_.category == "normandy")
+    events.filter(_.category == "normandy")
   }
 }
 
