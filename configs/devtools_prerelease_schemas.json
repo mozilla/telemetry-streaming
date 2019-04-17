@@ -991,6 +991,543 @@
           }
         }
       ]
+    },
+    {
+      "eventGroupName": "dt_adbg",
+      "events": [
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "close_adbg",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "close_adbg"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "device_added",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "device_added"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "device_removed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "device_removed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "runtime_type": "extra.runtime_type",
+            "target_type": "extra.target_type"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "inspect",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "inspect"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "open_adbg",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "open_adbg"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {
+            "width": "extra.width"
+          }
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name",
+            "runtime_id": "extra.runtime_id",
+            "runtime_name": "extra.runtime_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "runtime_added",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "runtime_added"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name",
+            "runtime_id": "extra.runtime_id",
+            "runtime_name": "extra.runtime_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "runtime_connected",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "runtime_connected"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name",
+            "runtime_id": "extra.runtime_id",
+            "runtime_name": "extra.runtime_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "runtime_disconnected",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "runtime_disconnected"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "connection_type": "extra.connection_type",
+            "device_name": "extra.device_name",
+            "runtime_id": "extra.runtime_id",
+            "runtime_name": "extra.runtime_name"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "runtime_removed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "runtime_removed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "page_type": "extra.page_type"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "select_page",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "select_page"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "runtime_id": "extra.runtime_id"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "show_profiler",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "show_profiler"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "prompt_enabled": "extra.prompt_enabled",
+            "runtime_id": "extra.runtime_id"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "update_conn_prompt",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "update_conn_prompt"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "aboutdebugging"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        }
+      ]
     }
   ]
 }
