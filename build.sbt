@@ -20,7 +20,7 @@ organization := "com.mozilla"
 
 scalaVersion in ThisBuild := "2.11.8"
 
-val sparkVersion = "2.3.0"
+val sparkVersion = "2.4.0"
 
 lazy val root = (project in file(".")).
   settings(
