@@ -29,7 +29,7 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
-    libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion
+    libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion
       exclude("net.jpountz.lz4", "lz4"), //conflicts with org.lz4:lz4-java:1.4.0 from spark-core
     libraryDependencies += "org.eclipse.jetty" % "jetty-servlet" % "9.3.20.v20170531" % Provided, // needed for metrics
     libraryDependencies += "org.rogach" %% "scallop" % "1.0.2",
