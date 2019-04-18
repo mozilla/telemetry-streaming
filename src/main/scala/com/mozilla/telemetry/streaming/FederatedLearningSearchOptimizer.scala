@@ -8,7 +8,6 @@ import java.time.Clock
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.FrecencyUpdatePing
-import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
@@ -34,8 +33,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       .option("kafka.bootstrap.servers", opts.kafkaBroker())
       .option("kafka.max.partition.fetch.bytes", 8 * 1024 * 1024) // 8MB
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", 100)
-      .option("subscribe", TelemetryKafkaTopic)
+      .option("subscribe", opts.topic())
       .option("startingOffsets", opts.startingOffsets())
+      .option("failOnDataLoss", opts.failOnDataLoss())
       .load()
       .select("value")
 
@@ -131,6 +131,9 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
   }
 
   private class Opts(args: Array[String]) extends BaseOpts(args) {
+    val failOnDataLoss: ScallopOption[Boolean] = opt[Boolean](
+      descr = "Whether to fail the query when it’s possible that data is lost.",
+      default = Some(false))
     val modelOutputBucket: ScallopOption[String] = opt[String](
       name = "modelOutputBucket",
       descr = "S3 bucket to save public model iterations",
@@ -164,6 +167,12 @@ object FederatedLearningSearchOptimizer extends StreamingJobBase {
       name = "s3EndpointOverride",
       descr = "Optional endpoint override for s3 client",
       required = false)
+    val topic: ScallopOption[String] = opt[String](
+      name = "topic",
+      descr = "Kafka topic to pull pings from",
+      default = Some("frecency-update"),
+      required = false
+    )
 
     requireOne(kafkaBroker)
     verify()
