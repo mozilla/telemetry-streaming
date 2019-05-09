@@ -2213,7 +2213,9 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "on": "extra.on"
+                        "on": "extra.on", 
+                        "source": "extra.source", 
+                        "version": "extra.version"
                     }, 
                     "description": "", 
                     "name": " Click Top Site", 
@@ -5687,6 +5689,100 @@
                             "timestamp", 
                             "object", 
                             "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Enter Landscape Mode", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "enter landscape mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "change"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "landscape_mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "enter"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "duration": "extra.duration"
+                    }, 
+                    "description": "", 
+                    "name": " Exit Landscape Mode", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "enter landscape mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "change"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "landscape_mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "exit"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
                         ], 
                         "type": "object"
                     }
