@@ -400,11 +400,18 @@ object SendsToAmplitude {
         message.fieldsAsMap.get("appName") match {
           case Some("Focus") => FocusEventPing(message)
           case Some("Zerda") => RocketEventPing(message)
-          case Some(x) => throw new IllegalArgumentException(s"Expect Focus or Zerda for focus-event, but we got $x")
+          case Some(x) => throw new IllegalArgumentException(s"Expect Focus or Zerda for focus-event appName, but we got $x")
           case _ => throw new IllegalArgumentException(s"No App Name found for focus-event")
         }
       }
-      case Some("mobile-event") => MobileEventPing(message)
+      case Some("mobile-event") => {
+        message.fieldsAsMap.get("appName") match {
+          case Some("FirefoxForFireTV") => FireTvEventPing(message)
+          case Some("Fennec") => MobileEventPing(message)
+          case Some(x) => throw new IllegalArgumentException(s"Expect FirefoxForFireTV or Fennec for mobile-event appName, but we got $x")
+          case _ => throw new IllegalArgumentException(s"No App Name found for focus-event")
+        }
+      }
       case Some("main") => MainPing(message)
       case Some("event") => EventPing(message)
       case Some(x) => throw new IllegalArgumentException(s"Unexpected doctype $x")
