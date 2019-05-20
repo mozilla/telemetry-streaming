@@ -8,7 +8,7 @@ import com.mozilla.telemetry.pings.FireTvEventPing.OptionToType
 import org.json4s.JsonDSL._
 import org.json4s._
 
-case class FireTvEventPing(arch: String,
+case class FireTvEventPing(arch: Option[String],
                            clientId: String,
                            created: Long,
                            device: String,
@@ -38,6 +38,7 @@ case class FireTvEventPing(arch: String,
     ("device_model" -> device) ~
     ("arch" -> arch) ~
     ("locale" -> locale) ~
+    ("os_version" -> getOsVersion) ~
     ("user_properties" ->
       ("tracking_protection_enabled" -> settings.tracking_protection_enabled.asBool) ~
       ("total_home_tile_count" -> settings.total_home_tile_count) ~
