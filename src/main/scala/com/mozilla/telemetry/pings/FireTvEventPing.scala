@@ -55,11 +55,11 @@ case class FireTvSettings(tracking_protection_enabled: Option[String],
                           app_id: Option[String])
 
 object FireTvEventPing {
-  def apply(message: Message): MobileEventPing = {
+  def apply(message: Message): FireTvEventPing = {
     implicit val formats = DefaultFormats
 
     val ping = Ping.messageToPing(message, List(), eventLocations)
-    ping.extract[MobileEventPing]
+    ping.extract[FireTvEventPing]
   }
 
   val eventLocations = List("events" :: Nil)
