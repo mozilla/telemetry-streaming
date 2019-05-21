@@ -11,7 +11,7 @@ import org.json4s._
 case class FireTvEventPing(arch: Option[String],
                            clientId: String,
                            created: Long,
-                           device: String,
+                           device: Option[String],
                            events: Seq[Event],
                            locale: String,
                            os: String,
@@ -35,8 +35,6 @@ case class FireTvEventPing(arch: Option[String],
 
   override def pingAmplitudeProperties: JObject = {
     ("device_id" -> getClientId) ~
-    ("device_model" -> device) ~
-    ("arch" -> arch) ~
     ("locale" -> locale) ~
     ("os_version" -> getOsVersion) ~
     ("user_properties" ->
