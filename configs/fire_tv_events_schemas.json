@@ -617,7 +617,7 @@
                             }, 
                             "value": {
                                 "enum": [
-                                    "play"
+                                    "pause"
                                 ], 
                                 "type": "string"
                             }
@@ -663,7 +663,7 @@
                             }, 
                             "value": {
                                 "enum": [
-                                    "pause"
+                                    "play"
                                 ], 
                                 "type": "string"
                             }
