@@ -42,6 +42,10 @@ case class EventPing(application: Application,
   def getNormandyEvents: Seq[Event] = {
     events.filter(_.category == "normandy")
   }
+
+  def getUptakeEvents: Seq[Event] = {
+    events.filter(e => e.category == "normandy" || e.category == "uptake.remotecontent.result")
+  }
 }
 
 object EventPing {
