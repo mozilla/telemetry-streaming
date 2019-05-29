@@ -6,7 +6,7 @@ package com.mozilla.telemetry.sinks
 import java.net.{DatagramPacket, DatagramSocket}
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.mozilla.telemetry.monitoring.DogStatsDCounter
+import com.mozilla.telemetry.monitoring.DogStatsDMetric
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -28,28 +28,29 @@ case class UDPReceiver(bufferLength: Int = 1024) {
   }
 }
 
-class DogStatsDCounterSinkTest extends FlatSpec with DataFrameSuiteBase with Matchers {
-  "DogStatsDCounterSink" should "produce a properly formatted minimal datagram string" in {
+class DogStatsDMetricSinkTest extends FlatSpec with DataFrameSuiteBase with Matchers {
+  "DogStatsDMetricSink" should "produce a properly formatted minimal datagram string" in {
     implicit def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
     import spark.implicits._
-    val input = MemoryStream[DogStatsDCounter]
+    val input = MemoryStream[DogStatsDMetric]
 
     val receiver = UDPReceiver()
     val f = Future[Seq[String]] {
-      receiver.receiveData(4)
+      receiver.receiveData(5)
     }
 
-    val sink = new DogStatsDCounterSink("localhost", receiver.port, Some(0.1))
+    val sink = new DogStatsDMetricSink("localhost", receiver.port, Some(0.1))
     val query = input.toDS()
       .writeStream
-      .queryName("DogStatsDCounterSinkTest")
+      .queryName("DogStatsDMetricSinkTest")
       .foreach(sink)
       .start()
 
-    input.addData(DogStatsDCounter("test.sink"))
-    input.addData(DogStatsDCounter("test.sink", kvTags = Some(Map("hello" -> "world"))))
-    input.addData(DogStatsDCounter("test.sink", bareTags = Some(Seq("what", "is:new"))))
-    input.addData(DogStatsDCounter("test.sink", metricValue = 2))
+    input.addData(DogStatsDMetric.makeCounter("test.sink"))
+    input.addData(DogStatsDMetric.makeCounter("test.sink", kvTags = Some(Map("hello" -> "world"))))
+    input.addData(DogStatsDMetric.makeCounter("test.sink", bareTags = Some(Seq("what", "is:new"))))
+    input.addData(DogStatsDMetric.makeCounter("test.sink", metricValue = 2))
+    input.addData(DogStatsDMetric.makeTimer("test.sink", metricValue = 2))
 
     query.processAllAvailable()
 
@@ -58,7 +59,8 @@ class DogStatsDCounterSinkTest extends FlatSpec with DataFrameSuiteBase with Mat
         "test.sink:1|c|@0.1",
         "test.sink:1|c|@0.1|#hello:world",
         "test.sink:1|c|@0.1|#what,is_new",
-        "test.sink:2|c|@0.1"
+        "test.sink:2|c|@0.1",
+        "test.sink:2|ms|@0.1"
       )
     }
 
