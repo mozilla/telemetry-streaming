@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package com.mozilla.telemetry.sinks
 
-import com.mozilla.telemetry.monitoring.{DogStatsDMetric, DogStatsDCounter}
 import org.apache.spark.sql.ForeachWriter
 import java.net.{InetSocketAddress, DatagramPacket, DatagramSocket}
+import com.mozilla.telemetry.monitoring.DogStatsDMetric
 
 
-sealed abstract class DogStatsDMetricSink[T <: DogStatsDMetric](host: String, port: Int, sampleRate: Option[Double] = None) extends ForeachWriter[T] {
+class DogStatsDMetricSink(host: String, port: Int, sampleRate: Option[Double] = None)
+  extends ForeachWriter[DogStatsDMetric] {
   private val address = new InetSocketAddress(host, port)
   private var socket: DatagramSocket = null
 
@@ -17,7 +18,7 @@ sealed abstract class DogStatsDMetricSink[T <: DogStatsDMetric](host: String, po
     true
   }
 
-  def process(value: T): Unit = {
+  def process(value: DogStatsDMetric): Unit = {
     val bytes = value.format(sampleRate).getBytes
     val datagram = new DatagramPacket(bytes, bytes.length, address)
     socket.send(datagram)
@@ -27,5 +28,3 @@ sealed abstract class DogStatsDMetricSink[T <: DogStatsDMetric](host: String, po
     socket.close()
   }
 }
-
-class DogStatsDCounterSink(host: String, port: Int, sampleRate: Option[Double] = None) extends DogStatsDMetricSink[DogStatsDCounter](host, port, sampleRate)

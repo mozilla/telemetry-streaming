@@ -394,7 +394,9 @@ object TestUtils {
 
   def generateEventMessages(size: Int,
                             fieldsOverride: Option[Map[String, Any]] = None,
-                            timestamp: Option[Long] = None): Seq[Message] = {
+                            timestamp: Option[Long] = None,
+                            customPayload: Option[String] = None
+                           ): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "event",
@@ -442,8 +444,7 @@ object TestUtils {
       case _ => defaultMap
     }
     val applicationJson = compact(render(Extraction.decompose(defaultFirefoxApplication)))
-    val payload =
-      s"""
+    val payload = customPayload.getOrElse(s"""
          |    "reason": "periodic",
          |    "processStartTimestamp": 1530291900000,
          |    "sessionId": "dd302e9d-569b-4058-b7e8-02b2ff83522c",
@@ -495,7 +496,7 @@ object TestUtils {
          |        ]
          |      ]
          |    }
-       """.stripMargin
+       """.stripMargin)
     1.to(size) map { index =>
       RichMessage(s"event-$index",
         outputMap,
@@ -512,7 +513,8 @@ object TestUtils {
 
   def generateFrecencyUpdateMessages(size: Int,
                                      fieldsOverride: Option[Map[String, Any]] = None,
-                                     timestamp: Option[Long] = None): Seq[Message] = {
+                                     timestamp: Option[Long] = None,
+                                     modelBranch: String = "model1"): Seq[Message] = {
     val defaultMap = Map(
       "clientId" -> "client1",
       "docType" -> "frecency-update",
@@ -573,7 +575,7 @@ object TestUtils {
        |    "selected_style": "autofill heuristic",
        |    "selected_url_was_same_as_search_string": 0,
        |    "enter_was_pressed": 1,
-       |    "study_variation": "training",
+       |    "study_variation": "${modelBranch}",
        |    "study_addon_version": "2.1.1"
        """.stripMargin
     1.to(size) map { index =>

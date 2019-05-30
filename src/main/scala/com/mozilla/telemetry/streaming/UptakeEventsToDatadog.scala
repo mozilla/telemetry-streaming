@@ -5,15 +5,17 @@ package com.mozilla.telemetry.streaming
 
 import com.mozilla.telemetry.heka.Message
 import com.mozilla.telemetry.pings.{EventPing, MainPing}
-import com.mozilla.telemetry.monitoring.DogStatsDCounter
-import com.mozilla.telemetry.sinks.DogStatsDCounterSink
+import com.mozilla.telemetry.monitoring.{DogStatsDMetric}
+import com.mozilla.telemetry.sinks.{DogStatsDMetricSink}
 import com.mozilla.telemetry.streaming.StreamingJobBase.TelemetryKafkaTopic
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.rogach.scallop.ScallopOption
 
+import scala.util.Try
 
-object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
-  override val JobName: String = "experiment_enrollments_to_datadog"
+
+object UptakeEventsToDatadog extends StreamingJobBase {
+  override val JobName: String = "uptake_events_enrollments_to_datadog"
 
   val kafkaCacheMaxCapacity = 100
 
@@ -23,7 +25,7 @@ object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
     val opts = new Opts(args)
 
     val spark = SparkSession.builder()
-      .appName("Experiment Enrollments to Datadog")
+      .appName("Uptake Events to Datadog")
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .getOrCreate()
 
@@ -40,11 +42,12 @@ object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
       .option("spark.streaming.kafka.consumer.cache.maxCapacity", kafkaCacheMaxCapacity)
       .option("subscribe", TelemetryKafkaTopic)
       .option("startingOffsets", opts.startingOffsets())
+      .option("failOnDataLoss", false)
       .load()
 
-    val writer = new DogStatsDCounterSink("localhost", 8125)
+    val writer = new DogStatsDMetricSink("localhost", 8125)
 
-    eventsToCounter(pings.select("value"), opts.raiseOnError())
+    eventsToMetrics(pings.select("value"), opts.raiseOnError())
       .writeStream
       .queryName(QueryName)
       .foreach(writer)
@@ -53,10 +56,10 @@ object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
       .awaitTermination()
   }
 
-  private[streaming] def eventsToCounter(messages: DataFrame, raiseOnError: Boolean): Dataset[DogStatsDCounter] = {
+  private[streaming] def eventsToMetrics(messages: DataFrame, raiseOnError: Boolean): Dataset[DogStatsDMetric] = {
     import messages.sparkSession.implicits._
 
-    val empty = Array.empty[DogStatsDCounter]
+    val empty = Array.empty[DogStatsDMetric]
 
     messages.flatMap(v => {
       try {
@@ -67,20 +70,41 @@ object ExperimentsEnrollmentsToDatadog extends StreamingJobBase {
         if (!allowedDocTypes.contains(docType)) {
           empty
         } else {
-          val normandyEvents = {
+          val uptakeEvents = {
             if (docType == "main") {
               val mainPing = MainPing(m)
               mainPing.getNormandyEvents
             } else {
               val eventPing = EventPing(m)
-              eventPing.getNormandyEvents
+              eventPing.getUptakeEvents
             }
           }
 
-          normandyEvents.map { e =>
+          val normandyCounters = uptakeEvents.filter(_.category == "normandy").map { e =>
             val tags = Map("experiment" -> e.value.getOrElse(""), "branch" -> e.extra.flatMap(_.get("branch")).getOrElse(""))
-            DogStatsDCounter(s"telemetry.${e.category}.${e.`object`}.${e.method}", kvTags = Some(tags))
+            DogStatsDMetric.makeCounter(s"telemetry.${e.category}.${e.`object`}.${e.method}", kvTags = Some(tags))
           }
+
+          val uptakeMetrics = uptakeEvents.filter(_.category == "uptake.remotecontent.result").flatMap { e =>
+            // Split the "source" key in the extra field, if it exists, to tag uptake events (bug 1539249)
+            val source = e.extra.flatMap(_.get("source").map(_.split("/")))
+            val source_type = source.flatMap(_.lift(0)).map(s => Seq("source_type" -> s)).getOrElse(Nil)
+            val source_subtype = source.flatMap(_.lift(1)).map(s => Seq("source_subtype" -> s)).getOrElse((Nil))
+            val source_details = source.flatMap(_.lift(2)).map(s => Seq("source_details" -> s)).getOrElse(Nil)
+            val tags = Map(source_type ++ source_subtype ++ source_details:_*)
+            val metricName = s"telemetry.uptake.${e.`object`}.${e.method}.${e.value.getOrElse("null")}"
+
+            // Uptake events all create a counter, and if there's a "duration" or "age" key in the event map field,
+            // those are sent as timer metrics
+            val counter = Seq(DogStatsDMetric.makeCounter(metricName, kvTags = Some(tags)))
+            val duration = e.extra.flatMap(_.get("duration").flatMap(d => Try(d.toInt).toOption)).map(d =>
+              Seq(DogStatsDMetric.makeTimer(metricName + ".duration", metricValue = d, kvTags = Some(tags)))).getOrElse(Nil)
+            val age = e.extra.flatMap(_.get("age").flatMap(d => Try(d.toInt).toOption)).map(d =>
+              Seq(DogStatsDMetric.makeTimer(metricName + ".age", metricValue = d, kvTags = Some(tags)))).getOrElse(Nil)
+            counter ++ duration ++ age
+          }
+
+          normandyCounters ++ uptakeMetrics
         }
       } catch {
         // TODO: track parse errors
