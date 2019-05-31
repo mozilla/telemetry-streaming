@@ -193,6 +193,320 @@
                 }, 
                 {
                     "amplitudeProperties": {
+                        "from": "extra.from"
+                    }, 
+                    "description": "", 
+                    "name": " App is launched from Private Shortcut", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "launch"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "app"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "private_mode"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "mode": "extra.mode"
+                    }, 
+                    "description": "", 
+                    "name": " Show private shortcut prompt", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "private_shortcut"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "mode": "extra.mode"
+                    }, 
+                    "description": "", 
+                    "name": " Click private shortcut prompt", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "private_shortcut"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "[positive|negative|dismiss]"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Users clicked on a Setting", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "setting"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "pref_private_shortcut"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "from": "extra.from", 
+                        "mode": "extra.mode"
+                    }, 
+                    "description": "", 
+                    "name": " Exit private mode", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "private_mode"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "exit"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "mode": "extra.mode"
+                    }, 
+                    "description": "", 
+                    "name": " Private shortcut created", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "pin_shortcut"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "private_shortcut"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "mode": "extra.mode"
+                    }, 
+                    "description": "", 
+                    "name": " Kill app", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "kill"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "app"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
                         "type": "extra.type"
                     }, 
                     "description": "", 
@@ -1188,7 +1502,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Show TabTray from Toolbar", 
                     "schema": {
@@ -1234,7 +1552,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Show Menu from Toolbar", 
                     "schema": {
@@ -1930,7 +2252,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click Toolbar - Forward", 
                     "schema": {
@@ -1976,7 +2302,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click Toolbar - Reload", 
                     "schema": {
@@ -2022,7 +2352,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click Toolbar - Share Link", 
                     "schema": {
@@ -2069,7 +2403,10 @@
                 }, 
                 {
                     "amplitudeProperties": {
-                        "to": "extra.to"
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "to": "extra.to", 
+                        "version": "extra.version"
                     }, 
                     "description": "", 
                     "name": " Click Toolbar - Add bookmark", 
@@ -2116,7 +2453,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Click Toolbar - Pin shortcut", 
                     "schema": {
@@ -2165,6 +2506,8 @@
                     "amplitudeProperties": {
                         "category": "extra.category", 
                         "category_versio": "extra.category_versio", 
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
                         "version": "extra.version"
                     }, 
                     "description": "", 
@@ -2740,7 +3083,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Show SearchBar by clicking SEARCH_BUTTON", 
                     "schema": {
@@ -2786,7 +3133,11 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Add Tab from Toolbar", 
                     "schema": {
