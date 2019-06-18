@@ -3599,7 +3599,10 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {}, 
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "version": "extra.version"
+                    }, 
                     "description": "", 
                     "name": " Open lifefeed news", 
                     "schema": {
@@ -3620,6 +3623,101 @@
                             "object": {
                                 "enum": [
                                     "panel"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "lifefeed_news"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click News settings", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "setting"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "lifefeed_news"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "language": "extra.language"
+                    }, 
+                    "description": "", 
+                    "name": " Change News settings", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "change"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "setting"
                                 ], 
                                 "type": "string"
                             }, 
