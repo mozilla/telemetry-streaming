@@ -1261,7 +1261,9 @@
             "connection_type": "extra.connection_type",
             "device_name": "extra.device_name",
             "runtime_id": "extra.runtime_id",
-            "runtime_name": "extra.runtime_name"
+            "runtime_name": "extra.runtime_name",
+	    "runtime_os": "extra.runtime_os",
+	    "runtime_version": "extra.runtime_version"
           },
           "sessionIdOffset": "extra.session_id",
           "description": "",
