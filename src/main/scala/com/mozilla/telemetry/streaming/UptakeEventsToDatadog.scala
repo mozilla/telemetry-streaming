@@ -45,7 +45,8 @@ object UptakeEventsToDatadog extends StreamingJobBase {
       .option("failOnDataLoss", false)
       .load()
 
-    val writer = new DogStatsDMetricSink("localhost", 8125)
+    val driverAddress = spark.conf.get("spark.driver.host", "localhost")
+    val writer = new DogStatsDMetricSink(driverAddress, 8125)
 
     eventsToMetrics(pings.select("value"), opts.raiseOnError())
       .writeStream
