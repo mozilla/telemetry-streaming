@@ -206,6 +206,258 @@
             "host": "extra.host",
             "width": "extra.width"
           }
+        },
+        {
+          "amplitudeProperties": {
+            "lines": "extra.lines"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "execute_js",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "execute_js"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "trigger": "extra.trigger",
+            "active": "extra.active",
+            "inactive": "extra.inactive"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "filters_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "filters_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "jump_to_definition",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "jump_to_definition"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "jump_to_source",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "jump_to_source"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "object_expanded",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "object_expanded"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "persist_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "persist_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "webconsole"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
         }
       ]
     },
@@ -305,6 +557,94 @@
             "host": "extra.host",
             "width": "extra.width"
           }
+        },
+        {
+          "amplitudeProperties": {
+            "made_changes": "extra.made_changes",
+            "time_open": "extra.time_open"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "edit_html",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "edit_html"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "inspector"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "oldpanel": "extra.oldpanel",
+            "newpanel": "extra.newpanel"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "sidepanel_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "sidepanel_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "inspector"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
         }
       ]
     },
@@ -404,6 +744,299 @@
             "host": "extra.host",
             "width": "extra.width"
           }
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "add_breakpoint",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "add_breakpoint"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "blackbox",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "blackbox"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "continue",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "continue"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "exceptions": "extra.exceptions",
+            "caught_exceptio": "extra.caught_exceptio"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "pause_on_exceptions",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "pause_on_exceptions"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "reason": "extra.reason",
+            "lib_stacks": "extra.lib_stacks"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "pause",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "pause"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "pretty_print",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "pretty_print"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "remove_breakpoint",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "remove_breakpoint"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "debugger"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
         }
       ]
     },
@@ -602,6 +1235,220 @@
             "host": "extra.host",
             "width": "extra.width"
           }
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "edit_resend",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "edit_resend"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "trigger": "extra.trigger",
+            "active": "extra.active",
+            "inactive": "extra.inactive"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "filters_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "filters_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {},
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "persist_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "persist_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "oldpanel": "extra.oldpanel",
+            "newpanel": "extra.newpanel"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "sidepanel_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "sidepanel_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
+        },
+        {
+          "amplitudeProperties": {
+            "mode": "extra.mode"
+          },
+          "sessionIdOffset": "extra.session_id",
+          "description": "",
+          "name": "throttle_changed",
+          "schema": {
+            "$schema": "http://json-schema.org/schema#",
+            "properties": {
+              "category": {
+                "enum": [
+                  "devtools.main"
+                ],
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "throttle_changed"
+                ],
+                "type": "string"
+              },
+              "object": {
+                "enum": [
+                  "netmonitor"
+                ],
+                "type": "string"
+              },
+              "timestamp": {
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "timestamp",
+              "object",
+              "method"
+            ],
+            "type": "object"
+          },
+          "userProperties": {}
         }
       ]
     },
