@@ -1780,6 +1780,129 @@
                         ], 
                         "type": "object"
                     }
+                },
+                {
+                    "amplitudeProperties": {
+                        "slide-num": "extra.slide-num"
+                    },
+                    "description": "",
+                    "name": "Dismiss onboarding screen",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "press"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "dismissed-onboarding"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {
+                        "slide-num": "extra.slide-num"
+                    },
+                    "description": "",
+                    "name": "Dismiss onboarding screen on email login card",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "press"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "dismissed-onboarding-email-login"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method"
+                        ],
+                        "type": "object"
+                    }
+                },
+                {
+                    "amplitudeProperties": {
+                        "slide-num": "extra.slide-num"
+                    },
+                    "description": "",
+                    "name": "Dismiss onboarding screen on sign up card",
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#",
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ],
+                                "type": "string"
+                            },
+                            "method": {
+                                "enum": [
+                                    "press"
+                                ],
+                                "type": "string"
+                            },
+                            "object": {
+                                "enum": [
+                                    "dismissed-onboarding-sign-up"
+                                ],
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "minimum": 0,
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "category",
+                            "timestamp",
+                            "object",
+                            "method"
+                        ],
+                        "type": "object"
+                    }
                 }
             ]
         }
