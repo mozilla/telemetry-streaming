@@ -3599,400 +3599,6 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "category": "extra.category", 
-                        "version": "extra.version"
-                    }, 
-                    "description": "", 
-                    "name": " Open lifefeed news", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "open"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_news"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click News settings", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "setting"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_news"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "category": "extra.category", 
-                        "language": "extra.language"
-                    }, 
-                    "description": "", 
-                    "name": " Change News settings", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "change"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "setting"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_news"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "category": "extra.category", 
-                        "feed": "extra.feed", 
-                        "position": "extra.position", 
-                        "source": "extra.source", 
-                        "subcategory": "extra.subcategory"
-                    }, 
-                    "description": "", 
-                    "name": " Click on news item", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_news"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Open lifefeed EC", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "open"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_ec"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "category": "extra.category", 
-                        "position": "extra.position", 
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Click on EC item", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_ec"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source", 
-                        "version": "extra.version"
-                    }, 
-                    "description": "", 
-                    "name": " Open lifefeed promo", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "open"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_promo"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "category": "extra.category", 
-                        "feed": "extra.feed", 
-                        "id": "extra.id", 
-                        "position": "extra.position", 
-                        "source": "extra.source", 
-                        "subcategory": "extra.subcategory"
-                    }, 
-                    "description": "", 
-                    "name": " Click on promo item", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "panel"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "lifefeed_promo"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
                     "amplitudeProperties": {}, 
                     "description": "", 
                     "name": " Show File ContextMenu", 
@@ -5250,671 +4856,6 @@
                     }
                 }, 
                 {
-                    "amplitudeProperties": {
-                        "to": "extra.to"
-                    }, 
-                    "description": "", 
-                    "name": " Banner Impression: new", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "new"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "to": "extra.to"
-                    }, 
-                    "description": "", 
-                    "name": " Banner Impression: update", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "update"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "to": "extra.to"
-                    }, 
-                    "description": "", 
-                    "name": " Banner Impression: return", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "return"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "to": "extra.to"
-                    }, 
-                    "description": "", 
-                    "name": " Banner Impression: swipe", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "swipe"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Click Banner Background", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "background"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "on": "extra.on", 
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Click Banner Item", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "item"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "direction": "extra.direction", 
-                        "to": "extra.to"
-                    }, 
-                    "description": "", 
-                    "name": " Swipe Banner Item", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "swipe"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "banner"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "page"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click Wifi Finder Survey", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "home"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "wifi_finder"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click VPN Survey", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "home"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "vpn"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {
-                        "source": "extra.source"
-                    }, 
-                    "description": "", 
-                    "name": " Survey Result", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "doorhanger"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "negative", 
-                                    "positive", 
-                                    "dismiss"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Show VPN Recommend", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "show"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "home"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "vpn_recommend"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click VPN Recommend", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "home"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "vpn_recommend"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Click VPN Recommend", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "vpn_doorhanger"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "negative", 
-                                    "positive"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
-                    "amplitudeProperties": {}, 
-                    "description": "", 
-                    "name": " Dismiss VPN Recommend", 
-                    "schema": {
-                        "$schema": "http://json-schema.org/schema#", 
-                        "properties": {
-                            "category": {
-                                "enum": [
-                                    "action"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "method": {
-                                "enum": [
-                                    "click"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "object": {
-                                "enum": [
-                                    "vpn_doorhanger"
-                                ], 
-                                "type": "string"
-                            }, 
-                            "timestamp": {
-                                "minimum": 0, 
-                                "type": "number"
-                            }, 
-                            "value": {
-                                "enum": [
-                                    "dismiss"
-                                ], 
-                                "type": "string"
-                            }
-                        }, 
-                        "required": [
-                            "category", 
-                            "timestamp", 
-                            "object", 
-                            "method", 
-                            "value"
-                        ], 
-                        "type": "object"
-                    }
-                }, 
-                {
                     "amplitudeProperties": {}, 
                     "description": "", 
                     "name": " Long Press Toolbar Download Indicator", 
@@ -6512,6 +5453,2377 @@
                             "value": {
                                 "enum": [
                                     "apply"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Show Firstrun Onboarding", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "onboarding"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "firstrun"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Show Whatsnew Onboarding", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "onboarding"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "whatsnew"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "finish": "extra.finish", 
+                        "on": "extra.on", 
+                        "page": "extra.page"
+                    }, 
+                    "description": "", 
+                    "name": " Click Firstrun Onboarding", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "onboarding"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "firstrun"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "finish": "extra.finish", 
+                        "on": "extra.on", 
+                        "page": "extra.page"
+                    }, 
+                    "description": "", 
+                    "name": " Click Whatsnew Onboarding", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "onboarding"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "whatsnew"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Show Firstrun Contextual Hint", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "contextual_hint"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "firstrun"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Show Whatsnew Contextual Hint", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "contextual_hint"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "whatsnew"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "finish": "extra.finish", 
+                        "message_id": "extra.message_id", 
+                        "on": "extra.on", 
+                        "page": "extra.page"
+                    }, 
+                    "description": "", 
+                    "name": " Click Firstrun Contextual Hint", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "contextual_hint"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "firstrun"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "finish": "extra.finish", 
+                        "message_id": "extra.message_id", 
+                        "on": "extra.on", 
+                        "page": "extra.page"
+                    }, 
+                    "description": "", 
+                    "name": " Click Whatsnew Contextual Hint", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "contextual_hint"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "whatsnew"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "type": "extra.type"
+                    }, 
+                    "description": "", 
+                    "name": " Show Logoman", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "logoman"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "type": "extra.type"
+                    }, 
+                    "description": "", 
+                    "name": " Click Logoman", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "logoman"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "type": "extra.type"
+                    }, 
+                    "description": "", 
+                    "name": " Click Logoman", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "swipe"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "logoman"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Get Notification", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "get"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "notification"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Show Notification", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "notification"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Dismiss Notification", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "swipe"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "notification"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "dismiss"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "background": "extra.background", 
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Open Notification", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "open"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "notification"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id"
+                    }, 
+                    "description": "", 
+                    "name": " Show In-App Message", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "message"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "in_app_message"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "link": "extra.link", 
+                        "message_id": "extra.message_id", 
+                        "primary": "extra.primary"
+                    }, 
+                    "description": "", 
+                    "name": " Click In-App Message", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "message"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "in_app_message"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Click Content Hub", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_hub"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Reload Content Home", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "reload"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Open Category", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "open"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "category"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "component_id": "extra.component_id", 
+                        "feed": "extra.feed", 
+                        "source": "extra.source", 
+                        "subcategory_id": "extra.subcategory_id", 
+                        "version_id": "extra.version_id", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Start Content Tab", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "start"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_tab"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "app_link": "extra.app_link", 
+                        "category": "extra.category", 
+                        "component_id": "extra.component_id", 
+                        "feed": "extra.feed", 
+                        "session_time": "extra.session_time", 
+                        "show_keyboard": "extra.show_keyboard", 
+                        "source": "extra.source", 
+                        "subcategory_id": "extra.subcategory_id", 
+                        "url_counts": "extra.url_counts", 
+                        "version_id": "extra.version_id", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " End Content Tab", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "end"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_tab"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "impression": "extra.impression", 
+                        "version_id": "extra.version_id"
+                    }, 
+                    "description": "", 
+                    "name": " Category Impression", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "impression"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "category"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Start Vertical Process", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "start"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "process"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "vertical"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "loadtime": "extra.loadtime", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " End Vertical Process", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "end"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "process"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "vertical"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Start Tab Swipe Process", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "start"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "process"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "loadtime": "extra.loadtime", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " End Tab Swipe Process", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "end"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "process"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "feed": "extra.feed", 
+                        "source": "extra.source", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Start Tab Swipe", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "start"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "app_link": "extra.app_link", 
+                        "feed": "extra.feed", 
+                        "session_time": "extra.session_time", 
+                        "show_keyboard": "extra.show_keyboard", 
+                        "source": "extra.source", 
+                        "url_counts": "extra.url_counts", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " End Tab Swipe", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "end"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "component_id": "extra.component_id", 
+                        "feed": "extra.feed", 
+                        "mode": "extra.mode", 
+                        "position": "extra.position", 
+                        "source": "extra.source", 
+                        "subcategory_id": "extra.subcategory_id", 
+                        "version_id": "extra.version_id", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Click Toolbar - Share/Reload/Back", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "toolbar"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "share|OPEN_IN_BROWSER|reload|back"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "from": "extra.from", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Click Toolbar - Tab Swipe", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "toolbar"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "feed": "extra.feed", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Click Tab Swipe Drawer", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "drawer"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Add Tab Swipe Tab", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "add"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "tab"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "feed": "extra.feed"
+                    }, 
+                    "description": "", 
+                    "name": " Change Tab Swipe Settings", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "change"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "setting"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "tab_swipe"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "position": "extra.position", 
+                        "source": "extra.source"
+                    }, 
+                    "description": "", 
+                    "name": " Pin Topsite", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "pin"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "link"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "audience_name": "extra.audience_name"
+                    }, 
+                    "description": "", 
+                    "name": " Predict audience", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "predicted"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "audience"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "audience_name"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click Challenge Page Join", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "challenge_page"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "join"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Show Task Contextual Hint", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "contextual_hint"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "task"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "finished": "extra.finished", 
+                        "task": "extra.task"
+                    }, 
+                    "description": "", 
+                    "name": " End Task", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "end"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "task"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Show Challenge Complete Message", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "message"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "challenge_complete"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "action": "extra.action"
+                    }, 
+                    "description": "", 
+                    "name": " Click Challenge Complete Message", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "message"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "challenge_complete"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Account Sign In", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "sign_in"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "account"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Show Redeem Page", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "show"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "redeem_page"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Copy Code on Redeem Page", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "copy"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "redeem_page"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "code"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click Redeem on Redeem Page", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "redeem_page"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "use"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click Reward Profile", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "profile"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "reward"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "item_name": "extra.item_name"
+                    }, 
+                    "description": "", 
+                    "name": " Click Item Content Home", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "item"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " Click Chellenge Page Login", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "challenge_page"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "login"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "category": "extra.category", 
+                        "vertical": "extra.vertical"
+                    }, 
+                    "description": "", 
+                    "name": " Long Press Content Home Item", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "long_press"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "item"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {
+                        "action": "extra.action", 
+                        "category": "extra.category"
+                    }, 
+                    "description": "", 
+                    "name": " Click Content Home Contextmenu", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "click"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "content_home"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "contextmenu"
+                                ], 
+                                "type": "string"
+                            }
+                        }, 
+                        "required": [
+                            "category", 
+                            "timestamp", 
+                            "object", 
+                            "method", 
+                            "value"
+                        ], 
+                        "type": "object"
+                    }
+                }, 
+                {
+                    "amplitudeProperties": {}, 
+                    "description": "", 
+                    "name": " App is launched by Game Shortcut", 
+                    "schema": {
+                        "$schema": "http://json-schema.org/schema#", 
+                        "properties": {
+                            "category": {
+                                "enum": [
+                                    "action"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "method": {
+                                "enum": [
+                                    "launch"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "object": {
+                                "enum": [
+                                    "app"
+                                ], 
+                                "type": "string"
+                            }, 
+                            "timestamp": {
+                                "minimum": 0, 
+                                "type": "number"
+                            }, 
+                            "value": {
+                                "enum": [
+                                    "game_shortcut"
                                 ], 
                                 "type": "string"
                             }
