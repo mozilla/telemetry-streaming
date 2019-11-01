@@ -38,6 +38,9 @@ case class RocketEventPing(clientId: String,
       ("pref_default_browser" -> settings.defaultBrowser) ~
       ("pref_save_downloads_to" -> settings.pref_save_downloads_to) ~
       ("pref_webview_version" -> settings.pref_webview_version) ~
+      ("install_referrer" -> settings.install_referrer) ~
+      ("experiment_name" -> settings.experiment_name) ~
+      ("experiment_bucket" -> settings.experiment_bucket) ~
       ("pref_locale" -> settings.pref_locale))
   }
 }
@@ -48,6 +51,9 @@ case class RocketSettings(pref_search_engine: Option[String],
                          pref_default_browser: Option[String],
                          pref_save_downloads_to: Option[String],
                          pref_webview_version: Option[String],
+                         install_referrer: Option[String],
+                         experiment_name: Option[String],
+                         experiment_bucket: Option[String],
                          pref_locale: Option[String]) {
 
   def asBool(param: Option[String]): Option[Boolean] = param.map(_ == "true")
