@@ -41,7 +41,8 @@ case class RocketEventPing(clientId: String,
       ("install_referrer" -> settings.install_referrer) ~
       ("experiment_name" -> settings.experiment_name) ~
       ("experiment_bucket" -> settings.experiment_bucket) ~
-      ("pref_locale" -> settings.pref_locale))
+      ("pref_locale" -> settings.pref_locale) ~
+      ("pref_key_s_tracker_token" -> settings.pref_key_s_tracker_token))
   }
 }
 
@@ -54,7 +55,8 @@ case class RocketSettings(pref_search_engine: Option[String],
                          install_referrer: Option[String],
                          experiment_name: Option[String],
                          experiment_bucket: Option[String],
-                         pref_locale: Option[String]) {
+                         pref_locale: Option[String],
+                         pref_key_s_tracker_token: Option[String]) {
 
   def asBool(param: Option[String]): Option[Boolean] = param.map(_ == "true")
 
