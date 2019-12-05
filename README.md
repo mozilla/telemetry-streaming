@@ -1,6 +1,8 @@
 [![Build Status](https://circleci.com/gh/mozilla/telemetry-streaming/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla/telemetry-streaming/tree/master)
 [![codecov.io](https://codecov.io/github/mozilla/telemetry-streaming/coverage.svg?branch=master)](https://codecov.io/github/mozilla/telemetry-streaming?branch=master)
 
+** This repository is no longer in use at Mozilla! It was designed to be run on our AWS-based telemetry infrastructure **
+
 # telemetry-streaming
 Spark Streaming ETL jobs for Mozilla Telemetry
 
