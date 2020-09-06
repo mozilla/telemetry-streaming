@@ -20,11 +20,12 @@ organization := "com.mozilla"
 
 scalaVersion in ThisBuild := "2.11.8"
 
-val sparkVersion = "2.3.0"
+val sparkVersion = "2.4.0"
 
 lazy val root = (project in file(".")).
   settings(
-    libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.1-SNAPSHOT",
+    libraryDependencies += "com.mozilla.telemetry" %% "moztelemetry" % "1.1-SNAPSHOT"
+      exclude("org.json4s", "json4s-jackson_2.11"),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % Test,
     libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
